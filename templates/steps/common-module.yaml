@@ -1,0 +1,114 @@
+parameters:
+  - name: commonModulesToLoad
+    type: object
+  - name: scriptType
+    type: object
+  - name: serviceConnectionVariableName
+    type: string
+  - name: azureResourceManagerConnection
+    type: string
+  - name: variables
+    type: object
+    default: []
+  - name: failOnStandardError
+    type: boolean
+    default: true
+  - name: azurePowershellUseCore
+    type: boolean
+    default: false
+  - name: azureCLIScriptType
+    type: string
+
+steps:
+  - task: PowerShell@2
+    displayName: 'Register Azure Artifacts Feed as PSRepository/PackageSource'
+    inputs:
+      azurePowerShellVersion: latestVersion
+      targetType: 'filePath'
+      filePath: $(Agent.BuildDirectory)/s/PipelineCommonFiles/templates/powershell/common-module/Register-Package.ps1
+      arguments: >
+        -RepositoryName $(RepositoryName)
+        -PackageFeedEndpoint $(PackageFeedEndpoint)
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+      failOnStderr: '${{ parameters.failOnStandardError }}'
+      ${{ if eq(parameters.azurePowershellUseCore, true) }}:
+        pwsh: true
+    env:
+      # This environment variable passes the credentials to the credential provider.
+      #VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: $(PackageFeedEndpointCredentialAccessToken)
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+    #To prevent possible 'Unable to resolve package source' errors when installing modules from your feed, call Install-Module in a separate PowerShell task.
+    #$env:PSModulePath is different in Powershell, AzurePowershell, AzureCLI context, So Install module should run under right context
+  - ${{ each commonModule in parameters.commonModulesToLoad }}:
+    - ${{ if or(eq(parameters.scriptType, ''), eq(parameters.scriptType, 'AzurePowerShell')) }}:
+      - task: AzurePowerShell@5
+        displayName: "Install ${{ commonModule.name }} - ${{ commonModule.version }} powershell module from common feed. ScriptType = ${{ parameters.scriptType }}"
+        inputs:
+          azureSubscription: ${{ coalesce( parameters.variables[parameters.serviceConnectionVariableName], parameters.azureResourceManagerConnection) }}
+          ScriptType: 'FilePath'
+          ScriptPath: $(Agent.BuildDirectory)/s/PipelineCommonFiles/templates/powershell/common-module/Install-Module.ps1
+          ${{ if ne(commonModule.version, '') }}:
+            ScriptArguments: >
+              -RepositoryName $(RepositoryName)
+              -ModuleName ${{ commonModule.name }}
+              -ModuleVersion ${{ commonModule.version }}
+          ${{ else }}:
+            ScriptArguments: >
+              -RepositoryName $(RepositoryName)
+              -ModuleName ${{ commonModule.name }}
+          FailOnStandardError: ${{ parameters.failOnStandardError }}
+          azurePowerShellVersion: 'LatestVersion'
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+          ${{if eq(parameters.azurePowershellUseCore, true) }}:
+            pwsh: true
+        env:
+          #VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: $(PackageFeedEndpointCredentialAccessToken)
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+    - ${{ if eq(parameters.scriptType, 'PowerShell') }}:
+      - task: PowerShell@2
+        displayName: "Install ${{ commonModule.name }} - ${{ commonModule.version }} powershell module from common feed. ScriptType = ${{ parameters.scriptType }}"
+        inputs:
+          azurePowerShellVersion: latestVersion
+          targetType: 'filePath'
+          filePath: $(Agent.BuildDirectory)/s/PipelineCommonFiles/templates/powershell/common-module/Install-Module.ps1
+          ${{ if ne(commonModule.version, '') }}:
+            arguments: >
+              -RepositoryName $(RepositoryName)
+              -ModuleName ${{ commonModule.name }}
+              -ModuleVersion ${{ commonModule.version }}
+          ${{ else }}:
+            arguments: >
+              -RepositoryName $(RepositoryName)
+              -ModuleName ${{ commonModule.name }}
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+          failOnStderr: '${{ parameters.failOnStandardError }}'
+          ${{if eq(parameters.azurePowershellUseCore, true) }}:
+            pwsh: true
+        env:
+          #VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: $(PackageFeedEndpointCredentialAccessToken)
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+    - ${{ if eq(parameters.scriptType, 'AzureCLI') }}:
+      - task: AzureCLI@2
+        displayName: "Install ${{ commonModule.name }} - ${{ commonModule.version }} powershell module from common feed. ScriptType = ${{ parameters.scriptType }}"
+        inputs:
+          azureSubscription: ${{ coalesce( parameters.variables[parameters.serviceConnectionVariableName], parameters.azureResourceManagerConnection) }}
+          scriptType: ${{ coalesce(parameters.azureCLIScriptType, 'ps') }}
+          scriptLocation: 'scriptPath'
+          scriptPath: $(Agent.BuildDirectory)/s/PipelineCommonFiles/templates/powershell/common-module/Install-Module.ps1
+          ${{ if ne(commonModule.version, '') }}:
+            arguments: >
+              -RepositoryName $(RepositoryName)
+              -ModuleName ${{ commonModule.name }}
+              -ModuleVersion ${{ commonModule.version }}
+          ${{ else }}:
+            arguments: >
+              -RepositoryName $(RepositoryName)
+              -ModuleName ${{ commonModule.name }}
+          failOnStandardError: '${{ parameters.failOnStandardError }}'
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+        env:
+          #VSS_NUGET_EXTERNAL_FEED_ENDPOINTS: $(PackageFeedEndpointCredentialAccessToken)
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
