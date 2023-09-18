@@ -55,14 +55,14 @@ steps:
             scriptArguments: >
                 -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
                 -ParameterFilePath "$(Build.SourcesDirectory)/self/${{ parameters.parameterFilePath }}"
-                -Location ${{ parameters.location }}
-                -ResourceGroupName ${{ upper(parameters.resourceGroup) }}
+                -Location "${{ parameters.location }}"
+                -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
                 -Deploy $${{ parameters.deploy }}
                 -WhatIf $${{ parameters.whatIf }}
           ${{ else }}:
             scriptArguments: >
                 -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
-                -Location ${{ parameters.location }}
-                -ResourceGroupName ${{ upper(parameters.resourceGroup) }}
+                -Location "${{ parameters.location }}"
+                -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
                 -Deploy $${{ parameters.deploy }}
                 -WhatIf $${{ parameters.whatIf }}
