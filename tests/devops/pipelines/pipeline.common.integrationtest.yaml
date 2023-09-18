@@ -6,7 +6,6 @@ resources:
       name: DEFRA/ado-pipeline-common
       endpoint: DEFRA
       type: github
-      trigger: none
 
 parameters:
   - name: deployFromFeature
