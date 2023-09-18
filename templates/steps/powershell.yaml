@@ -119,7 +119,7 @@ steps:
             inputs:
               azurePowerShellVersion: latestVersion
               targetType: 'filePath'
-              filePath: $(Agent.BuildDirectory)/s/PipelineCommon/templates/powershell/common-module/UnInstall-Module.ps1
+              filePath: $(Agent.BuildDirectory)/s/PipelineCommonFiles/templates/powershell/common-module/UnInstall-Module.ps1
               ${{ if ne(commonModule.version, '') }}:
                 arguments: >
                   -ModuleName ${{ commonModule.name }}
