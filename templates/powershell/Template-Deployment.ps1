@@ -74,7 +74,7 @@ function Get-TemplateParameterFilePath {
     if ($ParameterFilePath -and $(Test-Path $ParameterFilePath)) {
         $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.bicepparam"
         if (-not $(Test-Path -Path $parametersPath)) {
-            $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.parameter.json"
+            $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.parameters.json"
             if (-not $(Test-Path -Path $parametersPath)) {
                 throw "Parameter file not found for the template: $TemplateFileName"
             }
