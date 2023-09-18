@@ -1,0 +1,7 @@
+variables:
+  nc_regionid: 10
+  location: NorthEurope
+  IntTest.ResourceGroup: $(environment)INTTEST$(nc_resourcegroup)$(nc_regionid)01 #devinttestrgp1001
+  IntTest.Subscription.Scope.ResourceGroup: $(environment)inttestss$(nc_resourcegroup)$(nc_regionid)01 #devinttestssrgp1001
+  IntTest.Keyvault.Name: $(environment)NORTHKV$(nc_regionid)10
+  IntTest.StorageAccount.Name: $(environment)northsa$(nc_regionid)10

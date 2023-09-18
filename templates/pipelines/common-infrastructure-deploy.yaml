@@ -25,7 +25,7 @@ parameters:
 - name: privateAgentName
   type: string
   default: ''
-- name: tokenReplaceLocations
+- name: filePathsForTransform
   displayName: Additional files location to replace tokens
   type: string
   default: ''
@@ -70,7 +70,7 @@ stages:
             - template: /templates/steps/initialize.yaml
               parameters:
                 additionalRepositories: ${{ parameters.additionalRepositories }}
-                tokenReplaceLocations: ${{ parameters.tokenReplaceLocations }}
+                tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
                 tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
             - template: /templates/steps/powershell.yaml
@@ -172,7 +172,7 @@ stages:
                     - template: /templates/steps/initialize.yaml
                       parameters:
                         additionalRepositories: ${{ parameters.additionalRepositories }}
-                        tokenReplaceLocations: ${{ parameters.tokenReplaceLocations }}
+                        tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
                         tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
                     - ${{ each groupTemplate in parameters.groupedTemplates }}:
@@ -207,7 +207,7 @@ stages:
                     - template: /templates/steps/initialize.yaml
                       parameters:
                         additionalRepositories: ${{ parameters.additionalRepositories }}
-                        tokenReplaceLocations: ${{ parameters.tokenReplaceLocations }}
+                        tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
                         tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
                     - ${{ each groupTemplate in parameters.groupedTemplates }}:
@@ -294,7 +294,7 @@ stages:
                           - template: /templates/steps/initialize.yaml
                             parameters:
                               additionalRepositories: ${{ parameters.additionalRepositories }}
-                              tokenReplaceLocations: ${{ parameters.tokenReplaceLocations }}
+                              tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
                               tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
                           - ${{ each template in groupTemplate.templates }}:

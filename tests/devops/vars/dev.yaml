@@ -1,0 +1,7 @@
+variables:
+  environment: DEV
+  tenantId: c9d74090-b4e6-4b04-981d-e6757a160812
+  tenantName: DefraCloudDev
+  subscriptionId: a905f68e-daad-4402-a2a6-dacfeb83534d
+  secSubscriptionId: # { placeholder for secSubscriptionId }
+  replaceTokenServiceConnectionName: AZD-CDO-DEV1
