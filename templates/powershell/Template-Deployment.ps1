@@ -70,31 +70,44 @@ function Get-TemplateParameterFilePath {
         [Parameter()]
         [string]$ParameterFilePath
     )
-    [string]$parametersPath = ''
-    if ($ParameterFilePath -and $(Test-Path $ParameterFilePath)) {
-        $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.bicepparam"
-        Write-Debug "Looking for parameter file: $parametersPath"
-        if (-not $(Test-Path -Path $parametersPath)) {
-            $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.parameters.json"
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:TemplateFileName=$TemplateFileName"
+        Write-Debug "${functionName}:ParameterFilePath=$ParameterFilePath"
+    }
+    
+    process {
+        [string]$parametersPath = ''
+        if ($ParameterFilePath -and $(Test-Path $ParameterFilePath)) {
+            $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.bicepparam"
             Write-Debug "Looking for parameter file: $parametersPath"
             if (-not $(Test-Path -Path $parametersPath)) {
-                throw "Parameter file not found for the template: $TemplateFileName"
+                $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.parameters.json"
+                Write-Debug "Looking for parameter file: $parametersPath"
+                if (-not $(Test-Path -Path $parametersPath)) {
+                    throw "Parameter file not found for the template: $TemplateFileName"
+                }
             }
         }
-    }
-    else {
-        [string]$templateFolder = Split-Path -Path $TemplateFile
-        $parametersPath = Join-Path -Path $templateFolder -ChildPath "$TemplateFileName.transformed.bicepparam"
-        Write-Debug "Looking for parameter file: $parametersPath"
-        if (-not $(Test-Path -Path $parametersPath)) {
-            $parametersPath = Join-Path -Path $templateFolder -ChildPath "$TemplateFileName.transformed.parameters.json"
+        else {
+            [string]$templateFolder = Split-Path -Path $TemplateFile
+            $parametersPath = Join-Path -Path $templateFolder -ChildPath "$TemplateFileName.transformed.bicepparam"
             Write-Debug "Looking for parameter file: $parametersPath"
             if (-not $(Test-Path -Path $parametersPath)) {
-                throw "Parameter file not found for the template: $TemplateFileName"
+                $parametersPath = Join-Path -Path $templateFolder -ChildPath "$TemplateFileName.transformed.parameters.json"
+                Write-Debug "Looking for parameter file: $parametersPath"
+                if (-not $(Test-Path -Path $parametersPath)) {
+                    throw "Parameter file not found for the template: $TemplateFileName"
+                }
             }
         }
+        return $parametersPath
     }
-    return $parametersPath
+    
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
 }
 
 try {
