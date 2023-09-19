@@ -73,8 +73,10 @@ function Get-TemplateParameterFilePath {
     [string]$parametersPath = ''
     if ($ParameterFilePath -and $(Test-Path $ParameterFilePath)) {
         $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.bicepparam"
+        Write-Debug "Looking for parameter file: $parametersPath"
         if (-not $(Test-Path -Path $parametersPath)) {
             $parametersPath = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateFileName.transformed.parameters.json"
+            Write-Debug "Looking for parameter file: $parametersPath"
             if (-not $(Test-Path -Path $parametersPath)) {
                 throw "Parameter file not found for the template: $TemplateFileName"
             }
@@ -83,8 +85,10 @@ function Get-TemplateParameterFilePath {
     else {
         [string]$templateFolder = Split-Path -Path $TemplateFile
         $parametersPath = Join-Path -Path $templateFolder -ChildPath "$TemplateFileName.transformed.bicepparam"
+        Write-Debug "Looking for parameter file: $parametersPath"
         if (-not $(Test-Path -Path $parametersPath)) {
             $parametersPath = Join-Path -Path $templateFolder -ChildPath "$TemplateFileName.transformed.parameters.json"
+            Write-Debug "Looking for parameter file: $parametersPath"
             if (-not $(Test-Path -Path $parametersPath)) {
                 throw "Parameter file not found for the template: $TemplateFileName"
             }

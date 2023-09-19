@@ -6,6 +6,7 @@ resources:
       name: DEFRA/ado-pipeline-common
       endpoint: DEFRA
       type: github
+      ref: features/new-template
 
 parameters:
   - name: deployFromFeature
@@ -21,6 +22,9 @@ parameters:
       - template: /tests/devops/vars/custom.yaml@self
 
 lockBehavior: sequential
+
+variables:
+  - group: ADOPipelineCommon_IntegrationTests
 
 extends:
   template: /templates/pipelines/common-infrastructure-deploy.yaml@PipelineCommon
