@@ -76,9 +76,9 @@ stages:
             - template: /templates/steps/powershell.yaml
               parameters:
                 scriptsList:
-                  - displayName: Validate mandatory Consumer pipeline environment object
+                  - displayName: Validate pipeline environment object
                     scriptRepo: PipelineCommonFiles
-                    scriptPath: templates/powershell/ValidateConsumerPipelineEnvObject.ps1
+                    scriptPath: templates/powershell/ValidatePipelineEnvObject.ps1
                     Type: PowerShell
                     azurePowershellUseCore: true
                     scriptArguments: -Environments '${{ convertToJson(parameters.environments) }}'
@@ -90,7 +90,7 @@ stages:
                     azureResourceManagerConnection: ${{ template.acrServiceConnection }}
                     scriptsList:
                       - ${{ if eq(template.type, 'bicep') }}:
-                        - displayName: Compile Bicep to ARM - ${{ template.name }}
+                        - displayName: Lint and Compile Bicep to ARM - ${{ template.name }}
                           scriptRepo: PipelineCommonFiles
                           scriptPath: templates/powershell/Build-BicepTemplate.ps1
                           ${{ if eq(parameters.acrServiceConnection, '') }}:
