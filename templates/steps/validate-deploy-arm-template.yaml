@@ -1,0 +1,68 @@
+parameters:
+  - name: templatePath
+    displayName: Path containing template file
+    type: string
+  - name: templateName
+    displayName: Name of the template
+    type: string
+  - name: parameterFilePath
+    displayName: Path containing Parameter file
+    type: string
+    default: ''
+  - name: templateType
+    type: string
+    default: ''
+  - name: scope
+    displayName: Deployment Scope
+    type: string
+    values:
+      - 'Management Group'
+      - 'Subscription'
+      - 'Resource Group'
+  - name: deploy
+    displayName: Deploy template? If false, will only validate.
+    type: boolean
+    default: false
+  - name: whatIf
+    displayName: Run WhatIf Analysis.
+    type: boolean
+    default: false
+  - name: location
+    displayName: Azure location
+    type: string
+  - name: resourceGroup
+    displayName: Azure Resource Group
+    type: string
+  - name: connection
+    displayName: Azure service connection
+    type: string
+
+steps:
+  - template: /templates/steps/powershell.yaml
+    parameters:
+      azureResourceManagerConnection: ${{ parameters.connection }}
+      scriptsList:
+        - scriptRepo: PipelineCommonFiles
+          ${{ if and(eq(parameters.deploy, true), eq(parameters.whatIf, false)) }}:
+            displayName: Deploy - ${{ parameters.templateName }}
+          ${{ if and(eq(parameters.deploy, false), eq(parameters.whatIf, false)) }}:
+            displayName: Validate - ${{ parameters.templateName }}
+          ${{ if eq(parameters.whatIf, true) }}:
+            displayName: WhatIf - ${{ parameters.templateName }}
+          scriptPath: templates/powershell/Template-Deployment.ps1
+          Type: AzureCLI
+          ${{ if ne(parameters.parameterFilePath, '') }}:
+            scriptArguments: >
+                -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
+                -ParameterFilePath "$(Build.SourcesDirectory)/self/${{ parameters.parameterFilePath }}"
+                -Location "${{ parameters.location }}"
+                -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
+                -Deploy $${{ parameters.deploy }}
+                -WhatIf $${{ parameters.whatIf }}
+          ${{ else }}:
+            scriptArguments: >
+                -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
+                -Location "${{ parameters.location }}"
+                -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
+                -Deploy $${{ parameters.deploy }}
+                -WhatIf $${{ parameters.whatIf }}

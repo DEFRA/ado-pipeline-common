@@ -1,0 +1,132 @@
+parameters:
+- name: azureResourceManagerConnection
+  type: string
+  default: ''
+- name: scriptsList
+  type: object
+- name: KeyVaultList
+  type: object
+  default: []
+- name: variables
+  type: object
+  default: []
+
+steps:
+- ${{ each keyvault in parameters.KeyVaultList }}:
+  - task: AzureKeyVault@2
+    displayName: "Download secrets from KV ${{ keyvault.Name }} for PS"
+    inputs:
+      connectedServiceName: ${{ coalesce(keyvault.ServiceConnection, parameters.azureResourceManagerConnection) }}
+      keyVaultName: '${{ upper(keyvault.Name) }}'
+      secretsFilter: ${{ coalesce('keyvault.SecretsFilter', '*') }}
+      runAsPreJob: ${{ keyvault.runAsPreJob }}
+
+- ${{ each script in parameters.scriptsList }}:
+  - ${{ if eq(coalesce(script.runCondition, 'true'), true) }}:
+    # Load modules from the private feed
+    # For script.Type = AzurePowerShell, PowerShell
+    # For script.Type = AzureCLI and AzureCLIScriptType = ps, pscore
+    - ${{ if ne(script.commonModulesToLoad, '') }}:
+      - ${{ if or(in(script.Type, '', 'AzurePowerShell', 'PowerShell'), and(eq(script.Type, 'AzureCLI'), in(coalesce(script.AzureCLIScriptType, 'ps'), 'ps', 'pscore'))) }}:
+        - template: /templates/steps/common-module.yaml
+          parameters:
+            commonModulesToLoad: ${{ script.commonModulesToLoad }}
+            scriptType: ${{ script.Type }}
+            serviceConnectionVariableName: ${{ script.serviceConnectionVariableName }}
+            azureResourceManagerConnection: ${{ parameters.azureResourceManagerConnection }}
+            variables: ${{ parameters.variables }}
+            ${{ if ne(script.failOnStandardError, '') }}:
+              failOnStandardError: '${{ script.failOnStandardError }}'
+            azurePowershellUseCore: ${{ eq(script.azurePowershellUseCore, true) }}
+            azureCLIScriptType: ${{ script.azureCLIScriptType }}
+
+    - ${{ if or(eq(script.Type, ''), eq(script.Type, 'AzurePowerShell')) }}:
+      - task: AzurePowerShell@5
+        displayName: '${{ coalesce(script.displayName, script.scriptPath) }}'
+        ${{ if ne(script.condition, '') }}:
+          condition: ${{ script.condition }}
+        ${{ if eq(script.runAlways, true) }}:
+          condition: always()
+        inputs:
+          azureSubscription: ${{ coalesce( parameters.variables[script.serviceConnectionVariableName], parameters.azureResourceManagerConnection) }}
+          ${{ if ne(script.inlineScript, '') }}:
+            ScriptType: 'InlineScript'
+            Inline: ${{ script.inlineScript }}
+          ${{ else }}:
+            ScriptType: 'FilePath'
+            ScriptPath: $(Pipeline.Workspace)/s/${{ coalesce(script.scriptRepo, 'self') }}/${{ script.scriptPath }}
+            ScriptArguments: '${{ script.scriptArguments }}'
+          ${{ if ne(script.failOnStandardError, '') }}:
+            FailOnStandardError: ${{ script.failOnStandardError }}
+          azurePowerShellVersion: 'LatestVersion'
+          workingDirectory: $(Pipeline.Workspace)/s/${{ coalesce(script.scriptRepo, 'self') }}/
+          pwsh: ${{ lower(eq(script.azurePowershellUseCore, true)) }}
+        env:
+          ${{if coalesce(script.useSystemAccessToken, False)}}:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)    
+
+    - ${{ if eq(script.Type, 'PowerShell') }}:
+      - task: PowerShell@2
+        ${{ if eq(script.Type, 'PowerShell') }}:
+          displayName: '${{ coalesce(script.displayName, script.scriptPath) }}'
+        ${{ if eq(script.runAlways, true) }}:
+          condition: always()
+        inputs:
+          ignoreLASTEXITCODE: '${{ not(script.failOnStandardError) }}'
+          ${{ if ne(script.inlineScript, '') }}:
+            targetType: 'inline'
+            script: ${{ script.inlineScript }}
+          ${{ else }}:
+            targetType: 'filePath'
+            filePath: $(Pipeline.Workspace)/s/${{ coalesce(script.scriptRepo, 'self') }}/${{ script.scriptPath }}
+            arguments: '${{ script.scriptArguments }}'
+          ${{ if ne(script.failOnStandardError, '') }}:
+            failOnStderr: '${{ script.failOnStandardError }}'
+          workingDirectory: $(Pipeline.Workspace)/s/${{ coalesce(script.scriptRepo, 'self') }}/
+          pwsh: ${{ lower(eq(script.azurePowershellUseCore, true)) }}
+        env:
+          ${{ if coalesce(script.useSystemAccessToken, False) }}:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+    - ${{ if eq(script.Type, 'AzureCLI') }}:
+      - task: AzureCLI@2
+        displayName: '${{ coalesce(script.displayName, script.scriptPath) }}'
+        ${{ if eq(script.runAlways, true) }}:
+          condition: always()
+        inputs:
+          azureSubscription: ${{ coalesce( parameters.variables[script.serviceConnectionVariableName], parameters.azureResourceManagerConnection) }}
+          scriptType: ${{ coalesce(script.AzureCLIScriptType, 'ps') }}
+          addSpnToEnvironment: true
+          ${{ if ne(script.inlineScript, '') }}:
+            scriptLocation: 'inlineScript'
+            inlineScript: ${{ script.inlineScript }}
+          ${{ else }}:
+            scriptLocation: 'scriptPath'
+            ScriptPath: $(Pipeline.Workspace)/s/${{ coalesce(script.scriptRepo, 'self') }}/${{ script.scriptPath }}
+            arguments: '${{ script.scriptArguments }}'
+          ${{ if ne(script.failOnStandardError, '') }}:
+            failOnStandardError: '${{ script.failOnStandardError }}'
+          workingDirectory: $(Pipeline.Workspace)/s/${{ coalesce(script.scriptRepo, 'self') }}/
+        env:
+          ${{if coalesce(script.useSystemAccessToken, False)}}:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+- ${{ each script in parameters.scriptsList }}:
+    - ${{ if ne(script.commonModulesToLoad, '') }}:
+       - ${{ each commonModule in script.commonModulesToLoad }}:
+          - task: PowerShell@2
+            displayName: "UnInstall ${{ commonModule.name }} - ${{ commonModule.version }} powershell module"
+            inputs:
+              azurePowerShellVersion: latestVersion
+              targetType: 'filePath'
+              filePath: $(Agent.BuildDirectory)/s/PipelineCommonFiles/templates/powershell/common-module/UnInstall-Module.ps1
+              ${{ if ne(commonModule.version, '') }}:
+                arguments: >
+                  -ModuleName ${{ commonModule.name }}
+                  -ModuleVersion ${{ commonModule.version }}
+              ${{ else }}:
+                arguments: >
+                  -ModuleName ${{ commonModule.name }}
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
+              failOnStderr: false
+              pwsh: ${{ lower(eq(script.azurePowershellUseCore, true)) }}

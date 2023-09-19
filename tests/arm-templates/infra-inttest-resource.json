@@ -1,0 +1,143 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "renewalAppStorageAccountName": {
+            "type": "string"
+        },
+        "manifestStoreTableName": {
+            "type": "string"
+        },
+        "locationfromRegionFile": {
+            "type": "string"
+        },
+        "blobContainerName": {
+            "type": "string"
+        },
+        "exposedVariable": {
+            "type": "string"
+        },
+        "adoSpnObjectId": {
+            "type": "string"
+        },
+        "contributorRoleId": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "location": "[resourceGroup().location]"
+    },
+    "resources": [
+        {
+            "name": "[parameters('renewalAppStorageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-09-01",
+            "location": "[parameters('locationfromRegionFile')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "publicNetworkAccess": "Enabled",
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": false,
+                "allowSharedKeyAccess": true,
+                "networkAcls": {
+                    "bypass": "AzureServices",
+                    "defaultAction": "Allow"
+                },
+                "encryption": {
+                    "services": {
+                        "file": {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                }
+            },
+            "dependsOn": [],
+            "sku": {
+                "name": "Standard_GRS"
+            },
+            "kind": "StorageV2"
+
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2021-09-01",
+            "name": "[concat(parameters('renewalAppStorageAccountName'), '/default')]",
+            "properties": {
+                "cors": {
+                    "corsRules": [
+                        {
+                            "allowedHeaders": [ "*" ],
+                            "allowedMethods": [ "POST", "DELETE", "PUT", "GET" ],
+                            "allowedOrigins": [ "*" ],
+                            "exposedHeaders": [ "*" ],
+                            "maxAgeInSeconds": 0
+                        }
+                    ]
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('renewalAppStorageAccountName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices/tables",
+            "apiVersion": "2021-09-01",
+            "name": "[concat(parameters('renewalAppStorageAccountName'), '/default/', parameters('manifestStoreTableName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/tableServices', parameters('renewalAppStorageAccountName'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('renewalAppStorageAccountName'))]"
+            ]
+        },
+        {
+            "condition": "[equals(parameters('exposedVariable'),'test')]",
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2021-09-01",
+            "name": "[concat(parameters('renewalAppStorageAccountName'), '/default')]",      
+             "properties": {
+                "cors": {
+                    "corsRules": [
+                        {
+                            "allowedHeaders": [ "*" ],
+                            "allowedMethods": [ "POST", "DELETE", "PUT", "GET" ],
+                            "allowedOrigins": [ "*" ],
+                            "exposedHeaders": [ "*" ],
+                            "maxAgeInSeconds": 0
+                        }
+                    ]
+                }
+            },           
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('renewalAppStorageAccountName'))]"
+            ]
+        },
+        {
+            "condition": "[equals(parameters('exposedVariable'),'test')]",
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2021-09-01",
+            "name": "[concat(parameters('renewalAppStorageAccountName'), '/default/', parameters('blobContainerName'))]",           
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('renewalAppStorageAccountName'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('renewalAppStorageAccountName'))]"
+            ]
+        },
+        {
+            "condition": "[equals(subscription().displayName, 'AZD-CDO-TST1')]",
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "name": "[guid(resourceGroup().id, parameters('adoSpnObjectId'))]",
+            "properties": {
+                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('contributorRoleId'))]",
+                "principalId": "[parameters('adoSpnObjectId')]",
+                "principalType": "ServicePrincipal"
+            }
+        }
+    ]
+}

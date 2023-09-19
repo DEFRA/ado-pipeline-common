@@ -1,0 +1,78 @@
+name: $(BuildID)
+
+resources:
+  repositories:
+    - repository: PipelineCommon
+      name: DEFRA/ado-pipeline-common
+      endpoint: DEFRA
+      type: github
+
+parameters:
+  - name: deployFromFeature
+    displayName: "Deploy from Feature Branch"
+    type: boolean
+    default: true
+  - name: customVariables
+    displayName: "Custom Variables"
+    type: object
+    default:
+      - name: varName
+        value: test
+      - template: /tests/devops/vars/custom.yaml@self
+
+lockBehavior: sequential
+
+variables:
+  - group: ADOPipelineCommon_IntegrationTests
+
+extends:
+  template: /templates/pipelines/common-infrastructure-deploy.yaml@PipelineCommon
+  parameters:
+    variableFiles:
+      - /tests/devops/vars/{environment}.yaml@Self
+      - /tests/devops/vars/common.yaml@Self
+    regionalVariableFiles:
+      - /tests/devops/vars/regional/{environment}-{region}.yaml@Self
+    deployFromFeature: ${{ parameters.deployFromFeature }}
+    environments:
+      - name: dev
+        developmentEnvironment: True
+        enableTemplateValidationBeforeDeployment: true
+        serviceConnection: AZD-CDO-DEV1
+        azureRegions:
+          primary: NorthEurope
+      - name: tst
+        enableTemplateValidationBeforeDeployment: true
+        serviceConnection: AZD-CDO-TST1
+        userCustomVariables: ${{ parameters.customVariables }}
+        azureRegions:
+          isSecondaryRegionDeploymentActive: true
+          deployPrimaryAndSecondaryInParallel: true
+          primary: NorthEurope
+          secondary:
+            - WestEurope
+        deploymentBranches:
+          - "*"
+    groupedTemplates:
+      - name: Deploy_ARM_For_IntegrationTests
+        templates:
+          - name: infra-inttest-resource
+            path: tests/arm-templates
+            parameterFilePath: tests/arm-templates/parameters
+            scope: "Resource Group"
+            resourceGroupName: $(IntTest.ResourceGroup)
+          - name: infra-inttest-resource2
+            isDeployToSecondaryRegions: false
+            path: tests/arm-templates
+            scope: "Resource Group"
+            resourceGroupName: $(IntTest.ResourceGroup)
+            postDeployScriptsList:
+            - displayName: Assert InlineScript of Type AzurePowerShell can be executed and consume function from the private module
+              inlineScript: Get-FirstHellowithParameter -Name $(nameforFunctionParam) -Message 'Infra, How are you doing today?'
+              commonModulesToLoad:
+                - name: 'GetHelloScript'
+                  version: '1.0.3'
+          - name: infra-inttest-subscription-resource
+            path: tests/bicep-templates
+            type: bicep
+            scope: Subscription

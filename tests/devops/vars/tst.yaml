@@ -1,0 +1,3 @@
+variables:
+  environment: TST
+  replaceTokenServiceConnectionName: AZD-CDO-TST1

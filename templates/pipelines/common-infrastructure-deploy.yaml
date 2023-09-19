@@ -1,0 +1,330 @@
+parameters:
+- name: deployFromFeature
+  displayName: Deploy to Development Environment from feature branch
+  type: boolean
+  default: false
+- name: groupedTemplates
+  displayName: Group of Infra templates
+  type: object
+- name: variableFiles
+  displayName: Variables file list
+  type: object
+- name: regionalVariableFiles
+  displayName: Regional Variables file list
+  type: object
+  default: []
+- name: additionalRepositories
+  displayName: Additional repositories that needs reference in the process
+  type: object
+  default: []
+- name: environments
+  type: object
+- name: agentImage
+  type: string
+  default: ''
+- name: privateAgentName
+  type: string
+  default: ''
+- name: filePathsForTransform
+  displayName: Additional files location to replace tokens
+  type: string
+  default: ''
+- name: tokenReplaceEscapeConfig
+  type: string
+  default: auto
+  values:
+  - auto
+  - none
+  - json
+  - xml
+
+stages:
+  - stage: Validate
+    ${{ if ne(parameters.privateAgentName, '') }}:
+      pool:
+        name: ${{ parameters.privateAgentName }}
+    ${{ else }}:
+      pool:
+        vmImage: ${{ coalesce(parameters.agentImage, 'windows-latest') }}
+    jobs:
+    - ${{ each env in parameters.environments }}:
+      - ${{ if eq(env.developmentEnvironment, True) }}:
+        - job: Validate
+          displayName: Verification
+          variables:
+            - name: environment
+              value: ${{ env.name }}
+            - name: primaryRegion
+              value: ${{ env.azureRegions.primary }}
+            - ${{ each file in parameters.variableFiles }}:
+              - template: ${{ replace(file, '{environment}', lower(env.name)) }}
+            - ${{ each customVariable in env.userCustomVariables }}:
+              - ${{ if ne(customVariable.name, '') }}:
+                - name: ${{ customVariable.name }}
+                  value: ${{ customVariable.value }}
+              - ${{ if ne(customVariable.template, '') }}:
+                - template: ${{ customVariable.template }}
+            - ${{ each file in parameters.regionalVariableFiles }}:
+              - template: ${{ replace(replace(file, '{environment}',lower(env.name)), '{region}', lower(variables.primaryRegion)) }}
+          steps:
+            - template: /templates/steps/initialize.yaml
+              parameters:
+                additionalRepositories: ${{ parameters.additionalRepositories }}
+                tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
+                tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
+
+            - template: /templates/steps/powershell.yaml
+              parameters:
+                scriptsList:
+                  - displayName: Validate pipeline environment object
+                    scriptRepo: PipelineCommonFiles
+                    scriptPath: templates/powershell/ValidatePipelineEnvObject.ps1
+                    Type: PowerShell
+                    azurePowershellUseCore: true
+                    scriptArguments: -Environments '${{ convertToJson(parameters.environments) }}'
+
+            - ${{ each groupTemplate in parameters.groupedTemplates }}:
+              - ${{ each template in groupTemplate.templates }}:
+                - template: /templates/steps/powershell.yaml
+                  parameters:
+                    azureResourceManagerConnection: ${{ template.acrServiceConnection }}
+                    scriptsList:
+                      - ${{ if eq(template.type, 'bicep') }}:
+                        - displayName: Lint and Compile Bicep to ARM - ${{ template.name }}
+                          scriptRepo: PipelineCommonFiles
+                          scriptPath: templates/powershell/Build-BicepTemplate.ps1
+                          ${{ if eq(parameters.acrServiceConnection, '') }}:
+                            Type: PowerShell
+                          ${{ if ne(template.parameterFilePath, '') }}:
+                            scriptArguments: >
+                              -TemplateName "${{ template.name }}"
+                              -TemplatePath "$(Pipeline.Workspace)/s/self/${{ template.path }}"
+                              -parameterFilePath "$(Build.SourcesDirectory)/self/${{ template.parameterFilePath }}"
+                          ${{ else }}:
+                            scriptArguments: >
+                              -TemplateName "${{ template.name }}"
+                              -TemplatePath "$(Pipeline.Workspace)/s/self/${{ template.path }}"
+                      
+                      - displayName: ARM ttk - ${{ template.name }}
+                        scriptRepo: PipelineCommonFiles
+                        scriptPath: templates/powershell/Arm-ttk.ps1
+                        Type: PowerShell
+                        azurePowershellUseCore: true
+                        scriptArguments:
+                          -TemplateFile $(Build.SourcesDirectory)\self\${{ template.path }}\${{ template.name }}.json
+                
+                - template: /templates/steps/validate-deploy-arm-template.yaml
+                  parameters:
+                    scope: ${{ template.scope }}
+                    templateName: ${{ template.name }}
+                    templateType: ${{ template.type }}
+                    parameterFilePath: ${{ template.parameterFilePath }}
+                    templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
+                    location: ${{ variables.location }}
+                    resourceGroup: '${{ template.resourceGroupName }}'
+                    connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
+
+  - ${{ each env in parameters.environments }}:
+    - ${{ if ne(env.useDevelopmentEnvironmentForValidationOnly, True) }}:
+      - stage: ${{ upper(env.name) }}
+        ${{ if or(ne(env.privateAgentName, ''), ne(parameters.privateAgentName, '')) }}:
+          pool:
+            name: "${{ coalesce(env.privateAgentName, parameters.privateAgentName) }}"
+        ${{ else }}:
+          pool:
+            vmImage: "${{ coalesce(env.agentImage, parameters.agentImage, 'windows-latest') }}"
+        variables:
+          - name: environment
+            value: ${{ env.name }}
+          - name: primaryRegion
+            value: ${{ env.azureRegions.primary }}
+          - name: azurePrimaryAndSecondaryRegions
+            value: ${{ format('{0};{1}', env.azureRegions.primary, join(';', env.azureRegions.secondary)) }}
+          - ${{ each file in parameters.variableFiles }}:
+            - template: ${{ replace(file, '{environment}', env.name) }}
+        ${{ if eq(env.developmentEnvironment, True) }}:
+          condition: and(ne(dependencies.validate.result, 'Canceled'), not(canceled()), not(failed()), or(eq(${{ parameters.deployFromFeature }}, true), eq(${{ containsValue(env.deploymentBranches,'*') }},true) ,eq(${{ containsValue(env.deploymentBranches,variables['Build.SourceBranch']) }},true)))
+        ${{ elseif startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
+          condition: and(ne(dependencies.validate.result, 'Canceled'), not(canceled()), not(failed()), or(eq(${{ containsValue(env.deploymentBranches,'*') }},true), eq(${{ containsValue(env.deploymentBranches,'refs/pull/*/merge') }},true)))
+        ${{ elseif and(eq(env.dependsOnAny, True), eq(length(split(join(';', env.dependsOn),';')), 2)) }}:
+          condition: and(ne(dependencies.validate.result, 'Canceled'), not(canceled()), or(eq(${{ containsValue(env.deploymentBranches,'*') }}, true), eq(${{ containsValue(env.deploymentBranches,variables['Build.SourceBranch']) }}, true)), ${{ format('or({0},{1})', format('succeeded(''{0}'')', env.dependsOn[0]), format('succeeded(''{0}'')', env.dependsOn[1])) }})
+        ${{ else }}:
+          condition: and(ne(dependencies.validate.result, 'Canceled'), not(canceled()), not(failed()), or(eq(${{ containsValue(env.deploymentBranches,'*') }},true), eq(${{ containsValue(env.deploymentBranches,variables['Build.SourceBranch']) }},true)))
+        ${{ if ne(env.dependsOn,'') }}:
+          dependsOn: ${{ env.dependsOn }}
+        jobs:
+          - ${{ each region in split(variables.azurePrimaryAndSecondaryRegions, ';') }}:
+            - ${{ if or(eq(env.azureRegions.primary, region), and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(env.azureRegions.isSecondaryRegionDeploymentActive, true), true))) }}:
+
+              - ${{ if and(ne(env.developmentEnvironment, True), eq(coalesce(env.enableTemplateValidationBeforeDeployment, false), true)) }}:
+                - job: Template_Dry_Run_${{ upper(env.name) }}_${{ upper(region) }}
+                  displayName: Run validate (dry run) against templates - ${{ upper(env.name) }} ${{ upper(region) }}
+                  variables:
+                  - ${{ each customVariable in env.userCustomVariables }}:
+                    - ${{ if ne(customVariable.name, '') }}:
+                      - name: ${{ customVariable.name }}
+                        value: ${{ customVariable.value }}
+                    - ${{ if ne(customVariable.template, '') }}:
+                      - template: ${{ customVariable.template }}
+                  - ${{ each file in parameters.regionalVariableFiles }}:
+                    - template: ${{ replace(replace(file, '{environment}', env.name), '{region}', lower(region)) }}
+                  steps:
+                    - template: /templates/steps/initialize.yaml
+                      parameters:
+                        additionalRepositories: ${{ parameters.additionalRepositories }}
+                        tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
+                        tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
+
+                    - ${{ each groupTemplate in parameters.groupedTemplates }}:
+                      - ${{ each template in groupTemplate.templates }}:
+                        - template: /templates/steps/validate-deploy-arm-template.yaml
+                          parameters:
+                            scope: ${{ template.scope }}
+                            templateName: ${{ template.name }}
+                            templateType: ${{ template.type }}
+                            parameterFilePath: ${{ template.parameterFilePath }}
+                            templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
+                            location: ${{ variables.location }}
+                            resourceGroup: '${{ template.resourceGroupName }}'
+                            connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
+
+              - ${{ if and(or(ne(env.developmentEnvironment, True), eq(env.forceWhatIf, True)), startsWith(coalesce(env.outputTemplateChange, 'RunWithoutPause'), 'Run')) }}:
+                - job: Run_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
+                  displayName: Run WhatIf against templates - ${{ upper(env.name) }} ${{ upper(region) }}
+                  dependsOn:
+                    - ${{ if and(ne(env.developmentEnvironment, True), eq(coalesce(env.enableTemplateValidationBeforeDeployment, false), true)) }}:
+                      - Template_Dry_Run_${{ upper(env.name) }}_${{ upper(region) }}
+                  variables:
+                    - ${{ each customVariable in env.userCustomVariables }}:
+                      - ${{ if ne(customVariable.name, '') }}:
+                        - name: ${{ customVariable.name }}
+                          value: ${{ customVariable.value }}
+                      - ${{ if ne(customVariable.template, '') }}:
+                        - template: ${{ customVariable.template }}
+                    - ${{ each file in parameters.regionalVariableFiles }}:
+                      - template: ${{ replace(replace(file, '{environment}', env.name), '{region}', lower(region)) }}
+                  steps:
+                    - template: /templates/steps/initialize.yaml
+                      parameters:
+                        additionalRepositories: ${{ parameters.additionalRepositories }}
+                        tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
+                        tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
+
+                    - ${{ each groupTemplate in parameters.groupedTemplates }}:
+                      - ${{ each template in groupTemplate.templates }}:
+                        - template: /templates/steps/validate-deploy-arm-template.yaml
+                          parameters:
+                            whatIf: true
+                            scope: ${{ template.scope }}
+                            templateName: ${{ template.name }}
+                            templateType: ${{ template.type }}
+                            parameterFilePath: ${{ template.parameterFilePath }}
+                            templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
+                            location: ${{ variables.location }}
+                            resourceGroup: '${{ template.resourceGroupName }}'
+                            connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
+
+              - ${{ if and(eq(env.outputTemplateChange, 'RunWithPause'), or(ne(env.developmentEnvironment, True), env.forceWhatIf)) }}:
+                - job: Review_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
+                  displayName: Pause To Review WhatIf against ARM templates - ${{ upper(env.name) }} ${{ upper(region) }}
+                  pool: server
+                  dependsOn:
+                    - Run_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
+                    - ${{ if and(ne(env.developmentEnvironment, True), eq(coalesce(env.enableTemplateValidationBeforeDeployment, false), true)) }}:
+                      - Template_Dry_Run_${{ upper(env.name) }}_${{ upper(region) }}
+                  steps:
+                  - task: ManualValidation@0
+                    displayName: Review and Validate WhatIf Results
+                    inputs:
+                      timeoutInMinutes: 600
+                      instructions: Please review and validate results of the WhatIf command against ARM Templates
+                      onTimeout: reject
+
+              - ${{ each groupTemplate in parameters.groupedTemplates }}:
+                - ${{ if coalesce(groupTemplate.preDeployManualTasks, false) }}:
+                  - job: Pre_Deploy_Manual_Intervention_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupTemplate.name) }}
+                    displayName: Pre Deploy Manual tasks for ${{ upper(groupTemplate.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
+                    pool: server
+                    dependsOn:
+                      - ${{ if ne(groupTemplate.dependsOnGroupedTemplates, '') }}:
+                        - ${{ each dependsOnInstance in groupTemplate.dependsOnGroupedTemplates }}:
+                          - Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(dependsOnInstance) }}
+                    steps:
+                    - ${{ each manualTask in groupTemplate.preDeployManualTasks}}:
+                      - task: ManualValidation@0
+                        displayName: ${{ manualTask.displayName }}
+                        inputs:
+                          timeoutInMinutes: ${{ manualTask.timeoutInMinutes }}
+                          instructions: ${{ manualTask.instructions }}
+                          onTimeout: reject
+
+                - deployment: Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupTemplate.name) }}
+                  displayName: Deploy ${{ upper(groupTemplate.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
+                  dependsOn:
+                    - ${{ if and(ne(env.developmentEnvironment, True), eq(coalesce(env.enableTemplateValidationBeforeDeployment, false), true)) }}:
+                      - Template_Dry_Run_${{ upper(env.name) }}_${{ upper(region) }}
+                    - ${{ if and(or(ne(env.developmentEnvironment, True), eq(env.forceWhatIf, True)), startsWith(coalesce(env.outputTemplateChange, 'RunWithoutPause'), 'Run')) }}:
+                      - Run_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
+                    - ${{ if and(eq(env.outputTemplateChange, 'RunWithPause'), or(ne(env.developmentEnvironment, True), eq(env.forceWhatIf, True))) }}:
+                      - Review_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
+                    - ${{ if coalesce(groupTemplate.preDeployManualTasks, false) }}:
+                      - Pre_Deploy_Manual_Intervention_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupTemplate.name) }}
+                    - ${{ if ne(groupTemplate.dependsOnGroupedTemplates, '') }}:
+                      - ${{ each dependsOnInstance in groupTemplate.dependsOnGroupedTemplates }}:
+                        - Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(dependsOnInstance) }}
+                    - ${{ if and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(env.azureRegions.deployPrimaryAndSecondaryInParallel, true), false)) }}:
+                      - ${{ each dependentGroupedTemplate in parameters.groupedTemplates }}:
+                        - Deploy_${{ upper(env.name) }}_${{ upper(env.azureRegions.primary) }}_${{ upper(dependentGroupedTemplate.name) }}
+                  workspace:
+                    clean: all
+                  environment: ${{ upper(env.name) }}
+                  variables:
+                    - ${{ each customVariable in env.userCustomVariables }}:
+                      - ${{ if ne(customVariable.name, '') }}:
+                        - name: ${{ customVariable.name }}
+                          value: ${{ customVariable.value }}
+                      - ${{ if ne(customVariable.template, '') }}:
+                        - template: ${{ customVariable.template }}
+                    - ${{ each file in parameters.regionalVariableFiles }}:
+                      - template: ${{ replace(replace(file, '{environment}', env.name), '{region}', lower(region)) }}
+                  strategy:
+                    runOnce:
+                      deploy:
+                        steps:
+                          - template: /templates/steps/initialize.yaml
+                            parameters:
+                              additionalRepositories: ${{ parameters.additionalRepositories }}
+                              tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
+                              tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
+
+                          - ${{ each template in groupTemplate.templates }}:
+                            - ${{ if or(eq(env.azureRegions.primary, region), and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(template.isDeployToSecondaryRegions, true), true))) }}:
+                              - ${{ if coalesce(template.preDeployScriptsList, False) }}:
+                                - template: /templates/steps/powershell.yaml
+                                  parameters:
+                                    azureResourceManagerConnection: "${{ coalesce(variables[template.postDeployServiceConnectionVariableName], variables[template.serviceConnectionVariableName], env.serviceConnection) }}"
+                                    ${{ if ne(env.keyVaultList, '') }}:
+                                      keyVaultList: ${{ env.keyVaultList }}
+                                    scriptsList: ${{ template.preDeployScriptsList }}
+                                    variables: ${{ variables }}
+
+                              - template: /templates/steps/validate-deploy-arm-template.yaml
+                                parameters:
+                                  deploy: true
+                                  scope: ${{ template.scope }}
+                                  templateName: ${{ template.name }}
+                                  templateType: ${{ template.type }}
+                                  parameterFilePath: ${{ template.parameterFilePath }}
+                                  templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
+                                  location: ${{ variables.location }}
+                                  resourceGroup: '${{ template.resourceGroupName }}'
+                                  connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
+
+                              - ${{ if coalesce(template.postDeployScriptsList, False) }}:
+                                - template: /templates/steps/powershell.yaml
+                                  parameters:
+                                    azureResourceManagerConnection: "${{ coalesce(variables[template.postDeployServiceConnectionVariableName], variables[template.serviceConnectionVariableName], env.serviceConnection) }}"
+                                    ${{ if ne(env.keyVaultList, '') }}:
+                                      keyVaultList: ${{ env.keyVaultList }}
+                                    scriptsList: ${{ template.postDeployScriptsList }}
+                                    variables: ${{ variables }}

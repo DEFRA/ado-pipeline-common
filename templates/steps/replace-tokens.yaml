@@ -1,0 +1,32 @@
+parameters:
+  - name: rootDirectorylocation
+    type: string
+    default: ''
+  - name: targetFileslocation
+    type: string
+  - name: escapeType
+    type: string
+    default: auto
+    values: 
+    - auto
+    - none
+    - json
+    - xml
+steps:
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@5
+    displayName: Replace Variables
+    inputs:
+      ${{ if ne(parameters.rootDirectorylocation, '') }}:
+        rootDirectory: ${{ parameters.rootDirectorylocation }}
+      targetFiles: ${{ parameters.targetFileslocation }}
+      encoding: auto
+      writeBOM: true
+      escapeType: ${{ parameters.escapeType }}
+      actionOnMissing: warn
+      keepToken: false
+      tokenPattern: 'custom'
+      tokenPrefix: '#{{'
+      tokenSuffix: '}}'
+      useLegacyPattern: false
+      enableTelemetry: false
+      enableTransforms: true

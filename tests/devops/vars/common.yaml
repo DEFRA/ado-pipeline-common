@@ -1,0 +1,15 @@
+variables:
+  nc_resourcegroup: RG
+  nc_infrastructure: INF
+  
+  projectName: "INTTEST"
+  IntTest.StorageAccount.TableName: inttesttables
+  IntTest.StorageAccount.Blob.ContainerName: inttestcontainer
+  nameforFunctionParam: moduletest
+  Ado.ServiceConnection.ServicePrincipalId: a8592cd2-56fe-4bf9-8187-04ea0b53d20d
+
+  Contributor.RoleId: "b24988ac-6180-42a0-ab88-20f7382dd24c"
+  Keyvault.SecretsOfficer.RoleId: "b86a8fe4-44ce-4948-aee5-eccb2c155cd7"
+
+  PackageFeedEndpoint: https://pkgs.dev.azure.com/defragovuk/_packaging/defra-devops-common/nuget/v2
+  RepositoryName: PowershellAzureDevopsServices  
