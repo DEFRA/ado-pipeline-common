@@ -1,8 +1,7 @@
 parameters:
   - name: frameworkVersion
     displayName: NodeJS Version
-    type: string
-    default: '18.x'    
+    type: string   
   - name: packageFeedName
     type: string
     default: ''
@@ -10,12 +9,13 @@ parameters:
     type: string
     default: 'moderate'    
 steps:
-- task: NodeTool@0
-  displayName: 'Use Node ${{ parameters.frameworkVersion }} '
-  inputs:
-    versionSpec: 18.x
-    checkLatest: true 
-  enabled: false #this step takes long time to download nodejs file  
+- ${{ if ne(parameters.frameworkVersion, '') }}:  
+  - task: NodeTool@0
+    displayName: 'Use Node ${{ parameters.frameworkVersion }} '
+    inputs:
+      versionSpec: ${{ parameters.frameworkVersion }}
+      checkLatest: true 
+    enabled: true #this step takes long time to download nodejs file  
 - task: Npm@1
   displayName: 'npm ci'
   inputs:
