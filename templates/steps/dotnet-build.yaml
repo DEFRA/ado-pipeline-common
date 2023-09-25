@@ -1,0 +1,42 @@
+parameters:
+  - name: frameworkVersion
+    displayName: .Net Version
+    type: string
+    default: '6.x'    
+  - name: projectPath
+    displayName: .Net Project File Path
+    type: string
+    default: '**/*.csproj'
+  - name: testProjectPath
+    displayName: .Net Test Project File Path
+    type: string
+    default: '**/*.Tests.csproj'      
+  - name: packageFeedName
+    type: string
+    default: ''     
+steps:
+  - task: UseDotNet@2
+    displayName: UseDotNet
+    inputs:
+      version: ${{ parameters.frameworkVersion }}
+      includePreviewVersions: true
+  - task: DotNetCoreCLI@2
+    displayName: Restore
+    inputs:
+      command: restore
+      projects: ${{ parameters.projectPath }}      
+      ${{ if ne(parameters.packageFeedName, '') }}:
+        vstsFeed: ${{ parameters.packageFeedName }}
+  - task: DotNetCoreCLI@2
+    displayName: Build
+    inputs:
+      command: build
+      projects: ${{ parameters.projectPath }}
+  - task: DotNetCoreCLI@2
+    displayName: 'Unit Test'
+    inputs:
+        command: test
+        projects: ${{ parameters.testProjectPath }}
+        arguments: '--collect "Code coverage"'
+        publishTestResults: true
+
