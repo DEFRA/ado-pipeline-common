@@ -56,7 +56,7 @@ Write-Debug "${functionName}:Command=$Command"
 
 try {
     $tagName = $AcrRepoName + ":" + $ImageVersion
-    $AcrtagName = $AcrName + ".azurecr.io/" + $AcrRepoName + ":" + $ImageVersion
+    $AcrtagName = $AcrName + ".azurecr.io/image/" + $AcrRepoName + ":" + $ImageVersion
     Write-Debug "${functionName}:Docker Image=$tagName"
 
     $dockerCacheFilePath = $ImageCachePath + "/cache.tar"

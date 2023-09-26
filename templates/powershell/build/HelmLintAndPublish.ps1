@@ -66,7 +66,7 @@ try {
 
     $exitCode = 0
     
-    $tagName = $AcrName + ".azurecr.io/" + $AcrRepoName + ":" + $ChartVersion
+    $tagName = $AcrName + ".azurecr.io/helm" + $AcrRepoName + ":" + $ChartVersion
     Write-Debug "${functionName}:Helm Tag=$tagName"
         
     if ( $Command.ToLower() -eq 'lint' ) {
@@ -77,14 +77,16 @@ try {
         az acr login --name $AcrName    
         # Load chart if exists in cache
         if (Test-Path $chartCacheFilePath -PathType Leaf) {
-            az acr helm push -n $AcrName $chartCacheFilePath --force        
+            #az acr helm push -n $AcrName $chartCacheFilePath --force        
+            helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm
         }
         else {    
             helm dependency build
             helm package . --version $ChartVersion
             # Save the chart for future jobs
             Copy-Item $AcrRepoName-$ChartVersion.tgz -Destination $ChartCachePath -Force
-            az acr helm push -n $AcrName $AcrRepoName-$ChartVersion.tgz --force                  
+            #az acr helm push -n $AcrName $AcrRepoName-$ChartVersion.tgz --force                  
+            helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm
         }       
         az acr helm show -n $AcrName $AcrRepoName  
     }
