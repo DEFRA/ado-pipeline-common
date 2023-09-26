@@ -1,0 +1,252 @@
+parameters:
+- name: projectName
+  type: string
+- name: agentImage
+  type: string
+  default: 'ubuntu-latest'
+- name: privateAgentName
+  displayName: Name of the private agent
+  type: string
+  default: ''
+- name: environments
+  displayName: list of deployment env
+  type: object
+- name: packageFeedName
+  type: string
+  default: '' 
+- name: appBuildConfig
+  displayName: Details to build the app
+  type: object
+  default: 
+    appFrameworkType: 'dotnet'
+    frameworkVersion: '6.x'      
+    projectPath: './ProjectName/ProjectName.csproj'
+    testProjectPath: './ProjectName.Tests/ProjectName.Tests.csproj'
+    manifestPath: "./obj/FFCDemoPaymentService/project.assets.json"
+    imageRepoName: 'ProjectRepoName'     
+- name: appTestConfig
+  displayName: Details to test the app
+  type: object
+  default: 
+    testFilePath: './docker-compose.test.yaml'
+- name: snykConfig
+  displayName: Details for Snyk Service settings
+  type: object
+  default: 
+    snykConnection: 'AZD-ADP-SNYK'
+    snykOrganizationName: 'defra-adp'
+    failOnThreshold: 'high'
+- name: npmConfig
+  displayName: Details for NPM settings
+  type: object
+  default: 
+    failOnThreshold: 'moderate'
+- name: appDeployConfig
+  displayName: Details to deploy the app
+  type: object
+  default: null
+  
+variables:
+- group: NodeJSAppBuild
+
+stages:         
+  - stage: Application_CI
+    ${{ if ne(parameters.privateAgentName, '') }}:
+      pool:
+        name: ${{ parameters.privateAgentName }}
+    ${{ if eq(parameters.privateAgentName, '') }}:
+      pool:
+        vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+    jobs:
+      - job: Initialise        
+        steps:
+          - checkout: self
+            path: s/source
+
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+
+          - task: PowerShell@2
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Extract-CodeVersion.ps1'
+              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}"
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s/source'
+            displayName: GetAppVersion            
+            name: GetAppVersion
+
+      - job: Build  
+        dependsOn: Initialise
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+
+          - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
+            - template: /templates/steps/dotnet-build.yaml
+              parameters:
+                frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
+                projectPath: ${{ parameters.appBuildConfig.projectPath }}
+                testProjectPath: ${{ parameters.appBuildConfig.testProjectPath }}
+                packageFeedName: ${{ parameters.packageFeedName }}
+
+          - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
+            - template: /templates/steps/nodejs-build.yaml
+              parameters:
+                frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
+                failOnThreshold: ${{ parameters.npmConfig.failOnThreshold }}
+                packageFeedName: ${{ parameters.packageFeedName }}    
+
+          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+            - template: /templates/steps/security-scan-application.yaml
+              parameters:
+                snykConnection: ${{ parameters.snykConfig.snykConnection }}              
+                snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
+                acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+                manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
+          
+          - task: PowerShell@2
+            displayName: 'Helm lint'   
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: -Command "lint"
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'   
+
+      - job: BuildImage  
+        dependsOn: [Initialise]
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+
+          - task: Cache@2
+            displayName: Cache docker
+            inputs:
+              key: $(dockerCacheKey)
+              path: $(Pipeline.Workspace)/docker
+              cacheHitVar: CACHE_RESTORED
+          
+          - task: Cache@2
+            displayName: Cache helm chart
+            inputs:
+              key: $(helmCacheKey)
+              path: $(Pipeline.Workspace)/helm
+              cacheHitVar: CACHE_RESTORED
+
+
+          - task: PowerShell@2
+            displayName: 'Docker Build Image'
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
+              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' -Command "build"
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'
+
+          - task: PowerShell@2
+            displayName: 'Helm Build' 
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build"
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'
+
+          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+            - template: /templates/steps/security-scan-container.yaml
+              parameters:
+                snykConnection: ${{ parameters.snykConfig.snykConnection }}
+                snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
+                acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+                acrRepoTagVersion: $(appVersion)
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
+
+      - job: PublishArtifacts  
+        dependsOn: [Initialise,Build,BuildImage]
+        #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+        steps:
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+
+          - task: Cache@2
+            displayName: Restore Cached docker image
+            inputs:
+              key: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+              path: $(Pipeline.Workspace)/docker
+              cacheHitVar: CACHE_RESTORED  
+
+          - task: Cache@2
+            displayName: Restore Cached helm chart
+            inputs:
+              key: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+              path: $(Pipeline.Workspace)/helm
+              cacheHitVar: CACHE_RESTORED  
+
+          - task: PowerShell@2
+            displayName: 'Set App Version'   
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/GetSet-CodeVersion.ps1'
+              arguments: -Command "Set" -AppVersion $(appVersion) -ArtifactFilePath  $(System.ArtifactsDirectory)/version
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s' 
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish version'
+            inputs:
+              targetPath: '$(System.ArtifactsDirectory)/version'
+              artifact: appversion
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish docker'
+            inputs:
+              targetPath: '$(Pipeline.Workspace)/docker'
+              artifact: docker
+          
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish helm'
+            inputs:
+              targetPath: '$(Pipeline.Workspace)/helm'
+              artifact: helm
+            
+
+  - ${{ each deploymentEnv in parameters.environments }}:
+    - stage: Application_CD_${{ deploymentEnv.name }}
+      ${{ if ne(deploymentEnv.privateAgentName, '') }}:
+        pool:
+          name: ${{ deploymentEnv.privateAgentName }}
+      ${{ else }}:
+        pool:
+          vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+      jobs:
+        - deployment: PublishTo${{ deploymentEnv.name }}
+          environment: ${{ deploymentEnv.name }}
+          strategy:
+            runOnce:
+              deploy:          
+                steps:
+                  - template: /templates/steps/common-app-cd.yaml
+                    parameters:
+                        environmentObj: ${{ deploymentEnv }}
+                        appBuildConfig: ${{ parameters.appBuildConfig }}
+                        appDeployConfig: ${{ parameters.appDeployConfig }}

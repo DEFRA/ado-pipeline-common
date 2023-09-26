@@ -1,0 +1,58 @@
+parameters:
+  - name: frameworkVersion
+    displayName: NodeJS Version
+    type: string   
+  - name: packageFeedName
+    type: string
+    default: ''
+  - name: failOnThreshold
+    type: string
+    default: 'moderate'    
+steps:
+- ${{ if ne(parameters.frameworkVersion, '') }}:  
+  - task: NodeTool@0
+    displayName: 'Use Node ${{ parameters.frameworkVersion }} '
+    inputs:
+      versionSpec: ${{ parameters.frameworkVersion }}
+      checkLatest: true 
+    enabled: true #this step takes long time to download nodejs file  
+- task: Npm@1
+  displayName: 'npm ci'
+  inputs:
+    command: custom
+    customCommand: 'ci --legacy-peer-deps'
+    verbose: false
+    ${{ if ne(parameters.packageFeedName, '') }}:
+      customRegistry: useFeed
+      customFeed: ${{ parameters.packageFeedName }}
+           
+- task: Npm@1
+  displayName: 'npm audit'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'audit -audit-level=${{ parameters.failOnThreshold }} ' 
+  continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+
+- task: Npm@1
+  displayName: 'npm lint'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'run --if-present test:lint'
+  continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+
+- task: Npm@1
+  displayName: 'npm build'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'run --if-present build'
+
+- task: Npm@1
+  displayName: 'npm unit test'
+  inputs:
+    command: custom
+    verbose: false
+    customCommand: 'run --if-present test:unit'
+

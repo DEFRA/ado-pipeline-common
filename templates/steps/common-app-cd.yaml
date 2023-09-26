@@ -1,0 +1,94 @@
+parameters:
+- name: agentImage
+  type: string
+  default: 'ubuntu-latest'
+- name: environmentObj
+  displayName: deployment env
+  type: object
+- name: appBuildConfig
+  displayName: Details to build the app
+  type: object
+- name: appDeployConfig
+  displayName: Details to deploy the app
+  type: object
+  default: null
+        
+steps:
+
+  - checkout: Self
+    path: s/
+  - checkout: PipelineCommon
+    path: s/PipelineCommon
+
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: 'appversion'
+      targetPath: $(System.ArtifactsDirectory)/version
+
+  - task: PowerShell@2
+    displayName: 'Get App Version' 
+    name: GetAppVersion   
+    inputs:
+      targetType: filePath
+      filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/GetSet-CodeVersion.ps1'
+      arguments: -Command "Get" -ArtifactFilePath  $(System.ArtifactsDirectory)/version
+      failOnStderr: false
+      pwsh: true
+      workingDirectory: '$(Pipeline.Workspace)/s'  
+
+  - task: Cache@2
+    displayName: Restore Cached docker image
+    inputs:
+      key: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(GetAppVersion.appVersion)" | cache'
+      path: $(Pipeline.Workspace)/docker
+      cacheHitVar: CACHE_RESTORED  
+
+  - task: Cache@2
+    displayName: Restore Cached helm chart
+    inputs:
+      key: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(GetAppVersion.appVersion)" | cache'
+      path: $(Pipeline.Workspace)/helm
+      cacheHitVar: CACHE_RESTORED  
+
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: 'docker'
+      targetPath: '$(Pipeline.Workspace)/docker'
+  - task: DownloadPipelineArtifact@2
+    inputs:
+      artifactName: 'helm'
+      targetPath: '$(Pipeline.Workspace)/helm'
+
+  - ${{ if ne(parameters.appDeployConfig, '') }}:
+    - task: AzureAppConfigurationPush@6
+      displayName: 'Import Azure App Configuration'
+      inputs:
+        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+        AppConfigurationEndpoint: 'https://${{ parameters.environmentObj.appConfiguration }}.azconfig.io'
+        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/${{ parameters.environmentObj.name }}.appConfig.json'
+        FileContentProfile: appconfig/kvset
+
+  - task: AzureCLI@2                   
+    inputs:
+      azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
+      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(GetAppVersion.appVersion) -ImageCachePath $(Pipeline.Workspace)/docker -Command "push"
+      addSpnToEnvironment: true          
+      failOnStandardError: false
+      workingDirectory: '$(Pipeline.Workspace)/s'
+    displayName: 'Docker Push Image'
+      
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion $(GetAppVersion.appVersion) -ChartCachePath $(Pipeline.Workspace)/helm -Command "publish"
+      addSpnToEnvironment: true          
+      failOnStandardError: false
+      workingDirectory: '$(Pipeline.Workspace)/s'
+    displayName: 'Helm Publish' 
+        
