@@ -76,19 +76,16 @@ try {
     elseif ( $Command.ToLower() -eq 'publish' ) {
         az acr login --name $AcrName    
         # Load chart if exists in cache
-        if (Test-Path $chartCacheFilePath -PathType Leaf) {
-            #az acr helm push -n $AcrName $chartCacheFilePath --force        
+        if (Test-Path $chartCacheFilePath -PathType Leaf) {      
             helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm
         }
         else {    
             helm dependency build
             helm package . --version $ChartVersion
             # Save the chart for future jobs
-            Copy-Item $AcrRepoName-$ChartVersion.tgz -Destination $ChartCachePath -Force
-            #az acr helm push -n $AcrName $AcrRepoName-$ChartVersion.tgz --force                  
+            Copy-Item $AcrRepoName-$ChartVersion.tgz -Destination $ChartCachePath -Force                
             helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm
-        }       
-        az acr helm show -n $AcrName $AcrRepoName  
+        }        
     }
     elseif ( $Command.ToLower() -eq 'build' ) {
         helm dependency build
