@@ -55,19 +55,19 @@ try {
     [string]$command = "az bicep build --file $TemplatePath/$TemplateName.bicep"
     Invoke-CommandLine -Command $command
     if ($ParameterFilePath -and $(Test-Path $ParameterFilePath)) {
-        $parameterFile = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateName.bicepparam"
+        $parameterFile = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateName.transformed.bicepparam"
         
         Write-Debug "Building Bicep params $parameterFile"
-        $command = "az bicep build-params --file $parameterFile --outfile $ParameterFilePath/$TemplateName.parameters.json"
+        $command = "az bicep build-params --file $parameterFile --outfile $ParameterFilePath/$TemplateName.transformed.parameters.json"
         Invoke-CommandLine -Command $command
     }
     else {
-        $parameterFile = Join-Path -Path $TemplatePath -ChildPath "$TemplateName.bicepparam"
+        $parameterFile = Join-Path -Path $TemplatePath -ChildPath "$TemplateName.transformed.bicepparam"
         Write-Debug $parameterFile
     
         if (Test-Path $parameterFile -PathType Leaf) {
             Write-Debug "Building Bicep params $parameterFile"
-            $command = "az bicep build-params --file $parameterFile --outfile $TemplatePath/$TemplateName.parameters.json"
+            $command = "az bicep build-params --file $parameterFile --outfile $TemplatePath/$TemplateName.transformed.parameters.json"
             Invoke-CommandLine -Command $command
         }
     }
