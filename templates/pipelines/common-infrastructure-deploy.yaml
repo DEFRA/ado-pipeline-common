@@ -95,15 +95,9 @@ stages:
                           scriptPath: templates/powershell/Build-BicepTemplate.ps1
                           ${{ if eq(parameters.acrServiceConnection, '') }}:
                             Type: PowerShell
-                          ${{ if ne(template.parameterFilePath, '') }}:
-                            scriptArguments: >
-                              -TemplateName "${{ template.name }}"
-                              -TemplatePath "$(Pipeline.Workspace)/s/self/${{ template.path }}"
-                              -parameterFilePath "$(Build.SourcesDirectory)/self/${{ template.parameterFilePath }}"
-                          ${{ else }}:
-                            scriptArguments: >
-                              -TemplateName "${{ template.name }}"
-                              -TemplatePath "$(Pipeline.Workspace)/s/self/${{ template.path }}"
+                          scriptArguments: >
+                            -TemplateName "${{ template.name }}"
+                            -TemplatePath "$(Pipeline.Workspace)/s/self/${{ template.path }}"
                       
                       - displayName: ARM ttk - ${{ template.name }}
                         scriptRepo: PipelineCommonFiles

@@ -7,10 +7,8 @@ Compiles Bicep template and bicepparam files to json templates
 Mandatory. Template file name.
 .PARAMETER TemplatePath
 Mandatory. Template folder path.
-.PARAMETER ParameterFilePath
-Optional. Parameter file folder name.
 .EXAMPLE
-.\Template-Deployment.ps1 -TemplateName <TemplateName> -TemplatePath <TemplatePath> -ParameterFilePath <ParameterFilePath>
+.\Template-Deployment.ps1 -TemplateName <TemplateName> -TemplatePath <TemplatePath>
 #>
 [CmdletBinding()]
 Param
@@ -19,8 +17,6 @@ Param
     [string]$TemplateName,
     [Parameter(Mandatory)]
     [string]$TemplatePath,
-    [Parameter()]
-    [string]$ParameterFilePath = '',
     [Parameter()]
     [string]$WorkingDirectory = $PWD
 )
@@ -45,7 +41,6 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:TemplateName=$TemplateName"
 Write-Debug "${functionName}:TemplatePath=$TemplatePath"
-Write-Debug "${functionName}:ParameterFilePath=$ParameterFilePath"
 
 try {
     [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $WorkingDirectory -ChildPath "templates/powershell/modules/ps-helpers"
@@ -54,23 +49,6 @@ try {
 
     [string]$command = "az bicep build --file $TemplatePath/$TemplateName.bicep"
     Invoke-CommandLine -Command $command
-    if ($ParameterFilePath -and $(Test-Path $ParameterFilePath)) {
-        $parameterFile = Join-Path -Path $ParameterFilePath -ChildPath "$TemplateName.bicepparam"
-        
-        Write-Debug "Building Bicep params $parameterFile"
-        $command = "az bicep build-params --file $parameterFile --outfile $ParameterFilePath/$TemplateName.parameters.json"
-        Invoke-CommandLine -Command $command
-    }
-    else {
-        $parameterFile = Join-Path -Path $TemplatePath -ChildPath "$TemplateName.bicepparam"
-        Write-Debug $parameterFile
-    
-        if (Test-Path $parameterFile -PathType Leaf) {
-            Write-Debug "Building Bicep params $parameterFile"
-            $command = "az bicep build-params --file $parameterFile --outfile $TemplatePath/$TemplateName.parameters.json"
-            Invoke-CommandLine -Command $command
-        }
-    }
     $exitCode = 0
 }
 catch {
