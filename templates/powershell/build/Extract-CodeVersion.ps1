@@ -46,6 +46,7 @@ try {
     $oldAppVersion = "0.0.0"
     $exitCode = 0
     $defaultBranchName = "master"
+    $versionFilePath = "./VERSION"
     try {
 
         $masterBranchExists = git ls-remote --heads origin master
@@ -63,18 +64,32 @@ try {
         Write-Debug "Error reading branch "
         $exitCode = -2
     }
- 
-
-    if ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
+    #If custom VERSION file exists, read version number from file
+    if (Test-Path $versionFilePath -PathType Leaf) {
+        $appVersion = (Get-Content $versionFilePath).Trim()
+        try {
+            git fetch --all
+            git checkout -b devops origin/$defaultBranchName
+            if (Test-Path $versionFilePath -PathType Leaf) {
+                $oldAppVersion = (Get-Content $versionFilePath).Trim()
+            }
+        }
+        catch {
+            Write-Debug "Error switching branch "
+            $exitCode = -2
+        }
+    }
+    elseif ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
         $xml = [Xml] (Get-Content $ProjectPath )
         $appVersion = $xml.Project.PropertyGroup.Version
         
         try {
             git fetch --all
             git checkout -b devops origin/$defaultBranchName
-                
-            $xml = [Xml] (Get-Content $ProjectPath )
-            $oldAppVersion = $xml.Project.PropertyGroup.Version
+            if (Test-Path $ProjectPath -PathType Leaf) {
+                $xml = [Xml] (Get-Content $ProjectPath )
+                $oldAppVersion = $xml.Project.PropertyGroup.Version
+            }
         }
         catch {
             Write-Debug "Error switching branch "
@@ -88,27 +103,30 @@ try {
         try {
             git fetch --all
             git checkout -b devops origin/$defaultBranchName
-        
-            $oldAppVersion = node -p "require('$ProjectPath').version" 
+            if (Test-Path $ProjectPath -PathType Leaf) {
+                $oldAppVersion = node -p "require('$ProjectPath').version" 
+            }
         }
         catch {
-             Write-Debug "Error switching branch "
-             $exitCode = -2
+            Write-Debug "Error switching branch "
+            $exitCode = -2
         }             
     }
-    else {        
+    else {
+        Write-Debug "${functionName}: Error identifying version"     
         $exitCode = -2
     }
 
+    #Check if the version is upgraded
     if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
-        Write-Output "${functionName}:appVersion updated"    
+        Write-Output "${functionName}:appVersion upgraded"    
     }
     else {
-        Write-Output "${functionName}:appVersion not updated"    
+        Write-Output "${functionName}:appVersion not upgraded"    
         $exitCode = -2
     }
 
-    Write-Debug "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion"    
+    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion"    
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
 }
