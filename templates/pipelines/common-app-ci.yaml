@@ -96,8 +96,8 @@ stages:
             - task: SonarCloudPrepare@1
               displayName: 'Prepare analysis on SonarCloud'
               inputs:
-                SonarCloud: ${{ sonarConfig.sonarConnection }}
-                organization: ${{ sonarConfig.organization }}
+                SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
+                organization: ${{ parameters.sonarConfig.organization }}
                 projectKey: ${{ parameters.projectName}}
                 projectName: ${{ parameters.projectName}}
                 projectVersion: $(appVersion)
@@ -112,8 +112,8 @@ stages:
             - task: SonarCloudPrepare@1
               displayName: 'Prepare analysis on SonarCloud'
               inputs:
-                SonarCloud: ${{ sonarConfig.sonarConnection }}
-                organization: ${{ sonarConfig.organization }}
+                SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
+                organization: ${{ parameters.sonarConfig.organization }}
                 scannerMode: CLI
                 extraProperties: |
                   # Additional properties that will be passed to the scanner, 
