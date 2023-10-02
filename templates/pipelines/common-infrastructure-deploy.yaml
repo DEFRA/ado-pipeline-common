@@ -338,6 +338,7 @@ stages:
                                         scriptRepo: ${{ deployment.scriptRepo }}
                                         scriptPath: ${{ deployment.scriptPath }}
                                         Type: ${{ deployment.scriptType }}
+                                        inlineScript: ${{ deployment.inlineScript }}
                                         azurePowershellUseCore: ${{ deployment.azurePowershellUseCore }}
                                         scriptArguments: ${{ deployment.scriptArguments }}
                                     variables: ${{ variables }}

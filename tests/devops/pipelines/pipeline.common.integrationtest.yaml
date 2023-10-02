@@ -73,6 +73,10 @@ extends:
               commonModulesToLoad:
                 - name: 'GetHelloScript'
                   version: '1.0.3'
+          - name: 'Script deployment'
+            Type: PowerShell
+            inlineScript: >
+              'Write-Host "Hello World!"'
           - name: infra-inttest-subscription-resource
             path: tests/bicep-templates
             type: bicep
