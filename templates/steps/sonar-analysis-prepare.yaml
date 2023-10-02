@@ -5,6 +5,9 @@ parameters:
     type: object
   - name: appVersion
     type: string
+  - name: projectKey
+    type: string
+    default: ${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
 
 steps:   
 - task: SonarCloudPrepare@1
@@ -13,8 +16,8 @@ steps:
     SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
     organization: ${{ parameters.sonarConfig.organization }}
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
-      projectKey: ${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
-      projectName: ${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
+      projectKey: ${{ parameters.projectKey }}
+      projectName: ${{ parameters.projectKey }}
       projectVersion: ${{ parameters.appVersion}}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
@@ -26,19 +29,16 @@ steps:
       scannerMode: CLI
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
-          sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
-          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectKey=${{ parameters.projectKey }}
+          sonar.projectName=${{ parameters.projectKey }}
           sonar.projectVersion=${{ parameters.appVersion}}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
-          sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
-          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectKey=${{ parameters.projectKey }}
+          sonar.projectName=${{ parameters.projectKey }}
           sonar.projectVersion=${{ parameters.appVersion}}
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
-- bash: 'env | sort'
-  displayName: 'env variables'
-  enabled: true
 
     
