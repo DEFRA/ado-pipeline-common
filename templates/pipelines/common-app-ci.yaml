@@ -98,7 +98,7 @@ stages:
               inputs:
                 SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
                 organization: ${{ parameters.sonarConfig.organization }}
-                projectKey: ${{ parameters.projectName}}
+                projectKey: ${{ parameters.appBuildConfig.imageRepoName}}
                 projectName: ${{ parameters.projectName}}
                 projectVersion: $(appVersion)
             - template: /templates/steps/dotnet-build.yaml
@@ -117,7 +117,7 @@ stages:
                 scannerMode: CLI
                 extraProperties: |
                   # Additional properties that will be passed to the scanner, 
-                  sonar.projectKey=${{ parameters.projectName}}
+                  sonar.projectKey=${{ parameters.appBuildConfig.imageRepoName}}
                   sonar.projectName=${{ parameters.projectName}}
                   sonar.projectVersion=$(appVersion)
             - template: /templates/steps/nodejs-build.yaml
