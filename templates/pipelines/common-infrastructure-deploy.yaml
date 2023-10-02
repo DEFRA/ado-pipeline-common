@@ -244,8 +244,8 @@ stages:
                     displayName: Pre Deploy Manual tasks for ${{ upper(groupDeployment.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
                     pool: server
                     dependsOn:
-                      - ${{ if ne(groupDeployment.dependsOngroupedDeployments, '') }}:
-                        - ${{ each dependsOnInstance in groupDeployment.dependsOngroupedDeployments }}:
+                      - ${{ if ne(groupDeployment.dependsOnGroupedDeployments, '') }}:
+                        - ${{ each dependsOnInstance in groupDeployment.dependsOnGroupedDeployments }}:
                           - Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(dependsOnInstance) }}
                     steps:
                     - ${{ each manualTask in groupDeployment.preDeployManualTasks}}:
@@ -267,8 +267,8 @@ stages:
                       - Review_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
                     - ${{ if coalesce(groupDeployment.preDeployManualTasks, false) }}:
                       - Pre_Deploy_Manual_Intervention_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupDeployment.name) }}
-                    - ${{ if ne(groupDeployment.dependsOngroupedDeployments, '') }}:
-                      - ${{ each dependsOnInstance in groupDeployment.dependsOngroupedDeployments }}:
+                    - ${{ if ne(groupDeployment.dependsOnGroupedDeployments, '') }}:
+                      - ${{ each dependsOnInstance in groupDeployment.dependsOnGroupedDeployments }}:
                         - Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(dependsOnInstance) }}
                     - ${{ if and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(env.azureRegions.deployPrimaryAndSecondaryInParallel, true), false)) }}:
                       - ${{ each dependentGroupedTemplate in parameters.groupedDeployments }}:

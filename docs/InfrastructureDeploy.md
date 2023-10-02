@@ -111,7 +111,7 @@ extends:
      - <additional-repo2-name>
     groupedDeployments: (required)
       - name: <group-name> (required - Hyphens are not supported, please use underscores)
-        dependsOngroupedDeployments: (optional - All jobs will run in parallel if no dependency is defined. Else, the dependsOngroupedDeployments will be respected for job runs.)
+        dependsOnGroupedDeployments: (optional - All jobs will run in parallel if no dependency is defined. Else, the dependsOnGroupedDeployments will be respected for job runs.)
           - <group-name1> (optional)
           - <group-name2> (optional, can be no groups or multiple groups)
         deployments:
