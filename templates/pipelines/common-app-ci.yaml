@@ -46,7 +46,8 @@ parameters:
   type: object
   default: 
     sonarConnection: 'DEFRA SonarCloud'
-    organization: defra  
+    organization: defra
+    projectKeyPrefix: 'adp-'
 - name: appDeployConfig
   displayName: Details to deploy the app
   type: object
