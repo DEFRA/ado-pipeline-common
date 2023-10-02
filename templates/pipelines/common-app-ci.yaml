@@ -116,10 +116,10 @@ stages:
                 organization: ${{ sonarConfig.organization }}
                 scannerMode: CLI
                 extraProperties: |
-                # Additional properties that will be passed to the scanner, 
-                sonar.projectKey=${{ parameters.projectName}}
-                sonar.projectName=${{ parameters.projectName}}
-                sonar.projectVersion=$(appVersion)
+                  # Additional properties that will be passed to the scanner, 
+                  sonar.projectKey=${{ parameters.projectName}}
+                  sonar.projectName=${{ parameters.projectName}}
+                  sonar.projectVersion=$(appVersion)
             - template: /templates/steps/nodejs-build.yaml
               parameters:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
