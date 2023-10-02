@@ -74,7 +74,8 @@ extends:
                 - name: 'GetHelloScript'
                   version: '1.0.3'
           - name: 'Script deployment'
-            Type: PowerShell
+            type: 'script'
+            scriptType: PowerShell
             inlineScript: >
               'Write-Host "Hello World!"'
           - name: infra-inttest-subscription-resource
