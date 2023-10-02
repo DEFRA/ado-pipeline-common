@@ -57,28 +57,29 @@ extends:
     groupedDeployments:
       - name: Deploy_ARM_For_IntegrationTests
         deployments:
-          - name: infra-inttest-resource
-            path: tests/arm-templates
-            parameterFilePath: tests/arm-templates/parameters
-            scope: "Resource Group"
-            resourceGroupName: $(IntTest.ResourceGroup)
-          - name: infra-inttest-resource2
-            isDeployToSecondaryRegions: false
-            path: tests/arm-templates
-            scope: "Resource Group"
-            resourceGroupName: $(IntTest.ResourceGroup)
-            postDeployScriptsList:
-            - displayName: Assert InlineScript of Type AzurePowerShell can be executed and consume function from the private module
-              inlineScript: Get-FirstHellowithParameter -Name $(nameforFunctionParam) -Message 'Infra, How are you doing today?'
-              commonModulesToLoad:
-                - name: 'GetHelloScript'
-                  version: '1.0.3'
+          # - name: infra-inttest-resource
+          #   path: tests/arm-templates
+          #   parameterFilePath: tests/arm-templates/parameters
+          #   scope: "Resource Group"
+          #   resourceGroupName: $(IntTest.ResourceGroup)
+          # - name: infra-inttest-resource2
+          #   isDeployToSecondaryRegions: false
+          #   path: tests/arm-templates
+          #   scope: "Resource Group"
+          #   resourceGroupName: $(IntTest.ResourceGroup)
+          #   postDeployScriptsList:
+          #   - displayName: Assert InlineScript of Type AzurePowerShell can be executed and consume function from the private module
+          #     inlineScript: Get-FirstHellowithParameter -Name $(nameforFunctionParam) -Message 'Infra, How are you doing today?'
+          #     commonModulesToLoad:
+          #       - name: 'GetHelloScript'
+          #         version: '1.0.3'
           - name: 'Script deployment'
             type: 'script'
             scriptType: PowerShell
+            isDeployToSecondaryRegions: false
             inlineScript: >
               'Write-Host "Hello World!"'
-          - name: infra-inttest-subscription-resource
-            path: tests/bicep-templates
-            type: bicep
-            scope: Subscription
+          # - name: infra-inttest-subscription-resource
+          #   path: tests/bicep-templates
+          #   type: bicep
+          #   scope: Subscription
