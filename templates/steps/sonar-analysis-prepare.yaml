@@ -13,8 +13,8 @@ steps:
     SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
     organization: ${{ parameters.sonarConfig.organization }}
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
-      projectKey: $(sonarProjectKey)
-      projectName: ${{ parameters.projectName}}
+      projectKey: ${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
+      projectName: ${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
       projectVersion: ${{ parameters.appVersion}}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
@@ -27,12 +27,12 @@ steps:
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
-          sonar.projectName=${{ parameters.projectName}}
+          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
-          sonar.projectName=${{ parameters.projectName}}
+          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}-${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
