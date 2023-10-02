@@ -103,9 +103,9 @@ stages:
                 projectVersion: $(appVersion)
                 extraProperties: |
                   # Additional properties that will be passed to the scanner, 
-                  sonar.pullrequest.branch=$['System.PullRequest.SourceBranch']
-                  sonar.pullrequest.base=$['System.PullRequest.TargetBranch']
-                  sonar.pullrequest.key=$['System.PullRequest.PullRequestNumber']
+                  sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
+                  sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+                  sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
             - template: /templates/steps/dotnet-build.yaml
               parameters:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
@@ -125,9 +125,9 @@ stages:
                   sonar.projectKey=${{ parameters.appBuildConfig.imageRepoName}}
                   sonar.projectName=${{ parameters.projectName}}
                   sonar.projectVersion=$(appVersion)
-                  sonar.pullrequest.branch=$['System.PullRequest.SourceBranch']
-                  sonar.pullrequest.base=$['System.PullRequest.TargetBranch']
-                  sonar.pullrequest.key=$['System.PullRequest.PullRequestNumber']
+                  sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
+                  sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+                  sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
             - template: /templates/steps/nodejs-build.yaml
               parameters:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
