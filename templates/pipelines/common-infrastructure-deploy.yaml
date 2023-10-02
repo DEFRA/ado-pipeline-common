@@ -208,19 +208,19 @@ stages:
                         tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
                     - ${{ each groupDeployment in parameters.groupedDeployments }}:
-                      - ${{ each template in groupDeployment.deployments }}:
+                      - ${{ each deployment in groupDeployment.deployments }}:
                         - ${{ if ne(deployment.type, 'script') }}:
                           - template: /templates/steps/validate-deploy-arm-template.yaml
                             parameters:
                               whatIf: true
-                              scope: ${{ template.scope }}
-                              templateName: ${{ template.name }}
-                              templateType: ${{ template.type }}
-                              parameterFilePath: ${{ template.parameterFilePath }}
-                              templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
+                              scope: ${{ deployment.scope }}
+                              templateName: ${{ deployment.name }}
+                              templateType: ${{ deployment.type }}
+                              parameterFilePath: ${{ deployment.parameterFilePath }}
+                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
                               location: ${{ variables.location }}
-                              resourceGroup: '${{ template.resourceGroupName }}'
-                              connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
+                              resourceGroup: '${{ deployment.resourceGroupName }}'
+                              connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
 
               - ${{ if and(eq(env.outputTemplateChange, 'RunWithPause'), or(ne(env.developmentEnvironment, True), env.forceWhatIf)) }}:
                 - job: Review_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
