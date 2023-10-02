@@ -93,10 +93,10 @@ stages:
             path: s/PipelineCommon
 
           - template: /templates/steps/sonar-analysis-prepare.yaml
-              parameters:
-                sonarConfig: ${{ parameters.sonarConfig }}
-                appBuildConfig: ${{ parameters.appBuildConfig }}
-                appVersion: $(appVersion)
+            parameters:
+              sonarConfig: ${{ parameters.sonarConfig }}
+              appBuildConfig: ${{ parameters.appBuildConfig }}
+              appVersion: $(appVersion)
 
           - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
             - template: /templates/steps/dotnet-build.yaml
