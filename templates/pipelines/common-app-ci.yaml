@@ -85,31 +85,20 @@ stages:
       - job: Build  
         dependsOn: Initialise
         variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-          sonarProjectKey: adp-${{ parameters.appBuildConfig.imageRepoName}}
-          ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-            SourceBranch: $(System.PullRequest.SourceBranch)
-            TargetBranch: $(System.PullRequest.TargetBranch)
-            PRNumber: $(System.PullRequest.PullRequestNumber)
-          ${{ else }}:
-            SourceBranch: ''
-            TargetBranch: ''
-            PRNumber: ''
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
           - checkout: self
             path: s/
           - checkout: PipelineCommon
             path: s/PipelineCommon
 
+          - template: /templates/steps/sonar-analysis-prepare.yaml
+              parameters:
+                sonarConfig: ${{ parameters.sonarConfig }}
+                appBuildConfig: ${{ parameters.appBuildConfig }}
+                appVersion: $(appVersion)
+
           - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
-            - task: SonarCloudPrepare@1
-              displayName: 'Prepare analysis on SonarCloud'
-              inputs:
-                SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
-                organization: ${{ parameters.sonarConfig.organization }}
-                projectKey: $(sonarProjectKey)
-                projectName: ${{ parameters.projectName}}
-                projectVersion: $(appVersion)
             - template: /templates/steps/dotnet-build.yaml
               parameters:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
@@ -118,18 +107,6 @@ stages:
                 packageFeedName: ${{ parameters.packageFeedName }}
 
           - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
-            - task: SonarCloudPrepare@1
-              displayName: 'Prepare analysis on SonarCloud'
-              inputs:
-                SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
-                organization: ${{ parameters.sonarConfig.organization }}
-                scannerMode: CLI
-                extraProperties: |
-                  # Additional properties that will be passed to the scanner, 
-                  sonar.projectKey=$(sonarProjectKey)
-                  sonar.projectName=${{ parameters.projectName}}
-                  sonar.projectVersion=$(appVersion)
-                  
             - template: /templates/steps/nodejs-build.yaml
               parameters:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
