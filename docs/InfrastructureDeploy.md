@@ -109,16 +109,16 @@ extends:
     additionalRepositories: (optional)
      - <additional-repo1-name>
      - <additional-repo2-name>
-    groupedTemplates: (required)
+    groupedDeployments: (required)
       - name: <group-name> (required - Hyphens are not supported, please use underscores)
-        dependsOnGroupedTemplates: (optional - All jobs will run in parallel if no dependency is defined. Else, the dependsOnGroupedTemplates will be respected for job runs.)
+        dependsOnGroupedDeployments: (optional - All jobs will run in parallel if no dependency is defined. Else, the dependsOnGroupedDeployments will be respected for job runs.)
           - <group-name1> (optional)
           - <group-name2> (optional, can be no groups or multiple groups)
-        templates:
-          - name: <template-name> (required, only the name of ARM or Bicep template without extension json/bicep)
+        deployments:
+          - name: <deployment-name> (required, when type is arm/bicep template provide the name of the template without extension json/bicep otherwise plain text for script step display name)
+            path: <template-or-script-path> (required, folder path where the template/script resides)
+            type: <deployment-type> (optional, accepted values are arm, bicep or script and default value is arm)
             isDeployToSecondaryRegions: false (optional and default is True. Set it to false to skip the deployment for this template in the secondary regions)
-            path: <template-path> (required, folder path where the template resides)
-            type: <arm-template-type> (optional, accepted values are arm or bicep and default value is arm)
             parameterFilePath: <template-parameter-file-path> (optional, can be used when template file and parameter file are in different folder)
             serviceConnectionVariableName: <name-of-the-service-connection> (optional)
             preDeployServiceConnectionVariableName: <name-of-the-service-connection> (optional)
@@ -146,6 +146,11 @@ extends:
                 scriptRepo: <script-repo> (required, if scriptPath does not refer @PipelineCommon)
                 ScriptArguments: <script-arguments> (optional)
                 serviceConnectionVariableName: <name-of-the-service-connection> (optional)
+            scriptType: <type-of-the-script> (optional, Use it when deployment `type` is script. Default value is AzurePowershell and accepted values as AzurePowershell, PowerShell or AzureCLI.)
+            scriptRepo: <name-of-the-script-repo> (optional, Use it when deployment `type` is script and scripts are defined in a different repository.)
+            inlineScript: <inline-script> (optional, Use it when deployment `type` is script.)
+            azurePowershellUseCore: <script-arguments> (optional, Use it when deployment `type` is script and Applies when using `ScriptType` is AzurePowerShell or PowerShell. Default is false)
+            scriptArguments: <script-arguments> (optional, Use it when deployment `type` is script)
         preDeployManualTasks: (optional)
           - displayName: <display-name> (required)
             timeoutInMinutes: <timeout-in-minutes> (required)
@@ -426,7 +431,7 @@ Allowed Values are:
 extends:
   template: /pipeline/infra-template.yaml
   parameters:
-    templates:
+    deployments:
       - name: applicationGateway
         path: applicationGateway
         type: "arm"
@@ -545,7 +550,7 @@ additionalRepositories:
 ```
 
 ### preDeployManualTasks
-`preDeployManualTasks` list of manual tasks prompted during a pipeline-run and before the execution in a `groupedTemplates` of the  `preDeployScriptsList` and `templates`.
+`preDeployManualTasks` list of manual tasks prompted during a pipeline-run and before the execution in a `groupedDeployments` of the  `preDeployScriptsList` and `deployments`.
 
   ```yaml
   preDeployManualTasks:
@@ -573,7 +578,7 @@ Example
 extends:
   template: /templates/defra-common-arm-deploy.yaml@trdPipelineCommon
   parameters:
-    templates:
+    deployments:
       - path: webapps/Defra.Trade.DataMapping.API
         name: webapp-data-mapping
         isDeployToSecondaryRegions: false
@@ -590,7 +595,7 @@ Example
 extends:
   template: /templates/pipelines/common-infrastructure-deploy.yaml@PipelineCommon
   parameters:
-    templates:
+    deployments:
       - path: webapps/Defra.Trade.DataMapping.API
         name: webapp-data-mapping
         type: bicep
@@ -606,7 +611,7 @@ Example
 extends:
   template: /templates/pipelines/common-infrastructure-deploy.yaml@PipelineCommon
   parameters:
-    templates:
+    deployments:
       - path: webapps/Defra.Trade.DataMapping.API
         name: webapp-data-mapping
         type: bicep

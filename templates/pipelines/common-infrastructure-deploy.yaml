@@ -3,8 +3,8 @@ parameters:
   displayName: Deploy to Development Environment from feature branch
   type: boolean
   default: false
-- name: groupedTemplates
-  displayName: Group of Infra templates
+- name: groupedDeployments
+  displayName: Group of Infra templates or scripts
   type: object
 - name: variableFiles
   displayName: Variables file list
@@ -83,40 +83,42 @@ stages:
                     azurePowershellUseCore: true
                     scriptArguments: -Environments '${{ convertToJson(parameters.environments) }}'
 
-            - ${{ each groupTemplate in parameters.groupedTemplates }}:
-              - ${{ each template in groupTemplate.templates }}:
-                - template: /templates/steps/powershell.yaml
-                  parameters:
-                    azureResourceManagerConnection: ${{ template.acrServiceConnection }}
-                    scriptsList:
-                      - ${{ if eq(template.type, 'bicep') }}:
-                        - displayName: Lint and Compile Bicep to ARM - ${{ template.name }}
+            - ${{ each groupDeployment in parameters.groupedDeployments }}:
+              - ${{ each deployment in groupDeployment.deployments }}:
+                - ${{ if ne(deployment.type, 'script') }}:
+                  - template: /templates/steps/powershell.yaml
+                    parameters:
+                      azureResourceManagerConnection: ${{ deployment.acrServiceConnection }}
+                      scriptsList:
+                        - ${{ if eq(deployment.type, 'bicep') }}:
+                          - displayName: Lint and Compile Bicep to ARM - ${{ deployment.name }}
+                            scriptRepo: PipelineCommonFiles
+                            scriptPath: templates/powershell/Build-BicepTemplate.ps1
+                            ${{ if eq(parameters.acrServiceConnection, '') }}:
+                              Type: PowerShell
+                            scriptArguments: >
+                              -TemplateName "${{ deployment.name }}"
+                              -TemplatePath "$(Pipeline.Workspace)/s/self/${{ deployment.path }}"
+                        
+                        - displayName: ARM ttk - ${{ deployment.name }}
                           scriptRepo: PipelineCommonFiles
-                          scriptPath: templates/powershell/Build-BicepTemplate.ps1
-                          ${{ if eq(parameters.acrServiceConnection, '') }}:
-                            Type: PowerShell
-                          scriptArguments: >
-                            -TemplateName "${{ template.name }}"
-                            -TemplatePath "$(Pipeline.Workspace)/s/self/${{ template.path }}"
-                      
-                      - displayName: ARM ttk - ${{ template.name }}
-                        scriptRepo: PipelineCommonFiles
-                        scriptPath: templates/powershell/Arm-ttk.ps1
-                        Type: PowerShell
-                        azurePowershellUseCore: true
-                        scriptArguments:
-                          -TemplateFile $(Build.SourcesDirectory)\self\${{ template.path }}\${{ template.name }}.json
-                
-                - template: /templates/steps/validate-deploy-arm-template.yaml
-                  parameters:
-                    scope: ${{ template.scope }}
-                    templateName: ${{ template.name }}
-                    templateType: ${{ template.type }}
-                    parameterFilePath: ${{ template.parameterFilePath }}
-                    templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
-                    location: ${{ variables.location }}
-                    resourceGroup: '${{ template.resourceGroupName }}'
-                    connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
+                          scriptPath: templates/powershell/Arm-ttk.ps1
+                          Type: PowerShell
+                          azurePowershellUseCore: true
+                          scriptArguments:
+                            -TemplateFile $(Build.SourcesDirectory)\self\${{ deployment.path }}\${{ deployment.name }}.json
+                  
+                  - template: /templates/steps/validate-deploy-arm-template.yaml
+                    parameters:
+                      scope: ${{ deployment.scope }}
+                      templateName: ${{ deployment.name }}
+                      templateType: ${{ deployment.type }}
+                      parameterFilePath: ${{ deployment.parameterFilePath }}
+                      templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                      location: ${{ variables.location }}
+                      resourceGroup: '${{ deployment.resourceGroupName }}'
+                      connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
+                # - ${{ else }}:  RUN PESTER TESTS
 
   - ${{ each env in parameters.environments }}:
     - ${{ if ne(env.useDevelopmentEnvironmentForValidationOnly, True) }}:
@@ -169,18 +171,19 @@ stages:
                         tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
                         tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
-                    - ${{ each groupTemplate in parameters.groupedTemplates }}:
-                      - ${{ each template in groupTemplate.templates }}:
-                        - template: /templates/steps/validate-deploy-arm-template.yaml
-                          parameters:
-                            scope: ${{ template.scope }}
-                            templateName: ${{ template.name }}
-                            templateType: ${{ template.type }}
-                            parameterFilePath: ${{ template.parameterFilePath }}
-                            templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
-                            location: ${{ variables.location }}
-                            resourceGroup: '${{ template.resourceGroupName }}'
-                            connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
+                    - ${{ each groupDeployment in parameters.groupedDeployments }}:
+                      - ${{ each deployment in groupDeployment.deployments }}:
+                        - ${{ if ne(deployment.type, 'script') }}:
+                          - template: /templates/steps/validate-deploy-arm-template.yaml
+                            parameters:
+                              scope: ${{ deployment.scope }}
+                              templateName: ${{ deployment.name }}
+                              templateType: ${{ deployment.type }}
+                              parameterFilePath: ${{ deployment.parameterFilePath }}
+                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                              location: ${{ variables.location }}
+                              resourceGroup: '${{ deployment.resourceGroupName }}'
+                              connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
 
               - ${{ if and(or(ne(env.developmentEnvironment, True), eq(env.forceWhatIf, True)), startsWith(coalesce(env.outputTemplateChange, 'RunWithoutPause'), 'Run')) }}:
                 - job: Run_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
@@ -204,19 +207,20 @@ stages:
                         tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
                         tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
-                    - ${{ each groupTemplate in parameters.groupedTemplates }}:
-                      - ${{ each template in groupTemplate.templates }}:
-                        - template: /templates/steps/validate-deploy-arm-template.yaml
-                          parameters:
-                            whatIf: true
-                            scope: ${{ template.scope }}
-                            templateName: ${{ template.name }}
-                            templateType: ${{ template.type }}
-                            parameterFilePath: ${{ template.parameterFilePath }}
-                            templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
-                            location: ${{ variables.location }}
-                            resourceGroup: '${{ template.resourceGroupName }}'
-                            connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
+                    - ${{ each groupDeployment in parameters.groupedDeployments }}:
+                      - ${{ each deployment in groupDeployment.deployments }}:
+                        - ${{ if ne(deployment.type, 'script') }}:
+                          - template: /templates/steps/validate-deploy-arm-template.yaml
+                            parameters:
+                              whatIf: true
+                              scope: ${{ deployment.scope }}
+                              templateName: ${{ deployment.name }}
+                              templateType: ${{ deployment.type }}
+                              parameterFilePath: ${{ deployment.parameterFilePath }}
+                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                              location: ${{ variables.location }}
+                              resourceGroup: '${{ deployment.resourceGroupName }}'
+                              connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
 
               - ${{ if and(eq(env.outputTemplateChange, 'RunWithPause'), or(ne(env.developmentEnvironment, True), env.forceWhatIf)) }}:
                 - job: Review_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
@@ -234,17 +238,17 @@ stages:
                       instructions: Please review and validate results of the WhatIf command against ARM Templates
                       onTimeout: reject
 
-              - ${{ each groupTemplate in parameters.groupedTemplates }}:
-                - ${{ if coalesce(groupTemplate.preDeployManualTasks, false) }}:
-                  - job: Pre_Deploy_Manual_Intervention_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupTemplate.name) }}
-                    displayName: Pre Deploy Manual tasks for ${{ upper(groupTemplate.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
+              - ${{ each groupDeployment in parameters.groupedDeployments }}:
+                - ${{ if coalesce(groupDeployment.preDeployManualTasks, false) }}:
+                  - job: Pre_Deploy_Manual_Intervention_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupDeployment.name) }}
+                    displayName: Pre Deploy Manual tasks for ${{ upper(groupDeployment.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
                     pool: server
                     dependsOn:
-                      - ${{ if ne(groupTemplate.dependsOnGroupedTemplates, '') }}:
-                        - ${{ each dependsOnInstance in groupTemplate.dependsOnGroupedTemplates }}:
+                      - ${{ if ne(groupDeployment.dependsOnGroupedDeployments, '') }}:
+                        - ${{ each dependsOnInstance in groupDeployment.dependsOnGroupedDeployments }}:
                           - Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(dependsOnInstance) }}
                     steps:
-                    - ${{ each manualTask in groupTemplate.preDeployManualTasks}}:
+                    - ${{ each manualTask in groupDeployment.preDeployManualTasks}}:
                       - task: ManualValidation@0
                         displayName: ${{ manualTask.displayName }}
                         inputs:
@@ -252,8 +256,8 @@ stages:
                           instructions: ${{ manualTask.instructions }}
                           onTimeout: reject
 
-                - deployment: Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupTemplate.name) }}
-                  displayName: Deploy ${{ upper(groupTemplate.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
+                - deployment: Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupDeployment.name) }}
+                  displayName: Deploy ${{ upper(groupDeployment.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
                   dependsOn:
                     - ${{ if and(ne(env.developmentEnvironment, True), eq(coalesce(env.enableTemplateValidationBeforeDeployment, false), true)) }}:
                       - Template_Dry_Run_${{ upper(env.name) }}_${{ upper(region) }}
@@ -261,13 +265,13 @@ stages:
                       - Run_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
                     - ${{ if and(eq(env.outputTemplateChange, 'RunWithPause'), or(ne(env.developmentEnvironment, True), eq(env.forceWhatIf, True))) }}:
                       - Review_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
-                    - ${{ if coalesce(groupTemplate.preDeployManualTasks, false) }}:
-                      - Pre_Deploy_Manual_Intervention_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupTemplate.name) }}
-                    - ${{ if ne(groupTemplate.dependsOnGroupedTemplates, '') }}:
-                      - ${{ each dependsOnInstance in groupTemplate.dependsOnGroupedTemplates }}:
+                    - ${{ if coalesce(groupDeployment.preDeployManualTasks, false) }}:
+                      - Pre_Deploy_Manual_Intervention_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupDeployment.name) }}
+                    - ${{ if ne(groupDeployment.dependsOnGroupedDeployments, '') }}:
+                      - ${{ each dependsOnInstance in groupDeployment.dependsOnGroupedDeployments }}:
                         - Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(dependsOnInstance) }}
                     - ${{ if and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(env.azureRegions.deployPrimaryAndSecondaryInParallel, true), false)) }}:
-                      - ${{ each dependentGroupedTemplate in parameters.groupedTemplates }}:
+                      - ${{ each dependentGroupedTemplate in parameters.groupedDeployments }}:
                         - Deploy_${{ upper(env.name) }}_${{ upper(env.azureRegions.primary) }}_${{ upper(dependentGroupedTemplate.name) }}
                   workspace:
                     clean: all
@@ -291,34 +295,50 @@ stages:
                               tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
                               tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
-                          - ${{ each template in groupTemplate.templates }}:
-                            - ${{ if or(eq(env.azureRegions.primary, region), and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(template.isDeployToSecondaryRegions, true), true))) }}:
-                              - ${{ if coalesce(template.preDeployScriptsList, False) }}:
+                          - ${{ each deployment in groupDeployment.deployments }}:
+                            - ${{ if or(eq(env.azureRegions.primary, region), and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(deployment.isDeployToSecondaryRegions, true), true))) }}:
+                              - ${{ if ne(deployment.type, 'script') }}:
+                                - ${{ if coalesce(deployment.preDeployScriptsList, False) }}:
+                                  - template: /templates/steps/powershell.yaml
+                                    parameters:
+                                      azureResourceManagerConnection: "${{ coalesce(variables[deployment.postDeployServiceConnectionVariableName], variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}"
+                                      ${{ if ne(env.keyVaultList, '') }}:
+                                        keyVaultList: ${{ env.keyVaultList }}
+                                      scriptsList: ${{ deployment.preDeployScriptsList }}
+                                      variables: ${{ variables }}
+
+                                - template: /templates/steps/validate-deploy-arm-template.yaml
+                                  parameters:
+                                    deploy: true
+                                    scope: ${{ deployment.scope }}
+                                    templateName: ${{ deployment.name }}
+                                    templateType: ${{ deployment.type }}
+                                    parameterFilePath: ${{ deployment.parameterFilePath }}
+                                    templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                                    location: ${{ variables.location }}
+                                    resourceGroup: '${{ deployment.resourceGroupName }}'
+                                    connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
+
+                                - ${{ if coalesce(deployment.postDeployScriptsList, False) }}:
+                                  - template: /templates/steps/powershell.yaml
+                                    parameters:
+                                      azureResourceManagerConnection: "${{ coalesce(variables[deployment.postDeployServiceConnectionVariableName], variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}"
+                                      ${{ if ne(env.keyVaultList, '') }}:
+                                        keyVaultList: ${{ env.keyVaultList }}
+                                      scriptsList: ${{ deployment.postDeployScriptsList }}
+                                      variables: ${{ variables }}
+                              - ${{ if eq(deployment.type, 'script') }}:
                                 - template: /templates/steps/powershell.yaml
                                   parameters:
-                                    azureResourceManagerConnection: "${{ coalesce(variables[template.postDeployServiceConnectionVariableName], variables[template.serviceConnectionVariableName], env.serviceConnection) }}"
+                                    azureResourceManagerConnection: "${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}"
                                     ${{ if ne(env.keyVaultList, '') }}:
                                       keyVaultList: ${{ env.keyVaultList }}
-                                    scriptsList: ${{ template.preDeployScriptsList }}
-                                    variables: ${{ variables }}
-
-                              - template: /templates/steps/validate-deploy-arm-template.yaml
-                                parameters:
-                                  deploy: true
-                                  scope: ${{ template.scope }}
-                                  templateName: ${{ template.name }}
-                                  templateType: ${{ template.type }}
-                                  parameterFilePath: ${{ template.parameterFilePath }}
-                                  templatePath: $(Build.SourcesDirectory)/self/${{ template.path }}
-                                  location: ${{ variables.location }}
-                                  resourceGroup: '${{ template.resourceGroupName }}'
-                                  connection: ${{ coalesce(variables[template.serviceConnectionVariableName], env.serviceConnection) }}
-
-                              - ${{ if coalesce(template.postDeployScriptsList, False) }}:
-                                - template: /templates/steps/powershell.yaml
-                                  parameters:
-                                    azureResourceManagerConnection: "${{ coalesce(variables[template.postDeployServiceConnectionVariableName], variables[template.serviceConnectionVariableName], env.serviceConnection) }}"
-                                    ${{ if ne(env.keyVaultList, '') }}:
-                                      keyVaultList: ${{ env.keyVaultList }}
-                                    scriptsList: ${{ template.postDeployScriptsList }}
+                                    scriptsList: 
+                                      - displayName: ${{ deployment.name }}
+                                        Type: ${{ deployment.scriptType }}
+                                        scriptPath: ${{ deployment.path }}
+                                        scriptRepo: ${{ deployment.scriptRepo }}
+                                        inlineScript: ${{ deployment.inlineScript }}
+                                        azurePowershellUseCore: ${{ deployment.azurePowershellUseCore }}
+                                        scriptArguments: ${{ deployment.scriptArguments }}
                                     variables: ${{ variables }}

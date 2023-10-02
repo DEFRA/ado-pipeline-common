@@ -6,6 +6,7 @@ resources:
       name: DEFRA/ado-pipeline-common
       endpoint: DEFRA
       type: github
+      ref: ${{ variables['Build.SourceBranch'] }}
 
 parameters:
   - name: deployFromFeature
@@ -53,9 +54,9 @@ extends:
             - WestEurope
         deploymentBranches:
           - "*"
-    groupedTemplates:
+    groupedDeployments:
       - name: Deploy_ARM_For_IntegrationTests
-        templates:
+        deployments:
           - name: infra-inttest-resource
             path: tests/arm-templates
             parameterFilePath: tests/arm-templates/parameters
@@ -72,6 +73,12 @@ extends:
               commonModulesToLoad:
                 - name: 'GetHelloScript'
                   version: '1.0.3'
+          - name: 'Script deployment'
+            type: 'script'
+            scriptType: PowerShell
+            isDeployToSecondaryRegions: false
+            inlineScript: >
+              'Write-Host "Hello World!"'
           - name: infra-inttest-subscription-resource
             path: tests/bicep-templates
             type: bicep
