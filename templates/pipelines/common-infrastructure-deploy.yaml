@@ -335,9 +335,9 @@ stages:
                                       keyVaultList: ${{ env.keyVaultList }}
                                     scriptsList: 
                                       - displayName: ${{ deployment.name }}
-                                        scriptRepo: ${{ deployment.scriptRepo }}
-                                        scriptPath: ${{ deployment.scriptPath }}
                                         Type: ${{ deployment.scriptType }}
+                                        scriptPath: ${{ deployment.path }}
+                                        scriptRepo: ${{ deployment.scriptRepo }}
                                         inlineScript: ${{ deployment.inlineScript }}
                                         azurePowershellUseCore: ${{ deployment.azurePowershellUseCore }}
                                         scriptArguments: ${{ deployment.scriptArguments }}
