@@ -43,12 +43,13 @@ Write-Debug "${functionName}:ProjectPath=$ProjectPath"
 
 try {
     $appVersion = ""
+    #Assume version 0.0.0 for initial main branch
     $oldAppVersion = "0.0.0"
     $exitCode = 0
     $defaultBranchName = "master"
     $versionFilePath = "./VERSION"
     try {
-
+        git fetch origin
         $masterBranchExists = git ls-remote --heads origin master
         if ($null -eq $masterBranchExists) {
             $mainBranchExists = git ls-remote --heads origin main
@@ -67,50 +68,26 @@ try {
     #If custom VERSION file exists, read version number from file
     if (Test-Path $versionFilePath -PathType Leaf) {
         $appVersion = (Get-Content $versionFilePath).Trim()
-        try {
-            git fetch --all
-            git checkout -b devops origin/$defaultBranchName
-            if (Test-Path $versionFilePath -PathType Leaf) {
-                $oldAppVersion = (Get-Content $versionFilePath).Trim()
-            }
-        }
-        catch {
-            Write-Debug "Error switching branch "
-            $exitCode = -2
+        git checkout -b devops origin/$defaultBranchName
+        if (Test-Path $versionFilePath -PathType Leaf) {
+            $oldAppVersion = (Get-Content $versionFilePath).Trim()
         }
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
         $xml = [Xml] (Get-Content $ProjectPath )
-        $appVersion = $xml.Project.PropertyGroup.Version
-        
-        try {
-            git fetch --all
-            git checkout -b devops origin/$defaultBranchName
-            if (Test-Path $ProjectPath -PathType Leaf) {
-                $xml = [Xml] (Get-Content $ProjectPath )
-                $oldAppVersion = $xml.Project.PropertyGroup.Version
-            }
-        }
-        catch {
-            Write-Debug "Error switching branch "
-            $exitCode = -2
-        }
-        
+        $appVersion = $xml.Project.PropertyGroup.Version        
+        git checkout -b devops origin/$defaultBranchName
+        if (Test-Path $ProjectPath -PathType Leaf) {
+            $xml = [Xml] (Get-Content $ProjectPath )
+            $oldAppVersion = $xml.Project.PropertyGroup.Version
+        }        
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'nodejs' ) {
         $appVersion = node -p "require('$ProjectPath').version"   
-
-        try {
-            git fetch --all
-            git checkout -b devops origin/$defaultBranchName
-            if (Test-Path $ProjectPath -PathType Leaf) {
-                $oldAppVersion = node -p "require('$ProjectPath').version" 
-            }
-        }
-        catch {
-            Write-Debug "Error switching branch "
-            $exitCode = -2
-        }             
+        git checkout -b devops origin/$defaultBranchName
+        if (Test-Path $ProjectPath -PathType Leaf) {
+            $oldAppVersion = node -p "require('$ProjectPath').version" 
+        }         
     }
     else {
         Write-Debug "${functionName}: Error identifying version"     
