@@ -47,8 +47,8 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AppFrameworkType=$AppFrameworkType"
 Write-Debug "${functionName}:ProjectPath=$ProjectPath"
-Write-Debug "${functionName}:DefaultBranchName=$DefaultBranchName"
-Write-Debug "${functionName}:IsMainBranchBuild=$IsMainBranchBuild"
+Write-Output "${functionName}:DefaultBranchName=$DefaultBranchName"
+Write-Output "${functionName}:IsMainBranchBuild=$IsMainBranchBuild"
 
 try {
     $appVersion = ""
@@ -57,6 +57,7 @@ try {
     $exitCode = 0
     $versionFilePath = "./VERSION"
     $IsMainBranchBuild = [System.Convert]::ToBoolean($IsMainBranchBuild)
+    Write-Output "${functionName}:IsMainBranchBuild=$IsMainBranchBuild"
     try {
         git fetch origin
         if ("" -eq $DefaultBranchName) {
