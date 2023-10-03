@@ -13,6 +13,7 @@ steps:
     SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
     organization: ${{ parameters.sonarConfig.organization }}
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
+      scannerMode: MSBuild
       projectKey: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
       projectName: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
       projectVersion: ${{ parameters.appVersion}}
