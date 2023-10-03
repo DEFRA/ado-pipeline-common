@@ -13,8 +13,11 @@ Mandatory. Container image Version
 Mandatory. Container image Cache Path on the build agent
 .PARAMETER Command
 Optional. Command to run, Build or Push or Default = BuildAndPush  
+.PARAMETER PSHelperDirectory
+Mandatory. Directory Path of PSHelper module
+
 .EXAMPLE
-.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> 
+.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory>
 #> 
 
 [CmdletBinding()]
@@ -26,7 +29,9 @@ param(
     [string] $ImageVersion,
     [Parameter(Mandatory)]
     [string] $ImageCachePath,    
-    [string] $Command = "BuildAndPush"
+    [string] $Command = "BuildAndPush",
+    [Parameter(Mandatory)]
+    [string]$PSHelperDirectory
 )
 
 Set-StrictMode -Version 3.0
@@ -52,9 +57,11 @@ Write-Debug "${functionName}:AcrRepoName=$AcrRepoName"
 Write-Debug "${functionName}:ImageVersion=$ImageVersion"
 Write-Debug "${functionName}:ImageCachePath=$ImageCachePath"
 Write-Debug "${functionName}:Command=$Command"
-
+Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
+    Import-Module $PSHelperDirectory -Force
+
     $tagName = $AcrRepoName + ":" + $ImageVersion
     $AcrtagName = $AcrName + ".azurecr.io/image/" + $AcrRepoName + ":" + $ImageVersion
     Write-Debug "${functionName}:Docker Image=$tagName"
@@ -67,28 +74,28 @@ try {
     $exitCode = 0
     
     if ( $Command.ToLower() -eq 'build' ) {
-        docker buildx build -t $tagName --platform=linux/arm64 .  
+        Invoke-CommandLine -Command "docker buildx build -t $tagName --platform=linux/arm64 ."
         # Save the image for future jobs
-        docker save -o $dockerCacheFilePath $tagName        
+        Invoke-CommandLine -Command "docker save -o $dockerCacheFilePath $tagName"      
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
         # Load image if exists in cache
         if (Test-Path $dockerCacheFilePath -PathType Leaf) {
-            docker load -i $dockerCacheFilePath            
+            Invoke-CommandLine -Command "docker load -i $dockerCacheFilePath"        
         }
         else {
-            docker buildx build -t $tagName --platform=linux/arm64 .  
-            docker save -o $dockerCacheFilePath $tagName            
+            Invoke-CommandLine -Command "docker buildx build -t $tagName --platform=linux/arm64 ."  
+             Invoke-CommandLine -Command "docker save -o $dockerCacheFilePath $tagName"          
         }
-        az acr login --name $AcrName
-        docker tag $tagName $AcrtagName          
-        docker push $AcrtagName   
+        Invoke-CommandLine -Command "az acr login --name $AcrName"
+        Invoke-CommandLine -Command "docker tag $tagName $AcrtagName"          
+        Invoke-CommandLine -Command "docker push $AcrtagName"   
     }
     else {
-        docker buildx build -t $tagName --platform=linux/arm64 .
-        docker save -o $dockerCacheFilePath $tagName
-        az acr login --name $AcrName  
-        docker push $AcrtagName    
+        Invoke-CommandLine -Command "docker buildx build -t $tagName --platform=linux/arm64 ."
+        Invoke-CommandLine -Command "docker save -o $dockerCacheFilePath $tagName"
+        Invoke-CommandLine -Command "az acr login --name $AcrName"
+        Invoke-CommandLine -Command "docker push $AcrtagName"    
     }    
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.complete result=Failed;]DONE"

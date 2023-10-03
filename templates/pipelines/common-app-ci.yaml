@@ -131,7 +131,7 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -Command "lint"
+              arguments: -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'   
@@ -169,7 +169,7 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
-              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' -Command "build"
+              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
@@ -179,7 +179,7 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build"
+              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
