@@ -51,35 +51,37 @@ Write-Output "${functionName}:DefaultBranchName=$DefaultBranchName"
 Write-Output "${functionName}:IsMainBranchBuild=$IsMainBranchBuild"
 
 try {
+
+    [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $WorkingDirectory -ChildPath "templates/powershell/modules/ps-helpers"
+    Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
+    Import-Module $moduleDir.FullName -Force
+
     $appVersion = ""
     #Assume version 0.0.0 for initial main branch
     $oldAppVersion = "0.0.0"
     $exitCode = 0
     $versionFilePath = "./VERSION"
-    try {
-        git fetch origin
-        if ("" -eq $DefaultBranchName) {
-            $masterBranchExists = git ls-remote --heads origin master
-            if ($null -eq $masterBranchExists) {
-                $mainBranchExists = git ls-remote --heads origin main
-                if ($null -eq $mainBranchExists) {
-                    $exitCode = -2
-                }
-                else {
-                    $DefaultBranchName = "main"
-                }
+
+    Invoke-CommandLine -Command "git fetch origin"
+        
+    if ("" -eq $DefaultBranchName) {
+        $masterBranchExists = Invoke-CommandLine -Command "git ls-remote --heads origin master"
+        if ($null -eq $masterBranchExists) {
+            $mainBranchExists = Invoke-CommandLine -Command "git ls-remote --heads origin main"
+            if ($null -eq $mainBranchExists) {
+                $exitCode = -2
+            }
+            else {
+                $DefaultBranchName = "main"
             }
         }
     }
-    catch {
-        Write-Debug "Error reading branch "
-        $exitCode = -2
-    }
+    
     #If custom VERSION file exists, read version number from file
     if (Test-Path $versionFilePath -PathType Leaf) {
         $appVersion = (Get-Content $versionFilePath).Trim()
         if ( $IsMainBranchBuild -eq "False") {
-            git checkout -b devops origin/$DefaultBranchName
+            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $versionFilePath -PathType Leaf) {
                 $oldAppVersion = (Get-Content $versionFilePath).Trim()
             }
@@ -89,7 +91,7 @@ try {
         $xml = [Xml] (Get-Content $ProjectPath )
         $appVersion = $xml.Project.PropertyGroup.Version
         if ($IsMainBranchBuild -eq "False") {      
-            git checkout -b devops origin/$DefaultBranchName
+            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $xml = [Xml] (Get-Content $ProjectPath )
                 $oldAppVersion = $xml.Project.PropertyGroup.Version
@@ -99,7 +101,7 @@ try {
     elseif ( $AppFrameworkType.ToLower() -eq 'nodejs' ) {
         $appVersion = node -p "require('$ProjectPath').version"
         if ($IsMainBranchBuild -eq "False") {  
-            git checkout -b devops origin/$DefaultBranchName
+            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $oldAppVersion = node -p "require('$ProjectPath').version" 
             }        
