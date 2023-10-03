@@ -56,7 +56,6 @@ try {
     $oldAppVersion = "0.0.0"
     $exitCode = 0
     $versionFilePath = "./VERSION"
-    Write-Output "${functionName}:IsMainBranchBuild=$IsMainBranchBuild"
     try {
         git fetch origin
         if ("" -eq $DefaultBranchName) {
@@ -99,13 +98,10 @@ try {
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'nodejs' ) {
         $appVersion = node -p "require('$ProjectPath').version"
-        if ($IsMainBranchBuild -eq "False") {
-            Write-Output "${functionName}:$DefaultBranchName"    
+        if ($IsMainBranchBuild -eq "False") {  
             git checkout -b devops origin/$DefaultBranchName
             if (Test-Path $ProjectPath -PathType Leaf) {
-                 
                 $oldAppVersion = node -p "require('$ProjectPath').version" 
-                Write-Output "${functionName}:$oldAppVersion" 
             }        
         } 
     }

@@ -79,10 +79,6 @@ stages:
           - checkout: PipelineCommon
             path: s/PipelineCommon
 
-          - bash: 'env | sort'
-            displayName: 'env variables'
-            enabled: true
-
           - task: PowerShell@2
             inputs:
               targetType: filePath
