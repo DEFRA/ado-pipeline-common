@@ -57,6 +57,7 @@ variables:
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 stages:         
   - stage: Application_CI
+    displayName: 'Application CI'
     ${{ if ne(parameters.privateAgentName, '') }}:
       pool:
         name: ${{ parameters.privateAgentName }}
@@ -64,7 +65,8 @@ stages:
       pool:
         vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
     jobs:
-      - job: Initialise        
+      - job: Initialise
+        displayName: 'Initialise'     
         steps:
           - checkout: self
             path: s/source
@@ -82,7 +84,8 @@ stages:
             displayName: GetAppVersion            
             name: GetAppVersion
 
-      - job: Build  
+      - job: Build
+        displayName: 'Build'     
         dependsOn: Initialise
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
@@ -126,7 +129,8 @@ stages:
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'   
 
-      - job: BuildImage  
+      - job: BuildImage
+        displayName: 'Build Image'
         dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
@@ -182,7 +186,8 @@ stages:
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
-      - job: PublishArtifacts  
+      - job: PublishArtifacts
+        displayName: 'Publish Artifacts'  
         dependsOn: [Initialise,Build,BuildImage]
         condition: and(succeeded(), ${{ or(eq( variables.IsMainBranch , true),eq( variables.IsPrBuild , true),eq( parameters.deployFromFeature , true)) }} )
         variables:
@@ -240,6 +245,7 @@ stages:
     - ${{ each deploymentEnv in parameters.environments }}:
       - ${{ if or( eq(variables.IsMainBranch, true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) }}:
         - stage: Application_CD_${{ deploymentEnv.name }}
+          displayName: 'Application CD ${{ deploymentEnv.name }}'
           ${{ if ne(deploymentEnv.privateAgentName, '') }}:
             pool:
               name: ${{ deploymentEnv.privateAgentName }}
@@ -248,6 +254,7 @@ stages:
               vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
           jobs:
             - deployment: PublishTo${{ deploymentEnv.name }}
+              displayName: 'Publish To ${{ deploymentEnv.name }}'
               environment: ${{ deploymentEnv.name }}
               strategy:
                 runOnce:
