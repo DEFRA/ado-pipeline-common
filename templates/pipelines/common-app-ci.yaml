@@ -236,25 +236,25 @@ stages:
               artifact: helm
             
 
-  - ${{ if or(eq(variables.IsMainBranch, true),eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true) ) }}:
-    - ${{ each deploymentEnv in parameters.environments }}:
-      #- ${{ if or( eq(variables.IsMainBranch, true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) }}:
-      - stage: Application_CD_${{ deploymentEnv.name }}
-        ${{ if ne(deploymentEnv.privateAgentName, '') }}:
-          pool:
-            name: ${{ deploymentEnv.privateAgentName }}
-        ${{ else }}:
-          pool:
-            vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
-        jobs:
-          - deployment: PublishTo${{ deploymentEnv.name }}
-            environment: ${{ deploymentEnv.name }}
-            strategy:
-              runOnce:
-                deploy:          
-                  steps:
-                    - template: /templates/steps/common-app-cd.yaml
-                      parameters:
-                          environmentObj: ${{ deploymentEnv }}
-                          appBuildConfig: ${{ parameters.appBuildConfig }}
-                          appDeployConfig: ${{ parameters.appDeployConfig }}
+  #- ${{ if or(eq(variables.IsMainBranch, true),eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true) ) }}:
+  - ${{ each deploymentEnv in parameters.environments }}:
+    #- ${{ if or( eq(variables.IsMainBranch, true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) }}:
+    - stage: Application_CD_${{ deploymentEnv.name }}
+      ${{ if ne(deploymentEnv.privateAgentName, '') }}:
+        pool:
+          name: ${{ deploymentEnv.privateAgentName }}
+      ${{ else }}:
+        pool:
+          vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+      jobs:
+        - deployment: PublishTo${{ deploymentEnv.name }}
+          environment: ${{ deploymentEnv.name }}
+          strategy:
+            runOnce:
+              deploy:          
+                steps:
+                  - template: /templates/steps/common-app-cd.yaml
+                    parameters:
+                        environmentObj: ${{ deploymentEnv }}
+                        appBuildConfig: ${{ parameters.appBuildConfig }}
+                        appDeployConfig: ${{ parameters.appDeployConfig }}
