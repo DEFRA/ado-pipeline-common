@@ -20,6 +20,12 @@ steps:
   - checkout: PipelineCommon
     path: s/PipelineCommon
 
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download App Version' 
+    inputs:
+      artifactName: 'appversion'
+      targetPath: $(System.ArtifactsDirectory)/version
+
   - task: PowerShell@2
     displayName: 'Get App Version' 
     name: GetAppVersion   
@@ -31,21 +37,19 @@ steps:
       pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'  
 
-  - task: Cache@2
-    displayName: Restore Cached docker image
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download Docker image' 
     inputs:
-      key: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(GetAppVersion.appVersion)" | cache'
-      path: $(Pipeline.Workspace)/docker
-      cacheHitVar: CACHE_RESTORED  
+      artifactName: 'docker'
+      targetPath: '$(Pipeline.Workspace)/docker'
 
-  - task: Cache@2
-    displayName: Restore Cached helm chart
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download Helm Chart' 
     inputs:
-      key: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(GetAppVersion.appVersion)" | cache'
-      path: $(Pipeline.Workspace)/helm
-      cacheHitVar: CACHE_RESTORED  
+      artifactName: 'helm'
+      targetPath: '$(Pipeline.Workspace)/helm'
 
-  - ${{ if ne(parameters.appDeployConfig, '') }}:
+  - ${{ if and(ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filepath, '')) }}:
     - task: AzureAppConfigurationPush@6
       displayName: 'Import Azure App Configuration'
       inputs:

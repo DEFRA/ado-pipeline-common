@@ -20,7 +20,7 @@ steps:
     testDirectory: '$(Build.SourcesDirectory)'
     ${{ if ne(parameters.manifestPath, '') }}:
       targetFile: '${{ parameters.manifestPath }}'
-    failOnIssues: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
+    failOnIssues: true
     monitorOnBuild: false
     projectName: '${{ parameters.acrRepoName }}'
     organization: '${{ parameters.snykOrganizationName }}'
