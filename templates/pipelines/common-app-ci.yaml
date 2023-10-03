@@ -51,8 +51,10 @@ parameters:
   
 variables:
 - group: NodeJSAppBuild
-  IsMainBranch: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
-  IsPrBuild: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
+- name: IsMainBranch
+  value: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
+- name: IsPrBuild
+  value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 stages:         
   - stage: Application_CI
     ${{ if ne(parameters.privateAgentName, '') }}:
