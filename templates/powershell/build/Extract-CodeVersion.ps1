@@ -10,10 +10,12 @@ Mandatory. relative project file path. For DotNet csproj file path, For NodeJS p
 .PARAMETER DefaultBranchName
 Optional. Default Branch. master or main
 .PARAMETER IsMainBranchBuild
-Mandatory. True if the build triggered for main branch, else false.
+Mandatory. True if the build triggered for main branch, else False.
+.PARAMETER PSHelperDirectory
+Mandatory. Directory Path of PSHelper module
 
 .EXAMPLE
-.\Extract-CodeVersion.ps1  -AppFrameworkType <AppFrameworkType> -ProjectPath <ProjectPath> -DefaultBranchName <DefaultBranchName> -IsMainBranchBuild <IsMainBranchBuild>
+.\Extract-CodeVersion.ps1  -AppFrameworkType <AppFrameworkType> -ProjectPath <ProjectPath> -DefaultBranchName <DefaultBranchName> -IsMainBranchBuild <IsMainBranchBuild> -PSHelperDirectory <PSHelperDirectory>
 #> 
 
 [CmdletBinding()]
@@ -24,7 +26,9 @@ param(
     [string] $ProjectPath,
     [string] $DefaultBranchName = "",
     [Parameter(Mandatory)]
-    [string] $IsMainBranchBuild
+    [string] $IsMainBranchBuild,
+    [Parameter(Mandatory)]
+    [string]$PSHelperDirectory
 )
 
 Set-StrictMode -Version 3.0
@@ -49,16 +53,13 @@ Write-Debug "${functionName}:AppFrameworkType=$AppFrameworkType"
 Write-Debug "${functionName}:ProjectPath=$ProjectPath"
 Write-Output "${functionName}:DefaultBranchName=$DefaultBranchName"
 Write-Output "${functionName}:IsMainBranchBuild=$IsMainBranchBuild"
+Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
-
-    [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $WorkingDirectory -ChildPath "templates/powershell/modules/ps-helpers"
-    Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
-    Import-Module $moduleDir.FullName -Force
-
-    $appVersion = ""
-    #Assume version 0.0.0 for initial main branch
-    $oldAppVersion = "0.0.0"
+    
+    Import-Module $PSHelperDirectory -Force
+    $appVersion = ""    
+    $oldAppVersion = "0.0.0" #Assume version 0.0.0 for initial main branch
     $exitCode = 0
     $versionFilePath = "./VERSION"
 

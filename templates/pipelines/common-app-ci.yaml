@@ -60,6 +60,8 @@ variables:
   value: ${{ eq(variables['Build.SourceBranch'], join('refs/heads/',variables.DefaultBranch)) }}
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
+- name: PSHelperDirectory
+  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
 stages:         
   - stage: Application_CI
     displayName: 'Application CI'
@@ -83,7 +85,7 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Extract-CodeVersion.ps1'
-              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -DefaultBranchName ${{ variables.DefaultBranch }} -IsMainBranchBuild ${{ variables.IsMainBranchBuild }}
+              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -DefaultBranchName ${{ variables.DefaultBranch }} -IsMainBranchBuild ${{ variables.IsMainBranchBuild }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: GetAppVersion            
