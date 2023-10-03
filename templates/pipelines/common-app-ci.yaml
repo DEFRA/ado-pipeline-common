@@ -51,8 +51,13 @@ parameters:
   
 variables:
 - group: NodeJSAppBuild
-- name: IsMainBranch
-  value: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
+- name: DefaultBranch
+  ${{ if or(eq(parameters.appBuildConfig.defaultBranch, ''),eq(parameters.appBuildConfig.defaultBranch, 'main')) }}:
+    value: main
+  ${{ else }}:
+    value: master
+- name: IsMainBranchBuild
+  value: ${{ eq(variables['Build.SourceBranch'], join('refs/heads/',variables.DefaultBranch)) }}
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 stages:         
@@ -78,7 +83,7 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Extract-CodeVersion.ps1'
-              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}"
+              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -DefaultBranchName ${{ variables.DefaultBranch }} -IsMainBranchBuild ${{ variables.IsMainBranchBuild }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: GetAppVersion            
