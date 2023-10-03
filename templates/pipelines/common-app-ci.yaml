@@ -81,8 +81,8 @@ stages:
 
           - bash: 'env | sort'
             displayName: 'env variables'
-            enabled: false
-            
+            enabled: true
+
           - task: PowerShell@2
             inputs:
               targetType: filePath
