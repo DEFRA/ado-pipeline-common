@@ -16,38 +16,19 @@ parameters:
   default: '' 
 - name: appBuildConfig
   displayName: Details to build the app
-  type: object
-  default: 
-    appFrameworkType: 'dotnet'
-    frameworkVersion: '6.x'      
-    projectPath: './ProjectName/ProjectName.csproj'
-    testProjectPath: './ProjectName.Tests/ProjectName.Tests.csproj'
-    manifestPath: "./obj/FFCDemoPaymentService/project.assets.json"
-    imageRepoName: 'ProjectRepoName'     
+  type: object 
 - name: appTestConfig
   displayName: Details to test the app
   type: object
-  default: 
-    testFilePath: './docker-compose.test.yaml'
 - name: snykConfig
   displayName: Details for Snyk Service settings
   type: object
-  default: 
-    snykConnection: 'AZD-ADP-SNYK'
-    snykOrganizationName: 'defra-adp'
-    failOnThreshold: 'high'
 - name: npmConfig
   displayName: Details for NPM settings
   type: object
-  default: 
-    failOnThreshold: 'moderate'
 - name: sonarConfig
   displayName: Details for Sonar Cloud Analysis
   type: object
-  default: 
-    sonarConnection: 'DEFRA SonarCloud'
-    organization: defra
-    projectKeyPrefix: 'adp-'
 - name: appDeployConfig
   displayName: Details to deploy the app
   type: object
