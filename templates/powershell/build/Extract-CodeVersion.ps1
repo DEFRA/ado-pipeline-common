@@ -24,7 +24,7 @@ param(
     [string] $ProjectPath,
     [string] $DefaultBranchName = "",
     [Parameter(Mandatory)]
-    [boolean] $IsMainBranchBuild
+    [string] $IsMainBranchBuild
 )
 
 Set-StrictMode -Version 3.0
@@ -56,6 +56,7 @@ try {
     $oldAppVersion = "0.0.0"
     $exitCode = 0
     $versionFilePath = "./VERSION"
+    $IsMainBranchBuild = Convert.ToBoolean(IsMainBranchBuild)
     try {
         git fetch origin
         if ("" -eq $DefaultBranchName) {
