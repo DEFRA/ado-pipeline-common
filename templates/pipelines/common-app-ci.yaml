@@ -1,6 +1,9 @@
 parameters:
 - name: projectName
   type: string
+- name: deployFromFeature
+  type: boolean
+  default: false  
 - name: agentImage
   type: string
   default: 'ubuntu-latest'
@@ -48,7 +51,8 @@ parameters:
   
 variables:
 - group: NodeJSAppBuild
-
+- IsMainBranch: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
+- IsPrBuild: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 stages:         
   - stage: Application_CI
     ${{ if ne(parameters.privateAgentName, '') }}:
@@ -178,7 +182,7 @@ stages:
 
       - job: PublishArtifacts  
         dependsOn: [Initialise,Build,BuildImage]
-        #condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+        condition: ${{ and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'),eq(variables['Build.Reason'], 'PullRequest'),eq(parameters.deployFromFeature,true))) }}
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
@@ -230,23 +234,25 @@ stages:
               artifact: helm
             
 
-  - ${{ each deploymentEnv in parameters.environments }}:
-    - stage: Application_CD_${{ deploymentEnv.name }}
-      ${{ if ne(deploymentEnv.privateAgentName, '') }}:
-        pool:
-          name: ${{ deploymentEnv.privateAgentName }}
-      ${{ else }}:
-        pool:
-          vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
-      jobs:
-        - deployment: PublishTo${{ deploymentEnv.name }}
-          environment: ${{ deploymentEnv.name }}
-          strategy:
-            runOnce:
-              deploy:          
-                steps:
-                  - template: /templates/steps/common-app-cd.yaml
-                    parameters:
-                        environmentObj: ${{ deploymentEnv }}
-                        appBuildConfig: ${{ parameters.appBuildConfig }}
-                        appDeployConfig: ${{ parameters.appDeployConfig }}
+  - ${{ if or(eq(variables.IsMainBranch, true),eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true) ) }}:
+    - ${{ each deploymentEnv in parameters.environments }}:
+      - ${{ if or( eq(variables.IsMainBranch, true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) }}:
+        - stage: Application_CD_${{ deploymentEnv.name }}
+          ${{ if ne(deploymentEnv.privateAgentName, '') }}:
+            pool:
+              name: ${{ deploymentEnv.privateAgentName }}
+          ${{ else }}:
+            pool:
+              vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+          jobs:
+            - deployment: PublishTo${{ deploymentEnv.name }}
+              environment: ${{ deploymentEnv.name }}
+              strategy:
+                runOnce:
+                  deploy:          
+                    steps:
+                      - template: /templates/steps/common-app-cd.yaml
+                        parameters:
+                            environmentObj: ${{ deploymentEnv }}
+                            appBuildConfig: ${{ parameters.appBuildConfig }}
+                            appDeployConfig: ${{ parameters.appDeployConfig }}
