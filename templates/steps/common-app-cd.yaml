@@ -12,7 +12,8 @@ parameters:
   displayName: Details to deploy the app
   type: object
   default: null
-        
+- name: PSHelperDirectory
+  type: string  
 steps:
 
   - checkout: Self
@@ -64,7 +65,7 @@ steps:
       scriptType: pscore
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
-      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(GetAppVersion.appVersion) -ImageCachePath $(Pipeline.Workspace)/docker -Command "push" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(GetAppVersion.appVersion) -ImageCachePath $(Pipeline.Workspace)/docker -Command "push" -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
       addSpnToEnvironment: true          
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'
@@ -76,7 +77,7 @@ steps:
       scriptType: pscore
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion $(GetAppVersion.appVersion) -ChartCachePath $(Pipeline.Workspace)/helm -Command "publish" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion $(GetAppVersion.appVersion) -ChartCachePath $(Pipeline.Workspace)/helm -Command "publish" -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
       addSpnToEnvironment: true          
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'

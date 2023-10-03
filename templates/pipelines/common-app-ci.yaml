@@ -272,3 +272,4 @@ stages:
                             environmentObj: ${{ deploymentEnv }}
                             appBuildConfig: ${{ parameters.appBuildConfig }}
                             appDeployConfig: ${{ parameters.appDeployConfig }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
