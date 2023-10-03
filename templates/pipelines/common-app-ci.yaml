@@ -184,7 +184,7 @@ stages:
 
       - job: PublishArtifacts  
         dependsOn: [Initialise,Build,BuildImage]
-        condition: ${{ and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'),eq(variables['Build.Reason'], 'PullRequest'),eq(parameters.deployFromFeature,true))) }}
+        condition: and(succeeded(), or(eq(variables.IsMainBranch, true),eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)))
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
