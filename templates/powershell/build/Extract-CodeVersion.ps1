@@ -68,7 +68,7 @@ try {
                     $exitCode = -2
                 }
                 else {
-                    $defaultBranchName = "main"
+                    $DefaultBranchName = "main"
                 }
             }
         }
@@ -81,7 +81,7 @@ try {
     if (Test-Path $versionFilePath -PathType Leaf) {
         $appVersion = (Get-Content $versionFilePath).Trim()
         if (!$IsMainBranchBuild) {
-            git checkout -b devops origin/$defaultBranchName
+            git checkout -b devops origin/$DefaultBranchName
             if (Test-Path $versionFilePath -PathType Leaf) {
                 $oldAppVersion = (Get-Content $versionFilePath).Trim()
             }
@@ -91,7 +91,7 @@ try {
         $xml = [Xml] (Get-Content $ProjectPath )
         $appVersion = $xml.Project.PropertyGroup.Version
         if (!$IsMainBranchBuild) {      
-            git checkout -b devops origin/$defaultBranchName
+            git checkout -b devops origin/$DefaultBranchName
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $xml = [Xml] (Get-Content $ProjectPath )
                 $oldAppVersion = $xml.Project.PropertyGroup.Version
@@ -101,9 +101,12 @@ try {
     elseif ( $AppFrameworkType.ToLower() -eq 'nodejs' ) {
         $appVersion = node -p "require('$ProjectPath').version"
         if (!$IsMainBranchBuild) {
-            git checkout -b devops origin/$defaultBranchName
+            Write-Output "${functionName}:$DefaultBranchName"    
+            git checkout -b devops origin/$DefaultBranchName
             if (Test-Path $ProjectPath -PathType Leaf) {
+                 
                 $oldAppVersion = node -p "require('$ProjectPath').version" 
+                Write-Output "${functionName}:$oldAppVersion" 
             }        
         } 
     }
