@@ -56,7 +56,6 @@ try {
     $oldAppVersion = "0.0.0"
     $exitCode = 0
     $versionFilePath = "./VERSION"
-    $IsMainBranchBuild = [System.Convert]::ToBoolean($IsMainBranchBuild)
     Write-Output "${functionName}:IsMainBranchBuild=$IsMainBranchBuild"
     try {
         git fetch origin
@@ -80,7 +79,7 @@ try {
     #If custom VERSION file exists, read version number from file
     if (Test-Path $versionFilePath -PathType Leaf) {
         $appVersion = (Get-Content $versionFilePath).Trim()
-        if (!$IsMainBranchBuild) {
+        if ( $IsMainBranchBuild -eq "False") {
             git checkout -b devops origin/$DefaultBranchName
             if (Test-Path $versionFilePath -PathType Leaf) {
                 $oldAppVersion = (Get-Content $versionFilePath).Trim()
@@ -90,7 +89,7 @@ try {
     elseif ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
         $xml = [Xml] (Get-Content $ProjectPath )
         $appVersion = $xml.Project.PropertyGroup.Version
-        if (!$IsMainBranchBuild) {      
+        if ($IsMainBranchBuild -eq "False") {      
             git checkout -b devops origin/$DefaultBranchName
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $xml = [Xml] (Get-Content $ProjectPath )
@@ -100,7 +99,7 @@ try {
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'nodejs' ) {
         $appVersion = node -p "require('$ProjectPath').version"
-        if (!$IsMainBranchBuild) {
+        if ($IsMainBranchBuild -eq "False") {
             Write-Output "${functionName}:$DefaultBranchName"    
             git checkout -b devops origin/$DefaultBranchName
             if (Test-Path $ProjectPath -PathType Leaf) {
@@ -115,7 +114,7 @@ try {
         $exitCode = -2
     }
 
-    if (!$IsMainBranchBuild) {
+    if ($IsMainBranchBuild -eq "False") {
         #Check if the version is upgraded
         if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
             Write-Output "${functionName}:appVersion upgraded"    
