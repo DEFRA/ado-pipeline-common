@@ -56,7 +56,7 @@ try {
     $oldAppVersion = "0.0.0"
     $exitCode = 0
     $versionFilePath = "./VERSION"
-    $IsMainBranchBuild = Convert.ToBoolean($IsMainBranchBuild)
+    $IsMainBranchBuild = [System.Convert]::ToBoolean($IsMainBranchBuild)
     try {
         git fetch origin
         if ("" -eq $DefaultBranchName) {
