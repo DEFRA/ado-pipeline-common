@@ -1,0 +1,42 @@
+parameters:
+  - name: sonarConfig
+    type: object
+  - name: appBuildConfig
+    type: object
+  - name: appVersion
+    type: string
+
+steps:   
+- task: SonarCloudPrepare@1
+  displayName: 'Prepare Sonar analysis'
+  inputs:
+    SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
+    organization: ${{ parameters.sonarConfig.organization }}
+    ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
+      scannerMode: MSBuild
+      projectKey: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+      projectName: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+      projectVersion: ${{ parameters.appVersion}}
+      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+        extraProperties: |
+          sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
+          sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
+          sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+
+    ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
+      scannerMode: CLI
+      ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+        extraProperties: |
+          sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectVersion=${{ parameters.appVersion}}
+      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+        extraProperties: |
+          sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectVersion=${{ parameters.appVersion}}
+          sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
+          sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
+          sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+
+    

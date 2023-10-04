@@ -16,31 +16,19 @@ parameters:
   default: '' 
 - name: appBuildConfig
   displayName: Details to build the app
-  type: object
-  default: 
-    appFrameworkType: 'dotnet'
-    frameworkVersion: '6.x'      
-    projectPath: './ProjectName/ProjectName.csproj'
-    testProjectPath: './ProjectName.Tests/ProjectName.Tests.csproj'
-    manifestPath: "./obj/FFCDemoPaymentService/project.assets.json"
-    imageRepoName: 'ProjectRepoName'     
+  type: object 
 - name: appTestConfig
   displayName: Details to test the app
   type: object
-  default: 
-    testFilePath: './docker-compose.test.yaml'
 - name: snykConfig
   displayName: Details for Snyk Service settings
   type: object
-  default: 
-    snykConnection: 'AZD-ADP-SNYK'
-    snykOrganizationName: 'defra-adp'
-    failOnThreshold: 'high'
 - name: npmConfig
   displayName: Details for NPM settings
   type: object
-  default: 
-    failOnThreshold: 'moderate'
+- name: sonarConfig
+  displayName: Details for Sonar Cloud Analysis
+  type: object
 - name: appDeployConfig
   displayName: Details to deploy the app
   type: object
@@ -79,12 +67,18 @@ stages:
       - job: Build  
         dependsOn: Initialise
         variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
           - checkout: self
             path: s/
           - checkout: PipelineCommon
             path: s/PipelineCommon
+
+          - template: /templates/steps/sonar-analysis-prepare.yaml
+            parameters:
+              sonarConfig: ${{ parameters.sonarConfig }}
+              appBuildConfig: ${{ parameters.appBuildConfig }}
+              appVersion: $(appVersion)
 
           - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
             - template: /templates/steps/dotnet-build.yaml
@@ -100,6 +94,9 @@ stages:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
                 failOnThreshold: ${{ parameters.npmConfig.failOnThreshold }}
                 packageFeedName: ${{ parameters.packageFeedName }}    
+
+          - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
+            - template: /templates/steps/sonar-analysis.yaml
 
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
             - template: /templates/steps/security-scan-application.yaml
