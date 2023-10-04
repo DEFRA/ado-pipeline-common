@@ -51,7 +51,7 @@ stage: Application_CI
         task: Publish Artifact - docker image
         task: Publish Artifact - helm chart
 #For Each environment
-#If Main Branch build - Deploy to all environments
+#If master or main Branch build - Deploy to all environments
 #If PR or Feature Branch build - Deploy to dev environment only
 stage: Application_CD
 dependsOn: Application_CI
@@ -177,7 +177,7 @@ extends:
         deployFromFeature: true            #Mandatory: Default false. If set to True will deploy the feature branch code to Dev environment.
         appBuildConfig:
             appFrameworkType: "dotnet"      # Mandatory "dotnet" or "nodejs" used to run the appropriate build step
-            defaultBranch: "master"         #Optional: If not set defaults to main. Used to check if the code version has been increased and if the build is for main branch or pr or feature branch
+            defaultBranch: "master"         #Optional: If not set defaults to main. Used to check if the code version has been increased and if the build is for master or main branch or pr or feature branch
             frameworkVersion: "6.x"         #Optional: Used by DotNet build task. Defaults to 6.x
             projectPath: "./ProjectName/ProjectName.csproj" #Mandatory: Used to extract project version. For DotNet projects provide the csproj file path. For NodeJS package.json file path.
             testProjectPath: "./ProjectName.Tests/ProjectName.Tests.csproj" #Optional: Used to run Unit Tests of DotNet Projects
@@ -234,7 +234,7 @@ extends:
         deployFromFeature: ${{ parameters.deployFromFeature }}  #Mandatory: Default false. If set to True will deploy the feature branch code to Dev environment.
         appBuildConfig:
             appFrameworkType: "nodejs"      #Mandatory: "dotnet" or "nodejs" used to run the appropriate build step
-            defaultBranch: "main"         #Optional: If not set defaults to main. Used to check if the code version has been increased and if the build is for main branch or pr or feature branch
+            defaultBranch: "main"         #Optional: If not set defaults to main. Used to check if the code version has been increased and if the build is for master or main branch or pr or feature branch
             frameworkVersion: "18.x"        #Optional: Used by DotNet and Nodejs build task. Defaults to 6.x. For Node JS 18.x
             projectPath: "./package.json"   #Mandatory: Used to extract project version. For DotNet projects provide the csproj file path. For NodeJS package.json file path.
             manifestPath: "./package.json"  #Mandatory: Used by Snyk to identify the vulnerabilities.  packages.config (.NET Framework) .proj file or project.json or project.assets.json for (.NET Core) package.json for (NodeJS)
