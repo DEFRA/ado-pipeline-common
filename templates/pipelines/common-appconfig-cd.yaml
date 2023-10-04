@@ -1,0 +1,47 @@
+parameters:
+- name: projectName
+  type: string
+- name: agentImage
+  type: string
+  default: 'ubuntu-latest'
+- name: privateAgentName
+  displayName: Name of the private agent
+  type: string
+  default: ''
+- name: environments
+  displayName: list of deployment env
+  type: object
+- name: appDeployConfig
+  displayName: Details to deploy the app
+  type: object
+  default: null
+  
+stages:                   
+  - ${{ each deploymentEnv in parameters.environments }}:
+    - stage: AppConfig_CD_${{ deploymentEnv.name }}
+      displayName: 'AppConfig CD ${{ deploymentEnv.name }}' 
+      ${{ if ne(deploymentEnv.privateAgentName, '') }}:
+        pool:
+          name: ${{ deploymentEnv.privateAgentName }}
+      ${{ else }}:
+        pool:
+          vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+      jobs:
+        - deployment: PublishTo${{ deploymentEnv.name }}
+          displayName: 'Publish To ${{ deploymentEnv.name }}' 
+          environment: ${{ deploymentEnv.name }}
+          strategy:
+            runOnce:
+              deploy:          
+                steps:
+                  - checkout: Self
+                    path: s/
+
+                  - ${{ if ne(parameters.appDeployConfig, '') }}:
+                    - task: AzureAppConfigurationPush@6
+                      displayName: 'Import Azure App Configuration'
+                      inputs:
+                        azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                        AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
+                        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/${{ deploymentEnv.name }}.appConfig.json'
+                        FileContentProfile: appconfig/kvset
