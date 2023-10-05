@@ -30,18 +30,25 @@ stages:
         - deployment: PublishTo${{ deploymentEnv.name }}
           displayName: 'Publish To ${{ deploymentEnv.name }}' 
           environment: ${{ deploymentEnv.name }}
+          variables:
+            projectName: ${{ parameters.projectName }}
           strategy:
             runOnce:
               deploy:          
-                steps:
+                steps:                
                   - checkout: Self
                     path: s/
-
+                  - task: replacetokens@5
+                    displayName: 'Replace tokens in **/*.config'
+                    inputs:
+                      tokenPattern: doublebraces
+                      targetFiles: |
+                        **/*.config
                   - ${{ if ne(parameters.appDeployConfig, '') }}:
                     - task: AzureAppConfigurationPush@6
                       displayName: 'Import Azure App Configuration'
                       inputs:
                         azureSubscription: ${{ deploymentEnv.serviceConnection }}
                         AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
-                        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/${{ deploymentEnv.type }}.appConfig.json'
+                        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.type }}.json'
                         FileContentProfile: appconfig/kvset
