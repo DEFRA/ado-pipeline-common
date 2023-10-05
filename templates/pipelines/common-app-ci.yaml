@@ -271,7 +271,7 @@ stages:
                   eq(variables.IsPrBuild, true),
                   eq(${{ parameters.deployFromFeature }},true)
                 ),
-                eq({{ deploymentEnv.type }},'dev')
+                eq(${{ deploymentEnv.type }},'dev')
               ) 
             ) 
           displayName: 'Publish To ${{ deploymentEnv.name }}'
