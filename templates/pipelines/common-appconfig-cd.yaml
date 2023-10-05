@@ -54,6 +54,7 @@ stages:
                         FileContentProfile: appconfig/kvset
                         DryRun: true            
         - job: Review${{ deploymentEnv.name }}
+          dependsOn: DryRun${{ deploymentEnv.name }}
           displayName: 'Review ${{ deploymentEnv.name }}'
           pool: server
           steps:
@@ -64,6 +65,7 @@ stages:
                 instructions: verify
            
         - deployment: Publish${{ deploymentEnv.name }}
+          dependsOn: Review${{ deploymentEnv.name }}
           displayName: 'Publish ${{ deploymentEnv.name }}' 
           environment: ${{ deploymentEnv.name }}  
           strategy:
