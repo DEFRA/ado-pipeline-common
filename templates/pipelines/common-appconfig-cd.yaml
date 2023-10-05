@@ -43,5 +43,5 @@ stages:
                       inputs:
                         azureSubscription: ${{ deploymentEnv.serviceConnection }}
                         AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
-                        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/${{ deploymentEnv.name }}.appConfig.json'
+                        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/${{ deploymentEnv.type }}.appConfig.json'
                         FileContentProfile: appconfig/kvset
