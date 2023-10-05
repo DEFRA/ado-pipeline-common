@@ -12,7 +12,8 @@ parameters:
   displayName: Details to deploy the app
   type: object
   default: null
-        
+- name: PSHelperDirectory
+  type: string  
 steps:
 
   - checkout: Self
@@ -21,6 +22,7 @@ steps:
     path: s/PipelineCommon
 
   - task: DownloadPipelineArtifact@2
+    displayName: 'Download App Version' 
     inputs:
       artifactName: 'appversion'
       targetPath: $(System.ArtifactsDirectory)/version
@@ -36,30 +38,19 @@ steps:
       pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'  
 
-  - task: Cache@2
-    displayName: Restore Cached docker image
-    inputs:
-      key: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(GetAppVersion.appVersion)" | cache'
-      path: $(Pipeline.Workspace)/docker
-      cacheHitVar: CACHE_RESTORED  
-
-  - task: Cache@2
-    displayName: Restore Cached helm chart
-    inputs:
-      key: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(GetAppVersion.appVersion)" | cache'
-      path: $(Pipeline.Workspace)/helm
-      cacheHitVar: CACHE_RESTORED  
-
   - task: DownloadPipelineArtifact@2
+    displayName: 'Download Docker image' 
     inputs:
       artifactName: 'docker'
       targetPath: '$(Pipeline.Workspace)/docker'
+
   - task: DownloadPipelineArtifact@2
+    displayName: 'Download Helm Chart' 
     inputs:
       artifactName: 'helm'
       targetPath: '$(Pipeline.Workspace)/helm'
 
-  - ${{ if ne(parameters.appDeployConfig, '') }}:
+  - ${{ if and(ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filepath, '')) }}:
     - task: AzureAppConfigurationPush@6
       displayName: 'Import Azure App Configuration'
       inputs:
@@ -74,7 +65,7 @@ steps:
       scriptType: pscore
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
-      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(GetAppVersion.appVersion) -ImageCachePath $(Pipeline.Workspace)/docker -Command "push"
+      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(GetAppVersion.appVersion) -ImageCachePath $(Pipeline.Workspace)/docker -Command "push" -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
       addSpnToEnvironment: true          
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'
@@ -86,7 +77,7 @@ steps:
       scriptType: pscore
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion $(GetAppVersion.appVersion) -ChartCachePath $(Pipeline.Workspace)/helm -Command "publish"
+      arguments: -AcrName ${{ parameters.environmentObj.acrName }} -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion $(GetAppVersion.appVersion) -ChartCachePath $(Pipeline.Workspace)/helm -Command "publish" -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
       addSpnToEnvironment: true          
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'
