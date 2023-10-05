@@ -1,0 +1,39 @@
+parameters:
+- name: dryRun
+  type: boolean
+  default: true
+- name: environmentObj
+  displayName: deployment env
+  type: object
+- name: appDeployConfig
+  displayName: Details to deploy the app
+  type: object
+  default: null
+- name: workingDirectory
+  type: string
+- name: projectName
+  type: string
+
+steps:
+  - checkout: Self
+    path: s/ 
+  - task: replacetokens@5
+    displayName: 'Replace tokens in config'
+    inputs:
+      tokenPattern: doublebraces
+      inlineVariables: |
+        subscriptionid: ${{ parameters.environmentObj.serviceConnection }}
+        keyvaultname: ${{ parameters.environmentObj.appKeyVault }}
+        projectName: ${{ parameters.projectName }}
+      targetFiles: |
+        ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
+
+  - ${{ if ne(parameters.appDeployConfig, '') }}:
+    - task: AzureAppConfigurationPush@6
+      displayName: 'Import Azure App Configuration'
+      inputs:
+        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+        AppConfigurationEndpoint: 'https://${{ parameters.environmentObj.appConfiguration }}.azconfig.io'
+        ConfigurationFile: '${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+        FileContentProfile: appconfig/kvset
+        DryRun: ${{ parameters.dryRun }}

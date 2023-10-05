@@ -1,0 +1,8 @@
+steps:   
+- task: SonarCloudAnalyze@1
+  displayName: 'Run Sonar Code Analysis'
+  
+- task: SonarCloudPublish@1
+  displayName: 'Publish Sonar Quality Gate Result'
+  continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+    
