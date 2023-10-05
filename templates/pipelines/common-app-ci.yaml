@@ -250,7 +250,8 @@ stages:
               artifact: helm
               
   - ${{ each deploymentEnv in parameters.environments }}:      
-    - stage: Application_CD_${{ deploymentEnv.name }}
+    - stage: ${{ deploymentEnv.name }}
+      dependsOn: [Initialise, ${{ deploymentEnv.dependsOn }}]
       displayName: 'Application CD ${{ deploymentEnv.name }}'
       ${{ if ne(deploymentEnv.privateAgentName, '') }}:
         pool:

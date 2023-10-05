@@ -54,7 +54,7 @@ try {
     $exitCode = 0
     $versionFilePath = "./VERSION"
     $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-    $CurrentBranchName = Invoke-CommandLine -Command "git branch --show-current"
+    $CurrentBranchName = Invoke-CommandLine -Command "git rev-parse --abbrev-ref HEAD"
     $IsDefaultBranchBuild = "False"
 
     if ($DefaultBranchName -eq $CurrentBranchName) {
