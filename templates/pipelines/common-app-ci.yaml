@@ -239,30 +239,29 @@ stages:
             inputs:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
-            
-
-  - $[ if or(eq(stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], true),eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true) ) ]:
-    - ${{ each deploymentEnv in parameters.environments }}:
-      - $[ if or( eq(stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) ]:
-        - stage: Application_CD_${{ deploymentEnv.name }}
-          displayName: 'Application CD ${{ deploymentEnv.name }}'
-          ${{ if ne(deploymentEnv.privateAgentName, '') }}:
-            pool:
-              name: ${{ deploymentEnv.privateAgentName }}
-          ${{ else }}:
-            pool:
-              vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
-          jobs:
-            - deployment: PublishTo${{ deploymentEnv.name }}
-              displayName: 'Publish To ${{ deploymentEnv.name }}'
-              environment: ${{ deploymentEnv.name }}
-              strategy:
-                runOnce:
-                  deploy:          
-                    steps:
-                      - template: /templates/steps/common-app-cd.yaml
-                        parameters:
-                            environmentObj: ${{ deploymentEnv }}
-                            appBuildConfig: ${{ parameters.appBuildConfig }}
-                            appDeployConfig: ${{ parameters.appDeployConfig }}
-                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+              
+  - ${{ each deploymentEnv in parameters.environments }}:      
+    - stage: Application_CD_${{ deploymentEnv.name }}
+      dependsOn: [Application_CI]
+      displayName: 'Application CD ${{ deploymentEnv.name }}'
+      ${{ if ne(deploymentEnv.privateAgentName, '') }}:
+        pool:
+          name: ${{ deploymentEnv.privateAgentName }}
+      ${{ else }}:
+        pool:
+          vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+      jobs:
+        - $[ if or( eq(stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) ]:  
+          - deployment: PublishTo${{ deploymentEnv.name }}
+            displayName: 'Publish To ${{ deploymentEnv.name }}'
+            environment: ${{ deploymentEnv.name }}
+            strategy:
+              runOnce:
+                deploy:          
+                  steps:
+                    - template: /templates/steps/common-app-cd.yaml
+                      parameters:
+                          environmentObj: ${{ deploymentEnv }}
+                          appBuildConfig: ${{ parameters.appBuildConfig }}
+                          appDeployConfig: ${{ parameters.appDeployConfig }}
+                          PSHelperDirectory: ${{ variables.PSHelperDirectory }}
