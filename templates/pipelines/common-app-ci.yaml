@@ -193,9 +193,9 @@ stages:
           and(
             succeeded(), 
             or(
-             
+              eq( variables.IsDefaultBranchBuild , 'true'),
               eq( variables.IsPrBuild , true),
-              eq( parameters.deployFromFeature , true)
+              eq( ${{ parameters.deployFromFeature }} , true)
             ) 
           )
         variables:
@@ -265,11 +265,11 @@ stages:
             IsDefaultBranchBuild: $[ stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'] ]
           condition:  |
             or(
-             
+              eq( variables.IsDefaultBranchBuild, 'true'),
               and(
                 or(
                   eq(variables.IsPrBuild, true),
-                  eq(parameters.deployFromFeature,true)
+                  eq(${{ parameters.deployFromFeature }},true)
                 ),
                 eq(deploymentEnv.type,'dev')
               ) 
