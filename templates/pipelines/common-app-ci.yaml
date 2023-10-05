@@ -251,7 +251,7 @@ stages:
               
   - ${{ each deploymentEnv in parameters.environments }}:      
     - stage: ${{ deploymentEnv.name }}
-      dependsOn: Application_CI, ${{ deploymentEnv.dependsOn }} 
+      dependsOn: ${{ deploymentEnv.dependsOn }}
       displayName: 'Application CD ${{ deploymentEnv.name }}'
       ${{ if ne(deploymentEnv.privateAgentName, '') }}:
         pool:
