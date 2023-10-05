@@ -54,7 +54,8 @@ try {
     $exitCode = 0
     $versionFilePath = "./VERSION"
     $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
-    $CurrentBranchName = Invoke-CommandLine -Command "git name-rev --name-only HEAD | sed 's@^remotes/origin/@@'"
+    $CurrentBranchName = git name-rev --name-only HEAD | sed 's@^remotes/origin/@@'
+    $CurrentBranchName2 = Invoke-CommandLine -Command "git name-rev --name-only HEAD | sed 's@^remotes/origin/@@'"
     $IsDefaultBranchBuild = "False"
 
     if ($DefaultBranchName -eq $CurrentBranchName) {
@@ -109,7 +110,7 @@ try {
         }
     }
 
-    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion;IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName;CurrentBranchName=$CurrentBranchName"    
+    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion;IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName;CurrentBranchName=$CurrentBranchName;CurrentBranchName2=$CurrentBranchName2"    
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
     Write-Output "##vso[task.setvariable variable=IsDefaultBranchBuild;isOutput=true]$IsDefaultBranchBuild"
