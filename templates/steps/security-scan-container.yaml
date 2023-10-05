@@ -23,7 +23,7 @@ steps:
     dockerImageName:  ${{ parameters.acrRepoName }}:${{ parameters.acrRepoTagVersion }}
     dockerfilePath: '${{ parameters.dockerfilePath }}'
     monitorOnBuild: false
-    failOnIssues: true
+    failOnIssues: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
     projectName: '${{ parameters.acrRepoName }}'
     organization: '${{ parameters.snykOrganizationName }}'    
     failOnThreshold: '${{ parameters.failOnThreshold }}'
