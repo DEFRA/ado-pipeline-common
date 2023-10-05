@@ -18,7 +18,7 @@ parameters:
   
 stages:                   
   - ${{ each deploymentEnv in parameters.environments }}:
-    - stage: AppConfig_CD_${{ deploymentEnv.name }}
+    - stage: ${{ deploymentEnv.name }}
       displayName: 'AppConfig CD ${{ deploymentEnv.name }}' 
       ${{ if ne(deploymentEnv.privateAgentName, '') }}:
         pool:
