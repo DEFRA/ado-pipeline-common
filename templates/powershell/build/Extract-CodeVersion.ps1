@@ -7,15 +7,11 @@ Extract code version based on the framework type
 Mandatory. Application Framework Type. dotnet or nodejs
 .PARAMETER ProjectPath
 Mandatory. relative project file path. For DotNet csproj file path, For NodeJS path of package.json
-.PARAMETER DefaultBranchName
-Optional. Default Branch. master or main
-.PARAMETER IsDefaultBranchBuild
-Mandatory. True if the build triggered for main branch, else False.
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 
 .EXAMPLE
-.\Extract-CodeVersion.ps1  -AppFrameworkType <AppFrameworkType> -ProjectPath <ProjectPath> -DefaultBranchName <DefaultBranchName> -IsDefaultBranchBuild <IsDefaultBranchBuild> -PSHelperDirectory <PSHelperDirectory>
+.\Extract-CodeVersion.ps1  -AppFrameworkType <AppFrameworkType> -ProjectPath <ProjectPath> -PSHelperDirectory <PSHelperDirectory>
 #> 
 
 [CmdletBinding()]
@@ -24,9 +20,6 @@ param(
     [string] $AppFrameworkType,
     [Parameter(Mandatory)]
     [string] $ProjectPath,
-    [string] $DefaultBranchName = "",
-    [Parameter(Mandatory)]
-    [string] $IsDefaultBranchBuild,
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory
 )
@@ -51,8 +44,6 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AppFrameworkType=$AppFrameworkType"
 Write-Debug "${functionName}:ProjectPath=$ProjectPath"
-Write-Output "${functionName}:DefaultBranchName=$DefaultBranchName"
-Write-Output "${functionName}:IsDefaultBranchBuild=$IsDefaultBranchBuild"
 Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
@@ -62,26 +53,20 @@ try {
     $oldAppVersion = "0.0.0" #Assume version 0.0.0 for initial main branch
     $exitCode = 0
     $versionFilePath = "./VERSION"
+    $DefaultBranchName = Invoke-CommandLine -Command "git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'"
+    $CurrentBranchName = Invoke-CommandLine -Command "git symbolic-ref --short HEAD"
+    $IsDefaultBranchBuild = "false"
 
-    Invoke-CommandLine -Command "git fetch origin"
-        
-    if ("" -eq $DefaultBranchName) {
-        $masterBranchExists = Invoke-CommandLine -Command "git ls-remote --heads origin master"
-        if ($null -eq $masterBranchExists) {
-            $mainBranchExists = Invoke-CommandLine -Command "git ls-remote --heads origin main"
-            if ($null -eq $mainBranchExists) {
-                $exitCode = -2
-            }
-            else {
-                $DefaultBranchName = "main"
-            }
-        }
+    if ($DefaultBranchName -eq $CurrentBranchName) {
+        $IsDefaultBranchBuild = "true"
     }
+    
+    Invoke-CommandLine -Command "git fetch origin"        
     
     #If custom VERSION file exists, read version number from file
     if (Test-Path $versionFilePath -PathType Leaf) {
         $appVersion = (Get-Content $versionFilePath).Trim()
-        if ( $IsDefaultBranchBuild -eq "False") {
+        if ( $IsDefaultBranchBuild -eq "false") {
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $versionFilePath -PathType Leaf) {
                 $oldAppVersion = (Get-Content $versionFilePath).Trim()
@@ -91,7 +76,7 @@ try {
     elseif ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
         $xml = [Xml] (Get-Content $ProjectPath )
         $appVersion = $xml.Project.PropertyGroup.Version
-        if ($IsDefaultBranchBuild -eq "False") {      
+        if ($IsDefaultBranchBuild -eq "false") {      
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $xml = [Xml] (Get-Content $ProjectPath )
@@ -101,7 +86,7 @@ try {
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'nodejs' ) {
         $appVersion = node -p "require('$ProjectPath').version"
-        if ($IsDefaultBranchBuild -eq "False") {  
+        if ($IsDefaultBranchBuild -eq "false") {  
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $oldAppVersion = node -p "require('$ProjectPath').version" 
@@ -113,7 +98,7 @@ try {
         $exitCode = -2
     }
 
-    if ($IsDefaultBranchBuild -eq "False") {
+    if ($IsDefaultBranchBuild -eq "false") {
         #Check if the version is upgraded
         if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
             Write-Output "${functionName}:appVersion upgraded"    
@@ -124,9 +109,10 @@ try {
         }
     }
 
-    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion"    
+    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion;IsDefaultBranchBuild=$IsDefaultBranchBuild"    
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
+    Write-Output "##vso[task.setvariable variable=IsDefaultBranchBuild;isOutput=true]$IsDefaultBranchBuild"
 }
 catch {
     $exitCode = -2

@@ -51,13 +51,6 @@ parameters:
   
 variables:
 - group: NodeJSAppBuild
-- name: DefaultBranch
-  ${{ if or(eq(parameters.appBuildConfig.defaultBranch, ''),eq(parameters.appBuildConfig.defaultBranch, 'main')) }}:
-    value: main
-  ${{ else }}:
-    value: master
-- name: IsDefaultBranchBuild
-  value: ${{ eq(variables['Build.SourceBranch'], join('refs/heads/',variables.DefaultBranch)) }}
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
@@ -85,7 +78,7 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Extract-CodeVersion.ps1'
-              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -DefaultBranchName ${{ variables.DefaultBranch }} -IsDefaultBranchBuild ${{ variables.IsDefaultBranchBuild }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: GetAppVersion            
@@ -196,7 +189,7 @@ stages:
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'  
         dependsOn: [Initialise,Build,BuildImage]
-        condition: and(succeeded(), ${{ or(eq( variables.IsDefaultBranchBuild , true),eq( variables.IsPrBuild , true),eq( parameters.deployFromFeature , true)) }} )
+        condition: and(succeeded(), $[ or(eq( dependencies.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], true),eq( variables.IsPrBuild , true),eq( parameters.deployFromFeature , true)) ] )
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
@@ -248,9 +241,9 @@ stages:
               artifact: helm
             
 
-  - ${{ if or(eq(variables.IsDefaultBranchBuild, true),eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true) ) }}:
+  - $[ if or(eq(stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], true),eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true) ) ]:
     - ${{ each deploymentEnv in parameters.environments }}:
-      - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) }}:
+      - $[ if or( eq(stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) ]:
         - stage: Application_CD_${{ deploymentEnv.name }}
           displayName: 'Application CD ${{ deploymentEnv.name }}'
           ${{ if ne(deploymentEnv.privateAgentName, '') }}:
