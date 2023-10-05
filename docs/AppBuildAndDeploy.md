@@ -126,6 +126,7 @@ extends:
         acrName: 'acr name'                                 #Mandatory: Name of the ACR to push the docker and helm charts
         privateAgentName: 'sandbox-ubuntu2204'              #Optional:  Name of the private build agent, default will use Azure hosted linux agent.
         appConfiguration: 'application configration name'   #Optional:  Name of the Azure application configuration instance to push the config and secrets
+        dependsOn: [ Application_CI ]                       #Mandatory: Names of one ore more stages. Application_CI stage is mandatory for all deployments
 
 
 ```
@@ -176,8 +177,7 @@ extends:
         projectName: "ProjectName"          #Mandatory
         deployFromFeature: true            #Mandatory: Default false. If set to True will deploy the feature branch code to Dev environment.
         appBuildConfig:
-            appFrameworkType: "dotnet"      # Mandatory "dotnet" or "nodejs" used to run the appropriate build step
-            defaultBranch: "master"         #Optional: If not set defaults to main. Used to check if the code version has been increased and if the build is for master or main branch or pr or feature branch
+            appFrameworkType: "dotnet"      # Mandatory "dotnet" or "nodejs" used to run the appropriate build step            
             frameworkVersion: "6.x"         #Optional: Used by DotNet build task. Defaults to 6.x
             projectPath: "./ProjectName/ProjectName.csproj" #Mandatory: Used to extract project version. For DotNet projects provide the csproj file path. For NodeJS package.json file path.
             testProjectPath: "./ProjectName.Tests/ProjectName.Tests.csproj" #Optional: Used to run Unit Tests of DotNet Projects
@@ -233,8 +233,7 @@ extends:
         projectName: "ProjectName"          #Mandatory
         deployFromFeature: ${{ parameters.deployFromFeature }}  #Mandatory: Default false. If set to True will deploy the feature branch code to Dev environment.
         appBuildConfig:
-            appFrameworkType: "nodejs"      #Mandatory: "dotnet" or "nodejs" used to run the appropriate build step
-            defaultBranch: "main"         #Optional: If not set defaults to main. Used to check if the code version has been increased and if the build is for master or main branch or pr or feature branch
+            appFrameworkType: "nodejs"      #Mandatory: "dotnet" or "nodejs" used to run the appropriate build step            
             frameworkVersion: "18.x"        #Optional: Used by DotNet and Nodejs build task. Defaults to 6.x. For Node JS 18.x
             projectPath: "./package.json"   #Mandatory: Used to extract project version. For DotNet projects provide the csproj file path. For NodeJS package.json file path.
             manifestPath: "./package.json"  #Mandatory: Used by Snyk to identify the vulnerabilities.  packages.config (.NET Framework) .proj file or project.json or project.assets.json for (.NET Core) package.json for (NodeJS)
