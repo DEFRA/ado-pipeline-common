@@ -29,27 +29,30 @@ stages:
         pool:
           vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
       jobs:
-        - job: DryRun${{ deploymentEnv.name }}
+        - deployment: DryRun${{ deploymentEnv.name }}
           displayName: 'DryRun ${{ deploymentEnv.name }}' 
-          environment: ${{ deploymentEnv.name }}                
-          steps:                
-            - checkout: Self
-              path: s/
-            - task: replacetokens@5
-              displayName: 'Replace tokens in config'
-              inputs:
-                tokenPattern: doublebraces
-                targetFiles: |
-                  $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json
-            - ${{ if ne(parameters.appDeployConfig, '') }}:
-              - task: AzureAppConfigurationPush@6
-                displayName: 'Import Azure App Configuration'
-                inputs:
-                  azureSubscription: ${{ deploymentEnv.serviceConnection }}
-                  AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
-                  ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json'
-                  FileContentProfile: appconfig/kvset
-                  DryRun: true            
+          environment: ${{ deploymentEnv.name }}
+          strategy:
+            runOnce:
+              deploy:              
+                steps:                
+                  - checkout: Self
+                    path: s/
+                  - task: replacetokens@5
+                    displayName: 'Replace tokens in config'
+                    inputs:
+                      tokenPattern: doublebraces
+                      targetFiles: |
+                        $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json
+                  - ${{ if ne(parameters.appDeployConfig, '') }}:
+                    - task: AzureAppConfigurationPush@6
+                      displayName: 'Import Azure App Configuration'
+                      inputs:
+                        azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                        AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
+                        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json'
+                        FileContentProfile: appconfig/kvset
+                        DryRun: true            
         - job: Review${{ deploymentEnv.name }}
           displayName: 'Review ${{ deploymentEnv.name }}'
           pool: server
@@ -60,23 +63,26 @@ stages:
                 notifyUsers: rajesh.venkatraman@capgemini.com
                 instructions: verify
            
-        - job: Publish${{ deploymentEnv.name }}
+        - deployment: Publish${{ deploymentEnv.name }}
           displayName: 'Publish ${{ deploymentEnv.name }}' 
-          environment: ${{ deploymentEnv.name }}    
-          steps:                
-            - checkout: Self
-              path: s/
-            - task: replacetokens@5
-              displayName: 'Replace tokens in config'
-              inputs:
-                tokenPattern: doublebraces
-                targetFiles: |
-                  $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json
-            - task: AzureAppConfigurationPush@6
-              displayName: 'Import Azure App Configuration'
-              inputs:
-                azureSubscription: ${{ deploymentEnv.serviceConnection }}
-                AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
-                ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json'
-                FileContentProfile: appconfig/kvset
-                DryRun: false
+          environment: ${{ deploymentEnv.name }}  
+          strategy:
+            runOnce:
+              deploy:   
+                steps:                
+                  - checkout: Self
+                    path: s/
+                  - task: replacetokens@5
+                    displayName: 'Replace tokens in config'
+                    inputs:
+                      tokenPattern: doublebraces
+                      targetFiles: |
+                        $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json
+                  - task: AzureAppConfigurationPush@6
+                    displayName: 'Import Azure App Configuration'
+                    inputs:
+                      azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                      AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
+                      ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json'
+                      FileContentProfile: appconfig/kvset
+                      DryRun: false
