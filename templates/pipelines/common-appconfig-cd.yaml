@@ -52,3 +52,17 @@ stages:
                         AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
                         ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json'
                         FileContentProfile: appconfig/kvset
+                        DryRun: true
+                    - task: ManualValidation@0
+                      displayName: 'Manual Validation'
+                      inputs:
+                        notifyUsers: rajesh.venkatraman@capgemini.com
+                        instructions: test
+                    - task: AzureAppConfigurationPush@6
+                      displayName: 'Import Azure App Configuration'
+                      inputs:
+                        azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                        AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
+                        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json'
+                        FileContentProfile: appconfig/kvset
+                        DryRun: false
