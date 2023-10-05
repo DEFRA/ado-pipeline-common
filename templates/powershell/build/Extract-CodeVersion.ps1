@@ -21,8 +21,6 @@ param(
     [Parameter(Mandatory)]
     [string] $ProjectPath,
     [Parameter(Mandatory)]
-    [string] $CurrentBranchName,
-    [Parameter(Mandatory)]
     [string]$PSHelperDirectory
 )
 
