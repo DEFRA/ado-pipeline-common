@@ -189,7 +189,15 @@ stages:
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'  
         dependsOn: [Initialise,Build,BuildImage]
-        condition: and(succeeded(), or(eq( $[ dependencies.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'] ] , 'true'),eq( variables.IsPrBuild , true),eq( parameters.deployFromFeature , true)) )
+        condition: |
+          and(
+            succeeded(), 
+            or(
+              eq( dependencies.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'] , 'true'),
+              eq( variables.IsPrBuild , true),
+              eq( parameters.deployFromFeature , true)
+            ) 
+          )
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
@@ -252,7 +260,17 @@ stages:
           vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
       jobs:        
         - deployment: PublishTo${{ deploymentEnv.name }}
-          condition:  or( eq( $[ stageDependencies.Application_CI.outputs['Initialise.GetAppVersion.IsDefaultBranchBuild'] ], 'true'), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) 
+          condition:  |
+            or(
+              eq( stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], 'true'),
+              and(
+                or(
+                  eq(variables.IsPrBuild, true),
+                  eq(parameters.deployFromFeature,true)
+                ),
+                eq(deploymentEnv.type,'dev')
+              ) 
+            ) 
           displayName: 'Publish To ${{ deploymentEnv.name }}'
           environment: ${{ deploymentEnv.name }}
           strategy:
