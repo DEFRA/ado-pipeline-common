@@ -72,11 +72,11 @@ stages:
                 tokenPattern: doublebraces
                 targetFiles: |
                   $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json
-              - task: AzureAppConfigurationPush@6
-                displayName: 'Import Azure App Configuration'
-                inputs:
-                  azureSubscription: ${{ deploymentEnv.serviceConnection }}
-                  AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
-                  ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json'
-                  FileContentProfile: appconfig/kvset
-                  DryRun: false
+            - task: AzureAppConfigurationPush@6
+              displayName: 'Import Azure App Configuration'
+              inputs:
+                azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                AppConfigurationEndpoint: 'https://${{ deploymentEnv.appConfiguration }}.azconfig.io'
+                ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json'
+                FileContentProfile: appconfig/kvset
+                DryRun: false
