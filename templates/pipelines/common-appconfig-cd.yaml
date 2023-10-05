@@ -40,7 +40,8 @@ stages:
                     parameters:
                       dryRun: true
                       deploymentEnv: ${{ deploymentEnv }} 
-                      appDeployConfig: ${{ parameters.appDeployConfig }}        
+                      appDeployConfig: ${{ parameters.appDeployConfig }} 
+                      workingDirectory: '$(Pipeline.Workspace)/s'       
         - job: Review${{ deploymentEnv.name }}
           dependsOn: DryRun${{ deploymentEnv.name }}
           displayName: 'Review ${{ deploymentEnv.name }}'
@@ -63,3 +64,4 @@ stages:
                       dryRun: false
                       deploymentEnv: ${{ deploymentEnv }} 
                       appDeployConfig: ${{ parameters.appDeployConfig }}
+                      workingDirectory: '$(Pipeline.Workspace)/s'

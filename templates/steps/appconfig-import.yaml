@@ -9,6 +9,8 @@ parameters:
   displayName: Details to deploy the app
   type: object
   default: null
+- name: workingDirectory
+  type: string
 
 steps:
 
@@ -19,7 +21,7 @@ steps:
     inputs:
       tokenPattern: doublebraces
       targetFiles: |
-        $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json
+        ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ deploymentEnv.name }}.json
   - ${{ if ne(parameters.appDeployConfig, '') }}:
     - task: AzureAppConfigurationPush@6
       displayName: 'Import Azure App Configuration'
