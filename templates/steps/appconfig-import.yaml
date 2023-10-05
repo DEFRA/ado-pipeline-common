@@ -15,7 +15,8 @@ parameters:
   type: string
 
 steps:
-  
+  - checkout: Self
+    path: s/ 
   - task: replacetokens@5
     displayName: 'Replace tokens in config'
     inputs:

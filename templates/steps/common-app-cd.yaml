@@ -12,8 +12,6 @@ parameters:
   displayName: Details to deploy the app
   type: object
   default: null
-- name: projectName
-  type: string
         
 steps:
 
@@ -60,15 +58,7 @@ steps:
     inputs:
       artifactName: 'helm'
       targetPath: '$(Pipeline.Workspace)/helm'
-
-  - ${{ if ne(parameters.appDeployConfig, '') }}:             
-    - template: /templates/steps/appconfig-import.yaml
-      parameters:
-        dryRun: false
-        environmentObj: ${{ parameters.environmentObj }} 
-        appDeployConfig: ${{ parameters.appDeployConfig }}
-        workingDirectory: '$(Pipeline.Workspace)/s'
-        projectName: ${{ parameters.projectName }}
+  
 
   - task: AzureCLI@2                   
     inputs:

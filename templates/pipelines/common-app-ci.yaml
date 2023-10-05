@@ -242,9 +242,16 @@ stages:
             runOnce:
               deploy:          
                 steps:
+                  - ${{ if ne(parameters.appDeployConfig, '') }}:             
+                    - template: /templates/steps/appconfig-import.yaml
+                      parameters:
+                        dryRun: false
+                        environmentObj: ${{ deploymentEnv }} 
+                        appDeployConfig: ${{ parameters.appDeployConfig }}
+                        workingDirectory: '$(Pipeline.Workspace)/s'
+                        projectName: ${{ parameters.projectName }}
                   - template: /templates/steps/common-app-cd.yaml
                     parameters:
                         environmentObj: ${{ deploymentEnv }}
                         appBuildConfig: ${{ parameters.appBuildConfig }}
                         appDeployConfig: ${{ parameters.appDeployConfig }}
-                        projectName: ${{ parameters.projectName }}
