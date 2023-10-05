@@ -250,18 +250,18 @@ stages:
       ${{ else }}:
         pool:
           vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
-      jobs:
-        - $[ if or( eq(stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) ) ]:  
-          - deployment: PublishTo${{ deploymentEnv.name }}
-            displayName: 'Publish To ${{ deploymentEnv.name }}'
-            environment: ${{ deploymentEnv.name }}
-            strategy:
-              runOnce:
-                deploy:          
-                  steps:
-                    - template: /templates/steps/common-app-cd.yaml
-                      parameters:
-                          environmentObj: ${{ deploymentEnv }}
-                          appBuildConfig: ${{ parameters.appBuildConfig }}
-                          appDeployConfig: ${{ parameters.appDeployConfig }}
-                          PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+      jobs:        
+        - deployment: PublishTo${{ deploymentEnv.name }}
+          condition: or( eq(stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], true), and(or(eq(variables.IsPrBuild, true),eq(parameters.deployFromFeature,true)),eq(deploymentEnv.type,'dev')) )
+          displayName: 'Publish To ${{ deploymentEnv.name }}'
+          environment: ${{ deploymentEnv.name }}
+          strategy:
+            runOnce:
+              deploy:          
+                steps:
+                  - template: /templates/steps/common-app-cd.yaml
+                    parameters:
+                        environmentObj: ${{ deploymentEnv }}
+                        appBuildConfig: ${{ parameters.appBuildConfig }}
+                        appDeployConfig: ${{ parameters.appDeployConfig }}
+                        PSHelperDirectory: ${{ variables.PSHelperDirectory }}
