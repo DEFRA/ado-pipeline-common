@@ -35,13 +35,16 @@ stages:
           strategy:
             runOnce:
               deploy:              
-                steps:                
+                steps:
+                  - checkout: Self
+                    path: s/   
                   - template: /templates/steps/appconfig-import.yaml
                     parameters:
                       dryRun: true
-                      deploymentEnv: ${{ deploymentEnv }} 
+                      environmentObj: ${{ deploymentEnv }} 
                       appDeployConfig: ${{ parameters.appDeployConfig }} 
-                      workingDirectory: '$(Pipeline.Workspace)/s'       
+                      workingDirectory: '$(Pipeline.Workspace)/s'
+                      projectName: ${{ parameters.projectName }}      
         - job: Review${{ deploymentEnv.name }}
           dependsOn: DryRun${{ deploymentEnv.name }}
           displayName: 'Review ${{ deploymentEnv.name }}'
@@ -55,10 +58,13 @@ stages:
         - job: Publish${{ deploymentEnv.name }}
           dependsOn: Review${{ deploymentEnv.name }}
           displayName: 'Publish ${{ deploymentEnv.name }}'               
-          steps:                
+          steps:
+            - checkout: Self
+              path: s/                 
             - template: /templates/steps/appconfig-import.yaml
               parameters:
                 dryRun: false
-                deploymentEnv: ${{ deploymentEnv }} 
+                environmentObj: ${{ deploymentEnv }} 
                 appDeployConfig: ${{ parameters.appDeployConfig }}
                 workingDirectory: '$(Pipeline.Workspace)/s'
+                projectName: ${{ parameters.projectName }}

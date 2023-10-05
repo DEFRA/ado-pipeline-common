@@ -247,3 +247,4 @@ stages:
                         environmentObj: ${{ deploymentEnv }}
                         appBuildConfig: ${{ parameters.appBuildConfig }}
                         appDeployConfig: ${{ parameters.appDeployConfig }}
+                        projectName: ${{ parameters.projectName }}
