@@ -43,7 +43,7 @@ stages:
                     inputs:
                       tokenPattern: doublebraces
                       targetFiles: |
-                        **/*.config
+                        **/*.json
                   - ${{ if ne(parameters.appDeployConfig, '') }}:
                     - task: AzureAppConfigurationPush@6
                       displayName: 'Import Azure App Configuration'
