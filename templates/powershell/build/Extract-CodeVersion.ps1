@@ -53,7 +53,7 @@ try {
     $oldAppVersion = "0.0.0" #Assume version 0.0.0 for initial main branch
     $exitCode = 0
     $versionFilePath = "./VERSION"
-    $DefaultBranchName = Invoke-CommandLine -Command "git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'"
+    $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
     $CurrentBranchName = Invoke-CommandLine -Command "git symbolic-ref --short HEAD"
     $IsDefaultBranchBuild = "false"
 
