@@ -55,7 +55,7 @@ try {
     $versionFilePath = "./VERSION"
     $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
     $IsDefaultBranchBuild = "False"
-    $CurrentBranchName=$(Build.SourceBranchName)
+    $CurrentBranchName=(Get-ChildItem -Path Env:BUILD_SOURCEBRANCHNAME).value
     if ($DefaultBranchName -eq $CurrentBranchName) {
         $IsDefaultBranchBuild = "True"
     }
