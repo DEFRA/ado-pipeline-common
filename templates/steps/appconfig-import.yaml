@@ -22,8 +22,8 @@ steps:
     inputs:
       tokenPattern: doublebraces
       inlineVariables: |
-        subscriptionid: ${{ parameters.environmentObj.serviceConnection }}
-        keyvaultname: ${{ parameters.environmentObj.appKeyVault }}
+        subscriptionId: ${{ parameters.environmentObj.subscriptionId }}
+        keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
         projectName: ${{ parameters.projectName }}
       targetFiles: |
         ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
