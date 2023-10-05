@@ -193,13 +193,14 @@ stages:
           and(
             succeeded(), 
             or(
-              eq( dependencies.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'] , 'true'),
+              eq( variables.IsDefaultBranchBuild , 'true'),
               eq( variables.IsPrBuild , true),
               eq( parameters.deployFromFeature , true)
             ) 
           )
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          IsDefaultBranchBuild: $[ dependencies.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
           helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
         steps:
@@ -260,9 +261,11 @@ stages:
           vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
       jobs:        
         - deployment: PublishTo${{ deploymentEnv.name }}
+          variables: 
+            IsDefaultBranchBuild: $[ stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'] ]
           condition:  |
             or(
-              eq( stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'], 'true'),
+              eq( variables.IsDefaultBranchBuild, 'true'),
               and(
                 or(
                   eq(variables.IsPrBuild, true),
