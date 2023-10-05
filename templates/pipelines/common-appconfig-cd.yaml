@@ -55,10 +55,10 @@ stages:
           pool: server
           steps:
             - task: ManualValidation@0
-                displayName: 'Manual Validation'
-                inputs:
-                  notifyUsers: rajesh.venkatraman@capgemini.com
-                  instructions: verify
+              displayName: 'Manual Validation'
+              inputs:
+                notifyUsers: rajesh.venkatraman@capgemini.com
+                instructions: verify
            
         - job: Publish${{ deploymentEnv.name }}
           displayName: 'Publish ${{ deploymentEnv.name }}' 
