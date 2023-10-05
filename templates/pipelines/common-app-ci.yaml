@@ -4,6 +4,9 @@ parameters:
 - name: deployFromFeature
   type: boolean
   default: false  
+- name: deployConfigOnly
+  type: boolean
+  default: false   
 - name: agentImage
   type: string
   default: 'ubuntu-latest'
@@ -73,7 +76,8 @@ stages:
             name: GetAppVersion
 
       - job: Build
-        displayName: 'Build'     
+        displayName: 'Build'  
+        condition: ${{ eq(parameters.deployConfigOnly, false )}}    
         dependsOn: Initialise
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
@@ -128,6 +132,7 @@ stages:
 
       - job: BuildImage
         displayName: 'Build Image'
+        condition: ${{ eq(parameters.deployConfigOnly, false )}}    
         dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
@@ -184,7 +189,7 @@ stages:
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
       - job: PublishArtifacts
-        displayName: 'Publish Artifacts'  
+        displayName: 'Publish Artifacts'   
         dependsOn: [Initialise,Build,BuildImage]
         condition: |
           and(
@@ -193,6 +198,7 @@ stages:
               eq( variables.IsDefaultBranchBuild , true),
               eq( variables.IsPrBuild , true),
               eq( ${{ parameters.deployFromFeature }} , true)
+              eq(${{ parameters.deployConfigOnly }}, false )
             ) 
           )
         variables:
@@ -285,9 +291,10 @@ stages:
                         appDeployConfig: ${{ parameters.appDeployConfig }}
                         workingDirectory: '$(Pipeline.Workspace)/s'
                         projectName: ${{ parameters.projectName }}
-                  - template: /templates/steps/common-app-cd.yaml
-                    parameters:
-                        environmentObj: ${{ deploymentEnv }}
-                        appBuildConfig: ${{ parameters.appBuildConfig }}
-                        appDeployConfig: ${{ parameters.appDeployConfig }}
-                        PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                  - ${{ if eq(parameters.deployConfigOnly, false )}}:
+                    - template: /templates/steps/common-app-cd.yaml
+                      parameters:
+                          environmentObj: ${{ deploymentEnv }}
+                          appBuildConfig: ${{ parameters.appBuildConfig }}
+                          appDeployConfig: ${{ parameters.appDeployConfig }}
+                          PSHelperDirectory: ${{ variables.PSHelperDirectory }}
