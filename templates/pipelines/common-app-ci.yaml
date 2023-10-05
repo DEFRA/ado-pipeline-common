@@ -251,7 +251,6 @@ stages:
               
   - ${{ each deploymentEnv in parameters.environments }}:      
     - stage: Application_CD_${{ deploymentEnv.name }}
-      dependsOn: [Application_CI]
       displayName: 'Application CD ${{ deploymentEnv.name }}'
       ${{ if ne(deploymentEnv.privateAgentName, '') }}:
         pool:
