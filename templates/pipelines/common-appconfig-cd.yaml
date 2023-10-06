@@ -52,15 +52,20 @@ stages:
               displayName: 'Manual Validation'
               inputs:
                 notifyUsers: 
-                instructions: verify changes          
-        - job: Publish${{ deploymentEnv.name }}
+                instructions: verify changes       
+              enabled: false   
+        - deployment: Publish${{ deploymentEnv.name }}
+          environment: ${{ deploymentEnv.name }}
           dependsOn: Review${{ deploymentEnv.name }}
-          displayName: 'Publish ${{ deploymentEnv.name }}'               
-          steps:             
-            - template: /templates/steps/appconfig-import.yaml
-              parameters:
-                dryRun: false
-                environmentObj: ${{ deploymentEnv }} 
-                appDeployConfig: ${{ parameters.appDeployConfig }}
-                workingDirectory: '$(Pipeline.Workspace)/s'
-                projectName: ${{ parameters.projectName }}
+          displayName: 'Publish ${{ deploymentEnv.name }}'
+          strategy:
+            runOnce:
+              deploy:                
+                steps:             
+                  - template: /templates/steps/appconfig-import.yaml
+                    parameters:
+                      dryRun: false
+                      environmentObj: ${{ deploymentEnv }} 
+                      appDeployConfig: ${{ parameters.appDeployConfig }}
+                      workingDirectory: '$(Pipeline.Workspace)/s'
+                      projectName: ${{ parameters.projectName }}
