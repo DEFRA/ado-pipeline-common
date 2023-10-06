@@ -43,7 +43,7 @@ parameters:
 variables:
 - group: NodeJSAppBuild
 - name: IsDefaultBranchBuild
-  value: ${{ or( in(Build.SourceBranch, 'refs/heads/main','refs/heads/master'), contains(Build.SourceBranch,'refs/tags') }}
+  value: ${{ or( in(Build.SourceBranch, 'refs/heads/main','refs/heads/master'), contains(Build.SourceBranch,'refs/tags') ) }}
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
