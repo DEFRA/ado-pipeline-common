@@ -103,15 +103,17 @@ try {
     if ($IsDefaultBranchBuild -eq "False") {
         #Check if the version is upgraded
         if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
-            Write-Output "${functionName}:appVersion upgraded"    
+            Write-Output "${functionName}:appVersion upgraded" -ForegroundColor green   
         }
         else {
-            Write-Output "${functionName}:appVersion not upgraded"    
+            Write-Output "${functionName}:appVersion not upgraded" -ForegroundColor red   
             $exitCode = -2
         }
     }
 
-    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion;IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName;CurrentBranchName=$CurrentBranchName;"    
+    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion"    
+    Write-Output "${functionName}:IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName"    
+    Write-Output "${functionName}:CurrentBranchName=$CurrentBranchName;"    
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
     Write-Output "##vso[task.setvariable variable=IsDefaultBranchBuild;isOutput=true]$IsDefaultBranchBuild"
