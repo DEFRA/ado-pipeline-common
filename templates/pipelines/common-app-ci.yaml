@@ -77,7 +77,11 @@ stages:
 
       - job: Build
         displayName: 'Build'  
-        condition: ${{ eq(parameters.deployConfigOnly, false) }}    
+        condition: |
+          and(
+            succeeded('Initialise'),
+            ${{ eq(parameters.deployConfigOnly, false) }}
+          )
         dependsOn: Initialise
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
@@ -132,7 +136,11 @@ stages:
 
       - job: BuildImage
         displayName: 'Build Image'
-        condition: ${{ eq(parameters.deployConfigOnly, false) }}    
+        condition:  |
+          and(
+            succeeded('Initialise'),
+            ${{ eq(parameters.deployConfigOnly, false) }}    
+          )
         dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
