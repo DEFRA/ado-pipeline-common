@@ -56,7 +56,7 @@ try {
     $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
     $IsDefaultBranchBuild = "False"
     $CurrentBranchName=(Get-ChildItem -Path Env:BUILD_SOURCEBRANCH).value
-    if ($CurrentBranchName -contains "refs/tags") {
+    if ($CurrentBranchName -like "refs/tags*") {
         $IsDefaultBranchBuild = "True"
     }
     elseif ($CurrentBranchName -eq ("refs/heads/" + $DefaultBranchName) ) {
