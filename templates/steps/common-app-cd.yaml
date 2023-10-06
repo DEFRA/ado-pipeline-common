@@ -50,15 +50,6 @@ steps:
       artifactName: 'helm'
       targetPath: '$(Pipeline.Workspace)/helm'
 
-  - ${{ if and(ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filepath, '')) }}:
-    - task: AzureAppConfigurationPush@6
-      displayName: 'Import Azure App Configuration'
-      inputs:
-        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
-        AppConfigurationEndpoint: 'https://${{ parameters.environmentObj.appConfiguration }}.azconfig.io'
-        ConfigurationFile: '$(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}/${{ parameters.environmentObj.name }}.appConfig.json'
-        FileContentProfile: appconfig/kvset
-
   - task: AzureCLI@2                   
     inputs:
       azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
