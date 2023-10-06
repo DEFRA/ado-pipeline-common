@@ -42,6 +42,8 @@ parameters:
   
 variables:
 - group: NodeJSAppBuild
+- name: IsDefaultBranchBuild
+  value: ${{ or( in(Build.SourceBranch, 'refs/heads/main','refs/heads/master'), contains(Build.SourceBranch,'refs/tags') }}
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
@@ -210,7 +212,6 @@ stages:
           )
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-          IsDefaultBranchBuild: $[ dependencies.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
           helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
         steps:
@@ -271,8 +272,6 @@ stages:
           vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
       jobs:        
         - deployment: PublishTo${{ deploymentEnv.name }}
-          variables: 
-            IsDefaultBranchBuild: $[ stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.IsDefaultBranchBuild'] ]
           condition:  |
             or(
               eq( variables.IsDefaultBranchBuild, true),
