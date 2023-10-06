@@ -103,10 +103,10 @@ try {
     if ($IsDefaultBranchBuild -eq "False") {
         #Check if the version is upgraded
         if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
-            Write-Output "${functionName}:appVersion upgraded" -ForegroundColor green   
+            Write-Host "${functionName}:appVersion upgraded" -ForegroundColor green   
         }
         else {
-            Write-Output "${functionName}:appVersion not upgraded" -ForegroundColor red   
+            Write-Host "${functionName}:appVersion not upgraded" -ForegroundColor red   
             $exitCode = -2
         }
     }
