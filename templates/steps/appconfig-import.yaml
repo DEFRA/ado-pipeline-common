@@ -17,7 +17,9 @@ parameters:
 steps:
   - checkout: Self
     path: s/ 
-
+  - checkout: PipelineCommon
+    path: s/PipelineCommon
+    
   - task: PowerShell@2
     displayName: 'Validate Config File'
     inputs:
