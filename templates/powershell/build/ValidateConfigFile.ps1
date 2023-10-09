@@ -50,10 +50,10 @@ try {
     }
         
     if (($json | Test-Json -SchemaFile $SchemaFilePath) -eq $true) {
-        Write-Host ("${functionName} JSON "+$_.Name + "`t`tPassed validation")
+        Write-Host "${functionName} JSON File`t`tPassed validation"
     }
     else {
-        $err += $_.Name + "`t`t" + $Error[0].ErrorDetails + "`r`n";
+        $err += "`t`t" + $Error[0].ErrorDetails + "`r`n";
     }   
 
     if ($err -ne "") {
