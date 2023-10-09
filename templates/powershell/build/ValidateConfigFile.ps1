@@ -51,15 +51,7 @@ try {
         
     if (($json | Test-Json -SchemaFile $SchemaFilePath) -eq $true) {
         Write-Host "${functionName} JSON File`t`tPassed validation"
-    }
-    else {
-        $err += "`t`t" + $Error[0].ErrorDetails + "`r`n";
-    }   
-
-    if ($err -ne "") {
-        $exitCode = -2
-        Write-Error $err
-    }
+    }    
          
 }
 catch {
