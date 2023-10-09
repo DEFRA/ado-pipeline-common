@@ -21,10 +21,12 @@ stages:
     - stage: ${{ deploymentEnv.name }}
       displayName: 'AppConfig CD ${{ deploymentEnv.name }}'
       variables:
-        - ${{ containsValue( parameters.appDeployConfig.variableGroups.groups, (parameters.serviceName,'-',deploymentEnv.name) ) }}:
-          - group: '${{ join(parameters.serviceName,'-',deploymentEnv.name) }}'
+        - ${{ containsValue( parameters.appDeployConfig.variableGroups.groups, variables.variableGroupName ) }}:
+          - group: '${{ variables.variableGroupName }}'
         - name: serviceName
-          value: ${{ parameters.serviceName }} 
+          value: ${{ parameters.serviceName }}
+        - name: variableGroupName
+          value: "${{parameters.serviceName}}-${{ deploymentEnv.name }}"
       ${{ if ne(deploymentEnv.privateAgentName, '') }}:
         pool:
           name: ${{ deploymentEnv.privateAgentName }}
