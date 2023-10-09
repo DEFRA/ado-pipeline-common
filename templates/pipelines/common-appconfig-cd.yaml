@@ -22,7 +22,8 @@ stages:
       displayName: 'AppConfig CD ${{ deploymentEnv.name }}'
       variables:
         - group: '${{ parameters.serviceName }}-${{ deploymentEnv.name }}'
-        - serviceName: ${{ parameters.serviceName }} 
+        - name: serviceName
+          value: ${{ parameters.serviceName }} 
       ${{ if ne(deploymentEnv.privateAgentName, '') }}:
         pool:
           name: ${{ deploymentEnv.privateAgentName }}
