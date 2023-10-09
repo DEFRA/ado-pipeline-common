@@ -59,6 +59,9 @@ dependsOn: Application_CI
     deployment: PublishTo<Env>
       steps:
         task: Download artificats (code version, docker image, helm chart)
+        task: Push secrets from variable group to application keyvault
+        task: Validate Azure App Configuration json file
+        task: Replace Tokens in Configuration json file
         task: Push Azure App Configuration to AzureAppConfig
         task: Push Docker Image to ACR
         task: Push Helm Chart to ACR
@@ -73,12 +76,16 @@ Following pipeline `common-app-build.yaml` code snippet is an example of how to 
 # Example of abstracting the CI pipeline from dev team
 
 parameters:
-  - name: projectName
+  - name: serviceName
     displayName: Project name
     type: string
   - name: deployFromFeature
     type: boolean
-    default: false  
+    default: false 
+  - name: deployConfigOnly
+    displayName: Deploy App Config Only
+    type: boolean
+    default: false       
   - name: appBuildConfig
     displayName: Details to build the app
     type: object
@@ -102,8 +109,9 @@ resources:
 extends:
   template: /templates/pipelines/common-app-ci.yaml@PipelineCommon
   parameters:
-    projectName: ${{ parameters.projectName }}              #Mandatory: Project Name
+    serviceName: ${{ parameters.serviceName }}              #Mandatory: Project Name
     deployFromFeature: ${{ parameters.deployFromFeature }}  #Mandatory: True/False(default)  parameter used to deploy feature branch to dev environment.
+    deployConfigOnly: ${{ parameters.deployConfigOnly }}    #Mandatory: True/False(default)  parameter used to deploy app config to various environments.
     privateAgentName: 'DEFRA-ubuntu2204'                    #Optional:  Name of the private build agent. default will use Azure hosted linux agent.
     packageFeedName: 'artifact-feed'                        #Mandatory: Name of the Azure Devops Artifacts package feed. Used by .Net and NodeJs build.
     appBuildConfig: ${{ parameters.appBuildConfig }}        #Mandatory: Object which contains configration used for building the application. Such as appFrameworkType, defaultBranch, frameworkVersion, projectPath, manifestPath, imageRepoName
@@ -141,7 +149,10 @@ parameters:
     displayName: "Deploy from Feature Branch"
     type: boolean
     default: false
-
+  - name: deployConfigOnly
+    displayName: Deploy App Config Only
+    type: boolean
+    default: false  
 pr:
   branches:
     include:
@@ -174,8 +185,9 @@ resources:
 extends:
     template: /pipelines/common-app-build.yaml@DEFRA-ADPPipelineCommon
     parameters:
-        projectName: "ProjectName"          #Mandatory
+        serviceName: "serviceName"          #Mandatory
         deployFromFeature: true            #Mandatory: Default false. If set to True will deploy the feature branch code to Dev environment.
+        deployConfigOnly: ${{ parameters.deployConfigOnly }} #Mandatory: True/False(default)  parameter used to deploy app config to various environments.
         appBuildConfig:
             appFrameworkType: "dotnet"      # Mandatory "dotnet" or "nodejs" used to run the appropriate build step            
             frameworkVersion: "6.x"         #Optional: Used by DotNet build task. Defaults to 6.x
@@ -185,8 +197,8 @@ extends:
             imageRepoName: "repo-name"      #Mandatory: Used for publishing docker, helm charts and also used by snyk to publish the results
         appTestConfig:                      #Optional: Used for testing application
             testFilePath: './docker-compose.test.yaml'
-        appDeployConfig:                    #Optional: Used for deploying application to various environments
-            filepath: "./config"            #Optional: Folder path of app configuration files
+        appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
+            filepath: "./appConfig"            #Optional: Folder path of app configuration files
 
 ```
 
@@ -198,7 +210,10 @@ parameters:
     displayName: "Deploy from Feature Branch"
     type: boolean
     default: false
-
+  - name: deployConfigOnly
+    displayName: Deploy App Config Only
+    type: boolean
+    default: false  
 pr:
   branches:
     include:
@@ -230,8 +245,9 @@ resources:
 extends:
     template: /pipelines/common-app-build.yaml@DEFRA-ADPPipelineCommon
     parameters:
-        projectName: "ProjectName"          #Mandatory
+        serviceName: "serviceName"          #Mandatory
         deployFromFeature: ${{ parameters.deployFromFeature }}  #Mandatory: Default false. If set to True will deploy the feature branch code to Dev environment.
+        deployConfigOnly: ${{ parameters.deployConfigOnly }} #Mandatory: True/False(default)  parameter used to deploy app config to various environments.
         appBuildConfig:
             appFrameworkType: "nodejs"      #Mandatory: "dotnet" or "nodejs" used to run the appropriate build step            
             frameworkVersion: "18.x"        #Optional: Used by DotNet and Nodejs build task. Defaults to 6.x. For Node JS 18.x
@@ -241,6 +257,6 @@ extends:
         appTestConfig:                      #Optional: Used for testing application
             testFilePath: "./docker-compose.test.yaml"
             acceptanceTestFilePath: "./docker-compose.acceptance.yaml"
-        appDeployConfig:                    #Optional: Used for deploying application to various environments
-            filepath: "./config"            #Optional: Folder path of app configuration files
+        appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
+            filepath: "./appConfig"         #Optional: Folder path of app configuration files
 ```

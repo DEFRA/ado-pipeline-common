@@ -1,5 +1,5 @@
 parameters:
-- name: projectName
+- name: serviceName
   type: string
 - name: deployFromFeature
   type: boolean
@@ -41,6 +41,7 @@ parameters:
   default: null
   
 variables:
+- group: NodeJSAppBuild
 - group: NodeJSAppBuild
 - name: IsDefaultBranchBuild
   value: ${{ or( in(variables['Build.SourceBranch'], 'refs/heads/main','refs/heads/master'), contains(variables['Build.SourceBranch'],'refs/tags') ) }}
@@ -260,48 +261,49 @@ stages:
             inputs:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
-              
-  - ${{ each deploymentEnv in parameters.environments }}:      
-    - stage: ${{ deploymentEnv.name }}
-      dependsOn: ${{ deploymentEnv.dependsOn }}
-      displayName: 'Application CD ${{ deploymentEnv.name }}'
-      ${{ if ne(deploymentEnv.privateAgentName, '') }}:
-        pool:
-          name: ${{ deploymentEnv.privateAgentName }}
-      ${{ else }}:
-        pool:
-          vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
-      jobs:        
-        - deployment: PublishTo${{ deploymentEnv.name }}
-          condition:  |
-            or(
-              eq( variables.IsDefaultBranchBuild, true),
-              and(
-                or(
-                  eq(variables.IsPrBuild, true),
-                  eq(${{ parameters.deployFromFeature }},true)
-                ),
-                eq('${{ deploymentEnv.type }}','dev')
+  - ${{ if or( eq(variables.IsDefaultBranchBuild, true), eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true), eq(parameters.deployConfigOnly, true) ) }}:              
+    - ${{ each deploymentEnv in parameters.environments }}:      
+      - stage: ${{ deploymentEnv.name }}
+        dependsOn: ${{ deploymentEnv.dependsOn }}
+        displayName: 'Application CD ${{ deploymentEnv.name }}'
+        ${{ if ne(deploymentEnv.privateAgentName, '') }}:
+          pool:
+            name: ${{ deploymentEnv.privateAgentName }}
+        ${{ else }}:
+          pool:
+            vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+        jobs:        
+          - deployment: PublishTo${{ deploymentEnv.name }}
+            condition:  |
+              or(
+                eq( variables.IsDefaultBranchBuild, true),
+                and(
+                  or(
+                    eq(variables.IsPrBuild, true),
+                    eq(${{ parameters.deployFromFeature }},true),
+                    eq(${{ parameters.deployConfigOnly }}, true)
+                  ),
+                  eq('${{ deploymentEnv.type }}','dev')
+                ) 
               ) 
-            ) 
-          displayName: 'Publish To ${{ deploymentEnv.name }}'
-          environment: ${{ deploymentEnv.name }}
-          strategy:
-            runOnce:
-              deploy:          
-                steps:
-                  - ${{ if ne(parameters.appDeployConfig, '') }}:             
-                    - template: /templates/steps/appconfig-import.yaml
-                      parameters:
-                        dryRun: false
-                        environmentObj: ${{ deploymentEnv }} 
-                        appDeployConfig: ${{ parameters.appDeployConfig }}
-                        workingDirectory: '$(Pipeline.Workspace)/s'
-                        projectName: ${{ parameters.projectName }}
-                  - ${{ if eq(parameters.deployConfigOnly, false )}}:
-                    - template: /templates/steps/common-app-cd.yaml
-                      parameters:
-                          environmentObj: ${{ deploymentEnv }}
-                          appBuildConfig: ${{ parameters.appBuildConfig }}
+            displayName: 'Publish To ${{ deploymentEnv.name }}'
+            environment: ${{ deploymentEnv.name }}
+            strategy:
+              runOnce:
+                deploy:          
+                  steps:
+                    - ${{ if ne(parameters.appDeployConfig, '') }}:             
+                      - template: /templates/steps/appconfig-import.yaml
+                        parameters:
+                          dryRun: false
+                          environmentObj: ${{ deploymentEnv }} 
                           appDeployConfig: ${{ parameters.appDeployConfig }}
-                          PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                          workingDirectory: '$(Pipeline.Workspace)/s'
+                          serviceName: ${{ parameters.serviceName }}
+                    - ${{ if eq(parameters.deployConfigOnly, false )}}:
+                      - template: /templates/steps/common-app-cd.yaml
+                        parameters:
+                            environmentObj: ${{ deploymentEnv }}
+                            appBuildConfig: ${{ parameters.appBuildConfig }}
+                            appDeployConfig: ${{ parameters.appDeployConfig }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}

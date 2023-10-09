@@ -1,5 +1,5 @@
 parameters:
-- name: projectName
+- name: serviceName
   type: string
 - name: agentImage
   type: string
@@ -21,7 +21,8 @@ stages:
     - stage: ${{ deploymentEnv.name }}
       displayName: 'AppConfig CD ${{ deploymentEnv.name }}'
       variables:
-            projectName: ${{ parameters.projectName }} 
+        - group: '${{ parameters.serviceName }}-${{ deploymentEnv.name }}'
+        - serviceName: ${{ parameters.serviceName }} 
       ${{ if ne(deploymentEnv.privateAgentName, '') }}:
         pool:
           name: ${{ deploymentEnv.privateAgentName }}
@@ -42,7 +43,7 @@ stages:
                       environmentObj: ${{ deploymentEnv }} 
                       appDeployConfig: ${{ parameters.appDeployConfig }} 
                       workingDirectory: '$(Pipeline.Workspace)/s'
-                      projectName: ${{ parameters.projectName }}      
+                      serviceName: ${{ parameters.serviceName }}      
         - job: Review${{ deploymentEnv.name }}
           dependsOn: DryRun${{ deploymentEnv.name }}
           displayName: 'Review ${{ deploymentEnv.name }}'
@@ -68,4 +69,4 @@ stages:
                       environmentObj: ${{ deploymentEnv }} 
                       appDeployConfig: ${{ parameters.appDeployConfig }}
                       workingDirectory: '$(Pipeline.Workspace)/s'
-                      projectName: ${{ parameters.projectName }}
+                      serviceName: ${{ parameters.serviceName }}

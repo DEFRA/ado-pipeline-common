@@ -11,7 +11,7 @@ parameters:
   default: null
 - name: workingDirectory
   type: string
-- name: projectName
+- name: serviceName
   type: string
 
 steps:
@@ -20,29 +20,30 @@ steps:
   - checkout: PipelineCommon
     path: s/PipelineCommon
 
-  - task: PowerShell@2
-    displayName: 'Validate Config File'
-    inputs:
-      targetType: filePath
-      filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
-      arguments: -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'  -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
-      failOnStderr: true
-      pwsh: true
-      workingDirectory: '$(Pipeline.Workspace)/s'
-
-  - task: replacetokens@5
-    displayName: 'Replace tokens in config'
-    inputs:
-      tokenPattern: doublebraces
-      inlineVariables: |
-        subscriptionId: ${{ parameters.environmentObj.subscriptionId }}
-        keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
-        serviceName: ${{ parameters.projectName }}
-        env: ${{ parameters.environmentObj.name }}
-      targetFiles: |
-        ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
-
   - ${{ if ne(parameters.appDeployConfig, '') }}:
+    - task: PowerShell@2
+      displayName: 'Validate Config File'
+      inputs:
+        targetType: filePath
+        filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
+        arguments: -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'  -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+        failOnStderr: true
+        pwsh: true
+        workingDirectory: '$(Pipeline.Workspace)/s'
+
+    - task: replacetokens@5
+      displayName: 'Replace tokens in config'
+      inputs:
+        tokenPattern: doublebraces
+        inlineVariables: |
+          subscriptionId: ${{ parameters.environmentObj.subscriptionId }}
+          keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
+          serviceName: ${{ parameters.serviceName }}
+          env: ${{ parameters.environmentObj.name }}
+        targetFiles: |
+          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
+
+  
     - task: AzureAppConfigurationPush@6
       displayName: 'Import Azure App Configuration'
       inputs:
