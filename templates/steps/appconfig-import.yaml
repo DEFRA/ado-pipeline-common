@@ -22,7 +22,23 @@ steps:
     path: s/PipelineCommon
 
   - ${{ if ne(parameters.appDeployConfig, '') }}:
-    - ${{ each var in parameters.appDeployConfig.variableGroups.variables }} :
+    - task: AzureCLI@2
+      displayName: 'List Variables'
+      name: GetVariableList
+      env:
+        AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        DevOpsUri: $(System.CollectionURI)
+        DevOpsProject: $(System.TeamProject)
+      inputs:
+        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ListSecrets.ps1'
+        arguments: -Variables '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
+        addSpnToEnvironment: true          
+        failOnStandardError: false
+        workingDirectory: '$(Pipeline.Workspace)/s'
+    - ${{ each var in split(variables.secretVariables,';' ) }} :
       - task: AzureCLI@2
         displayName: 'Azure CLI '
         inputs:
