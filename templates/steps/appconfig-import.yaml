@@ -46,10 +46,10 @@ steps:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($var)") )
+            $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "(${{ var }})") )
             write-output $secret
-            write-output ($var)
-            az keyvault secret set --name ($var) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
+            write-output ${{ var }}
+            az keyvault secret set --name ${{ var }} --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
           addSpnToEnvironment: true
 
         
