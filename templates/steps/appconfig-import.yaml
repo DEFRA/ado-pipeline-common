@@ -28,11 +28,11 @@ steps:
         inputs:
           azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
         scriptType: pscore
-          scriptLocation: inlineScript
-          inlineScript: |
-            $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($var)") )
-            az keyvault secret set --name $var --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
-          addSpnToEnvironment: true
+        scriptLocation: inlineScript
+        inlineScript: |
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($var)") )
+          az keyvault secret set --name $var --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
+        addSpnToEnvironment: true
 
         
 
