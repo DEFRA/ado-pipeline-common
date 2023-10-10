@@ -42,6 +42,8 @@ steps:
     - script: echo $(ffc-demo-collector-secret-pipeline-variable)
     - task: AzureCLI@2
       displayName: 'Azure CLI '
+      env:
+        secret1: $(ffc-demo-collector-secret-pipeline-variable)
       inputs:
         azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
         scriptType: pscore
@@ -49,9 +51,8 @@ steps:
         inlineScript: |
           $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")          
           write-output $secretVariables[0]          
-          $secretValue= $(ffc-demo-collector-secret-pipeline-variable)
-          write-output $secretValue       
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes($secretValue) )         
+          write-output $ENV:secret1       
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes($ENV:secret1) )         
           write-output $secret                    
           #az keyvault secret set --name $($secretVariables[0]) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
         addSpnToEnvironment: true
