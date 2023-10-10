@@ -67,7 +67,13 @@ try {
         if ($VariableGroup.contains($ServiceName + "-" + $EnvName)) {
             Write-Host "${functionName} :$VariableGroup"                  
             $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"
+            Write-Host "${functionName} :$group"    
+            $group =az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json
+            Write-Host "${functionName} :$group"    
             $variable_group = Invoke-CommandLine -Command "az pipelines variable-group variable list --group-id $group.id --detect true  | ConvertFrom-Json"
+            Write-Host "${functionName} :$variable_group"    
+            $variable_group = az pipelines variable-group variable list --group-id $group.id --detect true  | ConvertFrom-Json
+            Write-Host "${functionName} :$variable_group"    
             $variables = $variable_group.psobject.Properties.Name
             foreach ($variable in $variables) {
                 if ($variable.contains($ServiceName)) {
