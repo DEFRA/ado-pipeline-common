@@ -55,7 +55,7 @@ try {
     $VariablesArray = $Variables -split ";"
     foreach ($variable in $VariablesArray) {
         if (![string]::IsNullOrEmpty($variable)) {
-            Write-Host "${functionName}:$(ffc-demo-collector-secret-va2) : ($variable) : $($variable) : $("$variable")"
+            Write-Host "${functionName} : $(${$variable}) : (${$variable}) : ${$variable} "
             $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($variable)") )
             write-output $secret
             $SecureSecret = ConvertTo-SecureString -String $secret -AsPlainText -Force
