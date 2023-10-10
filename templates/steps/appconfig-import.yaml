@@ -38,7 +38,7 @@ steps:
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'
-      - script: echo $(GetVariableList.secretVariables)
+      - script: echo $(secretVariables)
       - task: AzureCLI@2
         displayName: 'Azure CLI '
         inputs:
@@ -46,7 +46,7 @@ steps:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            $secretVariables= $(GetVariableList.secretVariables) -split ";"
+            $secretVariables= $(secretVariables) -split ";"
             $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($($secretVariables[0]))") )
             write-output $secret
             write-output $($secretVariables[0])
