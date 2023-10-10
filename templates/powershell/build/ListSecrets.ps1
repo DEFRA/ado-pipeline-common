@@ -6,18 +6,22 @@ List all variables from provided list of groups
 
 .PARAMETER VariableGroups
 Mandatory. SemiColon seperated variable groups
+.PARAMETER EnvName
+Mandatory. Environment Name
 .PARAMETER ServiceName
 Mandatory. Service Name
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 .EXAMPLE
-.\ListSecrets.ps1  -VariableGroups <VariableGroups> -ServiceName <ServiceName> PSHelperDirectory <PSHelperDirectory>
+.\ListSecrets.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName> -ServiceName <ServiceName> PSHelperDirectory <PSHelperDirectory>
 #> 
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [string] $VariableGroups,
+    [Parameter(Mandatory)]
+    [string] $EnvName,      
     [Parameter(Mandatory)]
     [string] $ServiceName,    
     [Parameter(Mandatory)]
@@ -43,6 +47,8 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:VariableGroups=$VariableGroups"
+Write-Debug "${functionName}:EnvName=$EnvName"
+Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
@@ -58,7 +64,7 @@ try {
 
     $VariableGroupsArray = $VariableGroups -split ";"
     foreach ($VariableGroup in $VariableGroupsArray) {
-        if (![string]::IsNullOrEmpty($VariableGroup)) {
+        if ($VariableGroup.contains($ServiceName + "-" + $EnvName)) {
             Write-Host "${functionName} :$VariableGroup"                  
             $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"
             $variable_group = Invoke-CommandLine -Command "az pipelines variable-group variable list --group-id $group.id --detect true  | ConvertFrom-Json"
@@ -68,6 +74,8 @@ try {
                     $variablesArray += $variable
                 }
             }
+        }else{
+            Write-Host "${functionName} :$VariableGroup not related to env: $EnvName"        
         }
     }  
     if ($variablesArray.Length -gt 0) {

@@ -34,7 +34,7 @@ steps:
         scriptType: pscore
         scriptLocation: scriptPath
         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ListSecrets.ps1'
-        arguments: -Variables '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
+        arguments: -VariableGroups '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -EnvName ${{ parameters.environmentObj.name }} -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'
