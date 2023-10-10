@@ -13,7 +13,8 @@ parameters:
   type: string
 - name: serviceName
   type: string
-
+- name: PSHelperDirectory
+  type: string  
 steps:
   - checkout: Self
     path: s/ 
@@ -21,6 +22,18 @@ steps:
     path: s/PipelineCommon
 
   - ${{ if ne(parameters.appDeployConfig, '') }}:
+    - task: AzureCLI@2
+      displayName: 'Import Secrets to KV'
+      inputs:
+        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ImportSecretsToKV.ps1'
+        arguments: -Variables '${{ join(';',parameters.appDeployConfig.variableGroups.variables) }}' -KeyVault '${{ parameters.environmentObj.appKeyVault }}' -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
+        addSpnToEnvironment: true          
+        failOnStandardError: false
+        workingDirectory: '$(Pipeline.Workspace)/s'
+
     - task: PowerShell@2
       displayName: 'Validate Config File'
       inputs:
