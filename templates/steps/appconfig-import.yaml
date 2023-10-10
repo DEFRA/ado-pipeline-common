@@ -22,17 +22,19 @@ steps:
     path: s/PipelineCommon
 
   - ${{ if ne(parameters.appDeployConfig, '') }}:
-    - task: AzureCLI@2
-      displayName: 'Import Secrets to KV'
-      inputs:
-        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+    - ${{ each var in parameters.appDeployConfig.variableGroups.variables }} :
+      - task: AzureCLI@2
+        displayName: 'Azure CLI '
+        inputs:
+          azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
         scriptType: pscore
-        scriptLocation: scriptPath
-        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ImportSecretsToKV.ps1'
-        arguments: -Variables '${{ join(';',parameters.appDeployConfig.variableGroups.variables) }}' -KeyVault '${{ parameters.environmentObj.appKeyVault }}' -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
-        addSpnToEnvironment: true          
-        failOnStandardError: false
-        workingDirectory: '$(Pipeline.Workspace)/s'
+          scriptLocation: inlineScript
+          inlineScript: |
+            $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($var)") )
+            az keyvault secret set --name $var --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
+          addSpnToEnvironment: true
+
+        
 
     - task: PowerShell@2
       displayName: 'Validate Config File'
