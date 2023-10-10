@@ -38,7 +38,7 @@ steps:
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'
-    - ${{ each var in split($secretVariables,';' ) }} :
+    - ${{ each var in split(variables.secretVariables,';' ) }} :
       - script: echo ${{ var }}
       - task: AzureCLI@2
         displayName: 'Azure CLI '
