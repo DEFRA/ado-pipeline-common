@@ -49,9 +49,8 @@ steps:
         inlineScript: |
           $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")          
           write-output $secretVariables[0]          
-          $secretValue= ("$secretVariables[0]")
-          write-output $secretValue
-          write-output ("$secretVariables[0]").ToCharArray()         
+          $secretValue= $($secretVariables[0])
+          write-output $secretValue       
           $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes($secretValue) )         
           write-output $secret                    
           #az keyvault secret set --name $($secretVariables[0]) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
