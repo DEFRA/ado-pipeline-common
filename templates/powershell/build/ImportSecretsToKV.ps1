@@ -19,7 +19,9 @@ param(
     [Parameter(Mandatory)]
     [string] $Variables,
     [Parameter(Mandatory)]
-    [string] $KeyVault
+    [string] $KeyVault,
+    [Parameter(Mandatory)]
+    [string]$PSHelperDirectory
 )
 
 Set-StrictMode -Version 3.0
