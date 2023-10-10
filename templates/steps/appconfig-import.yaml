@@ -40,7 +40,6 @@ steps:
         workingDirectory: '$(Pipeline.Workspace)/s'
         
     - script: echo $(ffc-demo-collector-secret-pipeline-variable)
-    - script: echo $(ffc-demo-collector-secret-va2)
     - task: AzureCLI@2
       displayName: 'Azure CLI '
       inputs:
@@ -48,11 +47,14 @@ steps:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($("$secretVariables[0]"))") )          
+          $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")          
           write-output $secretVariables[0]
           write-output $secretVariables[1]
-          write-output $("$secretVariables[0]")          
+          write-output $($secretVariables[0])          
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "$($secretVariables[0])") )          
+          write-output $secret  
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "$(ffc-demo-collector-secret-pipeline-variable)") )          
+          write-output $secret
           #az keyvault secret set --name $($secretVariables[0]) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
         addSpnToEnvironment: true
 
