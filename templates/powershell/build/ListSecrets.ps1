@@ -81,7 +81,7 @@ try {
     }  
     if ($variablesArray.Length -gt 0) {
         $variablesArrayString = $variablesArray -join ';'
-        Write-Output "##vso[task.setvariable variable=secretVariables;isOutput=true]$variablesArrayString"     
+        Write-Output "##vso[task.setvariable variable=secretVariables]$variablesArrayString"     
         Write-Host "${functionName} :$variablesArrayString"
     }
 }
