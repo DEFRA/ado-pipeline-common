@@ -55,8 +55,8 @@ try {
     $VariablesArray = $Variables -split ";"
     foreach ($variable in $VariablesArray) {
         if (![string]::IsNullOrEmpty($variable)) {
-            Write-Host "${functionName}:$variable"
-            $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "$($variable)") )
+            Write-Host "${functionName}:$variable : ($variable) : $($variable) : $("$variable")"
+            $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($variable)") )
             write-output $secret
             $SecureSecret = ConvertTo-SecureString -String $secret -AsPlainText -Force
             Invoke-CommandLine -Command "az keyvault secret set --name $variable --vault-name $KeyVault --value $SecureSecret"
