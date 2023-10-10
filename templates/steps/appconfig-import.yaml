@@ -38,7 +38,6 @@ steps:
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'
-      - script: echo $(secretVariables)
       - task: AzureCLI@2
         displayName: 'Azure CLI '
         inputs:
