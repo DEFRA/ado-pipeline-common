@@ -54,7 +54,7 @@ try {
 
     $VariablesArray = $Variables -split ";"
     foreach ($variable in $VariablesArray) {
-        if ([string]::IsNullOrEmpty($variable)) {
+        if (![string]::IsNullOrEmpty($variable)) {
             Write-Host "${functionName}:$variable"
             $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "$($variable)") )
             write-output $secret
