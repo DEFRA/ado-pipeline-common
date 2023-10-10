@@ -52,8 +52,10 @@ steps:
           $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")          
           write-output $secretVariables[0]          
           write-output $ENV:secret1       
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes($ENV:secret1) )         
-          write-output $secret                    
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$ENV:secret1") )
+          write-output $secret  
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("test") )
+          write-output $secret                   
           #az keyvault secret set --name $($secretVariables[0]) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
         addSpnToEnvironment: true
 
