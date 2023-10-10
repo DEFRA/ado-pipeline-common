@@ -48,13 +48,12 @@ steps:
         scriptLocation: inlineScript
         inlineScript: |
           $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")          
-          write-output $secretVariables[0]
-          write-output $secretVariables[1]
-          write-output ("$secretVariables[0]")          
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("("$secretVariables[0]")") )         
-          write-output $secret  
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "(ffc-demo-collector-secret-pipeline-variable)") )          
-          write-output $secret
+          write-output $secretVariables[0]          
+          $secretValue= ("$secretVariables[0]")
+          write-output $secretValue
+          write-output ("$secretVariables[0]").ToCharArray()         
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes($secretValue) )         
+          write-output $secret                    
           #az keyvault secret set --name $($secretVariables[0]) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
         addSpnToEnvironment: true
 
