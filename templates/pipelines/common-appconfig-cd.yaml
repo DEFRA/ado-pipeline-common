@@ -21,12 +21,11 @@ stages:
     - stage: ${{ deploymentEnv.name }}
       displayName: 'AppConfig CD ${{ deploymentEnv.name }}'
       variables:
-        - ${{ if containsValue( parameters.appDeployConfig.variableGroups, variables.variableGroupName ) }}:
-          - group: '${{ variables.variableGroupName }}'
+        - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
+          - ${{ if contains( varGroup, deploymentEnv.name) }}:
+            - group: '${{ varGroup }}'
         - name: serviceName
           value: ${{ parameters.serviceName }}
-        - name: variableGroupName
-          value: "${{parameters.serviceName}}-${{ deploymentEnv.name }}"
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
       ${{ if ne(deploymentEnv.privateAgentName, '') }}:
