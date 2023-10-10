@@ -14,7 +14,10 @@ parameters:
 - name: serviceName
   type: string
 - name: PSHelperDirectory
-  type: string  
+  type: string 
+- name: secretName
+  type: string 
+  default: "ffc-demo-collector-secret-pipeline-variable"   
 steps:
   - checkout: Self
     path: s/ 
@@ -39,7 +42,7 @@ steps:
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'
         
-    - script: echo $(ffc-demo-collector-secret-pipeline-variable)
+    - script: echo $(${{ parameters.secretName }})
     - task: AzureCLI@2
       displayName: 'Azure CLI '
       env:
@@ -55,12 +58,12 @@ steps:
           write-output $secret  
           $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
           write-output $secret
-          $x=$($secretVariables[0])
+          $x=$env:$secretVariables[0]
           $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$x") )
           write-output $secret  
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$("ffc-demo-collector-secret-pipeline-variable")") )
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
           write-output $secret    
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes($($secretVariables[0])) )
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$($env:$secretVariables[0])") )
           write-output $secret                  
           #az keyvault secret set --name $($secretVariables[0]) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
         addSpnToEnvironment: true
