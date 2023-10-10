@@ -55,8 +55,13 @@ steps:
           write-output $secret  
           $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
           write-output $secret
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$($secretVariables[0])") )
-          write-output $secret                    
+          $x=$($secretVariables[0])
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$x") )
+          write-output $secret  
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$("ffc-demo-collector-secret-pipeline-variable")") )
+          write-output $secret    
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes($($secretVariables[0])) )
+          write-output $secret                  
           #az keyvault secret set --name $($secretVariables[0]) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
         addSpnToEnvironment: true
 
