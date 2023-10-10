@@ -48,7 +48,7 @@ steps:
         scriptType: pscore
         scriptLocation: inlineScript
         inlineScript: |
-          $secretVariables= ($(GetVariableList.secretVariables) -split ";")
+          $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")
           $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($("$secretVariables[0]"))") )          
           write-output $secretVariables[0]
           write-output $secretVariables[1]
