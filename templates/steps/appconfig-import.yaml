@@ -13,56 +13,13 @@ parameters:
   type: string
 - name: serviceName
   type: string
-- name: PSHelperDirectory
-  type: string 
-- name: secretName
-  type: string 
-  default: "ffc-demo-collector-secret-pipeline-variable"   
 steps:
   - checkout: Self
     path: s/ 
   - checkout: PipelineCommon
     path: s/PipelineCommon
 
-  - ${{ if ne(parameters.appDeployConfig, '') }}:
-    - task: AzureCLI@2
-      displayName: 'List Variables'
-      name: GetVariableList
-      env:
-        AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-        DevOpsUri: $(System.CollectionURI)
-        DevOpsProject: $(System.TeamProject)
-      inputs:
-        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
-        scriptType: pscore
-        scriptLocation: scriptPath
-        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ListSecrets.ps1'
-        arguments: -VariableGroups '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -EnvName ${{ parameters.environmentObj.name }} -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
-        addSpnToEnvironment: true          
-        failOnStandardError: false
-        workingDirectory: '$(Pipeline.Workspace)/s'
-        
-    - script: echo $(${{ parameters.secretName }})
-    - task: AzureCLI@2
-      displayName: 'Azure CLI '
-      env:
-        varName: ffc-demo-collector-secret-pipeline-variable
-        secretValue: $(ffc-demo-collector-secret-pipeline-variable)
-
-      inputs:
-        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
-        scriptType: pscore
-        scriptLocation: inlineScript
-        inlineScript: |
-          $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")          
-          write-output $secretVariables[0]                         
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
-          write-output "secret: ($secret).ToCharArray() "          
-          az keyvault secret set --name $ENV:varName --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
-        addSpnToEnvironment: true
-
-        
-
+  - ${{ if ne(parameters.appDeployConfig, '') }}:      
     - task: PowerShell@2
       displayName: 'Validate Config File'
       inputs:

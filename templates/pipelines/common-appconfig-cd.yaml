@@ -35,6 +35,21 @@ stages:
         pool:
           vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
       jobs:
+        - deployment: ImportSecret${{ deploymentEnv.name }}
+          environment: ${{ deploymentEnv.name }}
+          displayName: 'ImportSecret ${{ deploymentEnv.name }}' 
+          strategy:
+            runOnce:
+              deploy:              
+                steps:
+                  - template: /templates/steps/secrets-import.yaml
+                    parameters:
+                      dryRun: true
+                      environmentObj: ${{ deploymentEnv }} 
+                      appDeployConfig: ${{ parameters.appDeployConfig }} 
+                      workingDirectory: '$(Pipeline.Workspace)/s'
+                      serviceName: ${{ parameters.serviceName }}
+                      PSHelperDirectory: ${{ variables.PSHelperDirectory }}
         - deployment: DryRun${{ deploymentEnv.name }}
           environment: ${{ deploymentEnv.name }}
           displayName: 'DryRun ${{ deploymentEnv.name }}' 
@@ -48,8 +63,7 @@ stages:
                       environmentObj: ${{ deploymentEnv }} 
                       appDeployConfig: ${{ parameters.appDeployConfig }} 
                       workingDirectory: '$(Pipeline.Workspace)/s'
-                      serviceName: ${{ parameters.serviceName }} 
-                      PSHelperDirectory: ${{ variables.PSHelperDirectory }}    
+                      serviceName: ${{ parameters.serviceName }}  
         - job: Review${{ deploymentEnv.name }}
           dependsOn: DryRun${{ deploymentEnv.name }}
           displayName: 'Review ${{ deploymentEnv.name }}'
@@ -76,4 +90,3 @@ stages:
                       appDeployConfig: ${{ parameters.appDeployConfig }}
                       workingDirectory: '$(Pipeline.Workspace)/s'
                       serviceName: ${{ parameters.serviceName }}
-                      PSHelperDirectory: ${{ variables.PSHelperDirectory }}
