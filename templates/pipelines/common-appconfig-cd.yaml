@@ -17,27 +17,6 @@ parameters:
   default: null
   
 stages:                
-  - stage: test
-    jobs:
-    - job: JobA
-      steps:
-      - pwsh: |
-          $json="{'job1': {'Work': 'work1'}, 'job2': {'Work': 'work2'}}"
-          Write-Host "##vso[task.setvariable variable=targets;isOutput=true]$json"
-        name: setTargets
-      - script: echo $(setTargets.targets)
-        name: echovar
-
-    - job: buildSrc
-      dependsOn: JobA
-      displayName: Build source
-      strategy:
-        matrix: $[ dependencies.JobA.outputs['setTargets.targets'] ]
-      variables:
-        targets: $[ dependencies.JobA.outputs['setTargets.targets'] ]
-      steps:
-      - pwsh: Write-Host "${{ convertToJson(variables) }}"
-        displayName: 'Print all variables via expression'
   - ${{ each deploymentEnv in parameters.environments }}:
     - stage: ${{ deploymentEnv.name }}
       displayName: 'AppConfig CD ${{ deploymentEnv.name }}'
@@ -61,45 +40,47 @@ stages:
           steps:
             - checkout: PipelineCommon
               path: s/PipelineCommon
-            - task: AzureCLI@2
-              displayName: 'List Variables'
-              name: GetVariableList
-              env:
-                AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-                DevOpsUri: $(System.CollectionURI)
-                DevOpsProject: $(System.TeamProject)
-              inputs:
-                azureSubscription: ${{ deploymentEnv.serviceConnection }}
-                scriptType: pscore
-                scriptLocation: scriptPath
-                scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ListSecrets.ps1'
-                arguments: -VariableGroups '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -EnvName ${{ deploymentEnv.name }} -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-                addSpnToEnvironment: true          
-                failOnStandardError: false
-                workingDirectory: '$(Pipeline.Workspace)/s'
+            # - task: AzureCLI@2
+            #   displayName: 'List Variables'
+            #   name: GetVariableList
+            #   env:
+            #     AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+            #     DevOpsUri: $(System.CollectionURI)
+            #     DevOpsProject: $(System.TeamProject)
+            #   inputs:
+            #     azureSubscription: ${{ deploymentEnv.serviceConnection }}
+            #     scriptType: pscore
+            #     scriptLocation: scriptPath
+            #     scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ListSecrets.ps1'
+            #     arguments: -VariableGroups '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -EnvName ${{ deploymentEnv.name }} -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+            #     addSpnToEnvironment: true          
+            #     failOnStandardError: false
+            #     workingDirectory: '$(Pipeline.Workspace)/s'
+        - pwsh: |
+            $json="{'job1': {'var': 'ffc-demo-collector-secret-pipeline-variable'}, 'job2': {'var': 'ffc-demo-collector-secret-va2'}}"
+            Write-Host "##vso[task.setvariable variable=secretVariables;isOutput=true]$json"
+          name: GetVariableList
         - job: ImportSecret          
           displayName: 'ImportSecret ${{ deploymentEnv.name }}' 
           dependsOn: ListSecrets
           strategy:
-            matrix:  
-              linux:
-                imageName: 'ubuntu-latest'
+            matrix: $[ dependencies.ListSecrets.outputs['GetVariableList.secretVariables'] ]
           variables:
-            secretVariables: $[ dependencies.ListSecrets.outputs['GetVariableList.secretVariables'] ]
+            secretVariables: $(var)
           steps:
             - checkout: Self
               path: s/ 
             - checkout: PipelineCommon
               path: s/PipelineCommon            
-            - ${{ each secret in split(variables.secretVariables, ';') }} :
-              - template: /templates/steps/secrets-import-kv.yaml
-                parameters:
-                  environmentObj: ${{ deploymentEnv }} 
-                  appDeployConfig: ${{ parameters.appDeployConfig }} 
-                  workingDirectory: '$(Pipeline.Workspace)/s'
-                  serviceName: ${{ parameters.serviceName }}
-                  PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                  secretName: ${{ secret }}
+            # - ${{ each secret in split(variables.secretVariables, ';') }} :
+            - template: /templates/steps/secrets-import-kv.yaml
+              parameters:
+                environmentObj: ${{ deploymentEnv }} 
+                appDeployConfig: ${{ parameters.appDeployConfig }} 
+                workingDirectory: '$(Pipeline.Workspace)/s'
+                serviceName: ${{ parameters.serviceName }}
+                PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                secretName: ${{ secretVariables }}
         - deployment: DryRun${{ deploymentEnv.name }}
           environment: ${{ deploymentEnv.name }}
           displayName: 'DryRun ${{ deploymentEnv.name }}' 
