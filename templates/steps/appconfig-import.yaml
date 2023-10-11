@@ -46,7 +46,9 @@ steps:
     - task: AzureCLI@2
       displayName: 'Azure CLI '
       env:
-        secret1: $(ffc-demo-collector-secret-pipeline-variable)
+        varName: ffc-demo-collector-secret-pipeline-variable
+        secret1: $($varName)
+
       inputs:
         azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
         scriptType: pscore
@@ -54,17 +56,13 @@ steps:
         inlineScript: |
           $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")          
           write-output $secretVariables[0]            
+          $secretWithoutBase64 =[Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)")                 
+          write-output "secret1: $secretWithoutBase64 "     
+           write-output "secretvertical: $secretWithoutBase64.ToCharArray() "
           $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$ENV:secret1") )
-          write-output $ENV:secret1 
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
-          write-output $(ffc-demo-collector-secret-pipeline-variable)
-          write-output  ($ENV:secret1).TocharArray()
-          write-output  $secret.TocharArray()
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
-          write-output $secret    
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("($secretVariables[0])") )
-          write-output $secret                  
-          #az keyvault secret set --name $($secretVariables[0]) --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
+          write-output "secret1: ($ENV:secret1).ToCharArray() "          
+          az keyvault secret set --name $ENV:varName --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
+          az keyvault secret set --name $ENV:varName --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secretWithoutBase64 -AsPlainText -Force)
         addSpnToEnvironment: true
 
         
