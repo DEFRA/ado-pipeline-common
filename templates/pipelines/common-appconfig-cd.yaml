@@ -48,11 +48,11 @@ stages:
                 DevOpsUri: $(System.CollectionURI)
                 DevOpsProject: $(System.TeamProject)
               inputs:
-                azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+                azureSubscription: ${{ deploymentEnv.serviceConnection }}
                 scriptType: pscore
                 scriptLocation: scriptPath
                 scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ListSecrets.ps1'
-                arguments: -VariableGroups '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -EnvName ${{ parameters.environmentObj.name }} -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                arguments: -VariableGroups '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -EnvName ${{ deploymentEnv.name }} -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                 addSpnToEnvironment: true          
                 failOnStandardError: false
                 workingDirectory: '$(Pipeline.Workspace)/s'
