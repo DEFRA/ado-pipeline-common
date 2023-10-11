@@ -133,7 +133,8 @@ extends:
         serviceConnection: 'ARM Connection'                 #Mandatory: Name of the connection to be used for deployment
         acrName: 'acr name'                                 #Mandatory: Name of the ACR to push the docker and helm charts
         privateAgentName: 'sandbox-ubuntu2204'              #Optional:  Name of the private build agent, default will use Azure hosted linux agent.
-        appConfiguration: 'application configration name'   #Optional:  Name of the Azure application configuration instance to push the config and secrets
+        appConfiguration: 'application configration name'   #Mandatory:  Name of the Azure application configuration instance to push the config and secrets
+        appKeyVault: 'application keyvault name'            #Mandatory:  Name of the Azure application keyvault instance to push the secrets from variable groups
         dependsOn: [ Application_CI ]                       #Mandatory: Names of one ore more stages. Application_CI stage is mandatory for all deployments
 
 
@@ -198,7 +199,13 @@ extends:
         appTestConfig:                      #Optional: Used for testing application
             testFilePath: './docker-compose.test.yaml'
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
-            filepath: "./appConfig"            #Optional: Folder path of app configuration files
+            filepath: "./appConfig"         #Optional: Folder path of app configuration files
+            variableGroups:                 #Optional: List of variable groups which contain secrets
+              - variableGroup1              #Optional: Variable Group name 
+              - variableGroup2      
+            variables:                      #Optional: List of variables used by the service
+              - variable1
+              - variable2
 
 ```
 
@@ -259,4 +266,10 @@ extends:
             acceptanceTestFilePath: "./docker-compose.acceptance.yaml"
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
+            variableGroups:                 #Optional: List of variable groups which contain secrets
+              - variableGroup1              #Optional: Variable Group name 
+              - variableGroup2      
+            variables:                      #Optional: List of variables used by the service
+              - variable1
+              - variable2
 ```
