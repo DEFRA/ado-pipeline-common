@@ -292,7 +292,20 @@ stages:
               runOnce:
                 deploy:          
                   steps:
-                    - ${{ if ne(parameters.appDeployConfig, '') }}:             
+                    - ${{ if ne(parameters.appDeployConfig, '') }}:
+                      - checkout: Self
+                        path: s/ 
+                      - checkout: PipelineCommon
+                        path: s/PipelineCommon  
+                      - ${{ each secret in split(parameters.appDeployConfig.variables, ';') }} :
+                        - template: /templates/steps/secrets-import-kv.yaml
+                          parameters:
+                            environmentObj: ${{ deploymentEnv }} 
+                            appDeployConfig: ${{ parameters.appDeployConfig }} 
+                            workingDirectory: '$(Pipeline.Workspace)/s'
+                            serviceName: ${{ parameters.serviceName }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                            secretName: ${{ secret }}       
                       - template: /templates/steps/appconfig-import.yaml
                         parameters:
                           dryRun: false
