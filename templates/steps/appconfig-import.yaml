@@ -47,7 +47,7 @@ steps:
       displayName: 'Azure CLI '
       env:
         varName: ffc-demo-collector-secret-pipeline-variable
-        secret1: $($varName)
+        secretValue: $(ffc-demo-collector-secret-pipeline-variable)
 
       inputs:
         azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
@@ -55,14 +55,10 @@ steps:
         scriptLocation: inlineScript
         inlineScript: |
           $secretVariables= ("$(GetVariableList.secretVariables)" -split ";")          
-          write-output $secretVariables[0]            
-          $secretWithoutBase64 =[Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)")                 
-          write-output "secret1: $secretWithoutBase64 "     
-           write-output "secretvertical: $secretWithoutBase64.ToCharArray() "
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$ENV:secret1") )
-          write-output "secret1: ($ENV:secret1).ToCharArray() "          
+          write-output $secretVariables[0]                         
+          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
+          write-output "secret: ($secret).ToCharArray() "          
           az keyvault secret set --name $ENV:varName --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secret -AsPlainText -Force)
-          az keyvault secret set --name $ENV:varName --vault-name ${{ parameters.environmentObj.appKeyVault }} --value (ConvertTo-SecureString -String $secretWithoutBase64 -AsPlainText -Force)
         addSpnToEnvironment: true
 
         
