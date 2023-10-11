@@ -39,6 +39,8 @@ steps:
           keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
           serviceName: ${{ parameters.serviceName }}
           env: ${{ parameters.environmentObj.name }}
+          keyVaultContentType: "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8"
+          resourceid: "/subscriptions/${{ parameters.environmentObj.subscriptionId }}/resourceGroups/${{ parameters.environmentObj.appKeyVault }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities"
         targetFiles: |
           ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
 
