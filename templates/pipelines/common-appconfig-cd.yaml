@@ -56,10 +56,10 @@ stages:
             #     addSpnToEnvironment: true          
             #     failOnStandardError: false
             #     workingDirectory: '$(Pipeline.Workspace)/s'
-        - pwsh: |
-            $json="{'job1': {'var': 'ffc-demo-collector-secret-pipeline-variable'}, 'job2': {'var': 'ffc-demo-collector-secret-va2'}}"
-            Write-Host "##vso[task.setvariable variable=secretVariables;isOutput=true]$json"
-          name: GetVariableList
+            - pwsh: |
+                $json="{'job1': {'var': 'ffc-demo-collector-secret-pipeline-variable'}, 'job2': {'var': 'ffc-demo-collector-secret-va2'}}"
+                Write-Host "##vso[task.setvariable variable=secretVariables;isOutput=true]$json"
+              name: GetVariableList
         - job: ImportSecret          
           displayName: 'ImportSecret ${{ deploymentEnv.name }}' 
           dependsOn: ListSecrets
