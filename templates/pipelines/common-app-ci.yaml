@@ -297,7 +297,7 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/PipelineCommon  
-                      - ${{ each secret in split(parameters.appDeployConfig.variables, ';') }} :
+                      - ${{ each secret in parameters.appDeployConfig.variable }} :
                         - template: /templates/steps/secrets-import-kv.yaml
                           parameters:
                             environmentObj: ${{ deploymentEnv }} 
