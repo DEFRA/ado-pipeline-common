@@ -4,20 +4,16 @@ Validate json Azure app config file
 .DESCRIPTION
 Validate json Azure app config file
 
-.PARAMETER Variables
-Mandatory. SemiColon seperated variables
 .PARAMETER KeyVault
 Mandatory. Application Keyvault
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 .EXAMPLE
-.\ImportSecretsToKV.ps1  -Variables <Variables> -KeyVault <KeyVault> PSHelperDirectory <PSHelperDirectory>
+.\ImportSecretsToKV.ps1 -KeyVault <KeyVault> -PSHelperDirectory <PSHelperDirectory>
 #> 
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
-    [string] $Variables,
     [Parameter(Mandatory)]
     [string] $KeyVault,
     [Parameter(Mandatory)]
@@ -42,7 +38,6 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:Variables=$Variables"
 Write-Debug "${functionName}:KeyVault=$KeyVault"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
@@ -51,18 +46,10 @@ try {
     Import-Module $PSHelperDirectory -Force
 
     $exitCode = 0
-
-    $VariablesArray = $Variables -split ";"
-    foreach ($variable in $VariablesArray) {
-        if (![string]::IsNullOrEmpty($variable)) {
-            Write-Host "${functionName} : $(${$variable}) : (${$variable}) : ${$variable} "
-            $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes( "($variable)") )
-            write-output $secret
-            $SecureSecret = ConvertTo-SecureString -String $secret -AsPlainText -Force
-            Invoke-CommandLine -Command "az keyvault secret set --name $variable --vault-name $KeyVault --value $SecureSecret"
-        }
-    }   
-         
+                                   
+    $secureSecretvalue = ConvertTo-SecureString -String $env:secretValue -AsPlainText -Force
+    Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value $secureSecretvalue"
+     
 }
 catch {
     $exitCode = -2
