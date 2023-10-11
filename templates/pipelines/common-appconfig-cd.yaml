@@ -64,13 +64,13 @@ stages:
               linux:
                 imageName: 'ubuntu-latest'
           variables:
-            secretVariableNames: $[ dependencies.ListSecrets.outputs['GetVariableList.secretVariables'] ]
+            secretVariables: $[ dependencies.ListSecrets.outputs['GetVariableList.secretVariables'] ]
           steps:
             - checkout: Self
               path: s/ 
             - checkout: PipelineCommon
               path: s/PipelineCommon            
-            - ${{ each secret in split(variables.secretVariableNames, ';') }} :
+            - ${{ each secret in split(variables.secretVariables, ';') }} :
               - template: /templates/steps/secrets-import-kv.yaml
                 parameters:
                   environmentObj: ${{ deploymentEnv }} 
