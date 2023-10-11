@@ -59,9 +59,6 @@ steps:
           $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
           write-output $(ffc-demo-collector-secret-pipeline-variable)
           $y="ffc-demo-collector-secret-pipeline-variable"
-          $x=$env:$y
-          $z=$env:($secretVariables[0])
-          $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$x") )
           write-output $x  
           $secret = [Convert]::ToBase64String( [Text.Encoding]::ASCII.GetBytes("$(ffc-demo-collector-secret-pipeline-variable)") )
           write-output $secret    
