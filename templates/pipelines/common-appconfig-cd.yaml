@@ -42,14 +42,19 @@ stages:
             runOnce:
               deploy:              
                 steps:
-                  - template: /templates/steps/secrets-import.yaml
-                    parameters:
-                      dryRun: true
-                      environmentObj: ${{ deploymentEnv }} 
-                      appDeployConfig: ${{ parameters.appDeployConfig }} 
-                      workingDirectory: '$(Pipeline.Workspace)/s'
-                      serviceName: ${{ parameters.serviceName }}
-                      PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                  - checkout: Self
+                    path: s/ 
+                  - checkout: PipelineCommon
+                    path: s/PipelineCommon
+                  - ${{ each secret in parameters.appDeployConfig.variables }} :
+                    - template: /templates/steps/secrets-import-kv.yaml
+                      parameters:
+                        environmentObj: ${{ deploymentEnv }} 
+                        appDeployConfig: ${{ parameters.appDeployConfig }} 
+                        workingDirectory: '$(Pipeline.Workspace)/s'
+                        serviceName: ${{ parameters.serviceName }}
+                        PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                        secretName: ${{ secret }}
         - deployment: DryRun${{ deploymentEnv.name }}
           environment: ${{ deploymentEnv.name }}
           displayName: 'DryRun ${{ deploymentEnv.name }}' 
