@@ -35,26 +35,50 @@ stages:
         pool:
           vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
       jobs:
-        - deployment: ImportSecret${{ deploymentEnv.name }}
-          environment: ${{ deploymentEnv.name }}
+        - job: ListSecrets
+          displayName: 'List Secrets ${{ deploymentEnv.name }}'                        
+          steps:
+            - checkout: PipelineCommon
+              path: s/PipelineCommon
+            - task: AzureCLI@2
+              displayName: 'List Variables'
+              name: GetVariableList
+              env:
+                AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+                DevOpsUri: $(System.CollectionURI)
+                DevOpsProject: $(System.TeamProject)
+              inputs:
+                azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+                scriptType: pscore
+                scriptLocation: scriptPath
+                scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ListSecrets.ps1'
+                arguments: -VariableGroups '${{ join(';',parameters.appDeployConfig.variableGroups) }}' -EnvName ${{ parameters.environmentObj.name }} -ServiceName ${{ parameters.serviceName }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                addSpnToEnvironment: true          
+                failOnStandardError: false
+                workingDirectory: '$(Pipeline.Workspace)/s'
+        - job: ImportSecret          
           displayName: 'ImportSecret ${{ deploymentEnv.name }}' 
+          dependsOn: ListSecrets
           strategy:
-            runOnce:
-              deploy:              
-                steps:
-                  - checkout: Self
-                    path: s/ 
-                  - checkout: PipelineCommon
-                    path: s/PipelineCommon
-                  - ${{ each secret in parameters.appDeployConfig.variables }} :
-                    - template: /templates/steps/secrets-import-kv.yaml
-                      parameters:
-                        environmentObj: ${{ deploymentEnv }} 
-                        appDeployConfig: ${{ parameters.appDeployConfig }} 
-                        workingDirectory: '$(Pipeline.Workspace)/s'
-                        serviceName: ${{ parameters.serviceName }}
-                        PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                        secretName: ${{ secret }}
+            matrix:  
+              linux:
+                imageName: 'ubuntu-latest'
+          variables:
+            secretVariableNames: $[ dependencies.ListSecrets.outputs['GetVariableList.secretVariables'] ]
+          steps:
+            - checkout: Self
+              path: s/ 
+            - checkout: PipelineCommon
+              path: s/PipelineCommon            
+            - ${{ each secret in split(variables.secretVariableNames, ';') }} :
+              - template: /templates/steps/secrets-import-kv.yaml
+                parameters:
+                  environmentObj: ${{ deploymentEnv }} 
+                  appDeployConfig: ${{ parameters.appDeployConfig }} 
+                  workingDirectory: '$(Pipeline.Workspace)/s'
+                  serviceName: ${{ parameters.serviceName }}
+                  PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                  secretName: ${{ secret }}
         - deployment: DryRun${{ deploymentEnv.name }}
           environment: ${{ deploymentEnv.name }}
           displayName: 'DryRun ${{ deploymentEnv.name }}' 
