@@ -80,7 +80,7 @@ stages:
                 workingDirectory: '$(Pipeline.Workspace)/s'
                 serviceName: ${{ parameters.serviceName }}
                 PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                secretName: ${{ secretVariables }}
+                secretName: ${{ variables.secretVariables }}
         - deployment: DryRun${{ deploymentEnv.name }}
           environment: ${{ deploymentEnv.name }}
           displayName: 'DryRun ${{ deploymentEnv.name }}' 
