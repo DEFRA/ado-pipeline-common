@@ -51,6 +51,9 @@ try {
         
     if (($json | Test-Json -SchemaFile $SchemaFilePath) -eq $true) {
         Write-Host "${functionName} JSON File`t`tPassed validation"
+    }
+    else {
+        Write-Host "${functionName} JSON File`t`tFailed validation"
     }    
          
 }

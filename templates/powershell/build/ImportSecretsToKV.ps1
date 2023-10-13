@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
-Validate json Azure app config file
+Import Secrets from Variable group to Application Keyvault
 .DESCRIPTION
-Validate json Azure app config file
+Import Secrets from Variable group to Application Keyvault
 
 .PARAMETER KeyVault
 Mandatory. Application Keyvault
