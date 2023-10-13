@@ -24,7 +24,7 @@ steps:
     parameters:
       rootDirectorylocation: '$(Build.SourcesDirectory)'
       targetFileslocation: |
-        **/*.parameters.json => *.transformed.parameters.json
-        **/*.bicepparam => *.transformed.bicepparam
+        $(Pipeline.Workspace)/s/self/**/*.parameters.json => *.transformed.parameters.json
+        $(Pipeline.Workspace)/s/self/**/*.bicepparam => *.transformed.bicepparam
         ${{ parameters.tokenReplaceLocations }}
       escapeType: ${{ parameters.tokenReplaceEscapeConfig }}

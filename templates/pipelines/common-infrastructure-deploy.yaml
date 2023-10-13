@@ -258,6 +258,8 @@ stages:
 
                 - deployment: Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupDeployment.name) }}
                   displayName: Deploy ${{ upper(groupDeployment.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
+                  ${{ if ne(parameters.privateAgentName, '') }}:
+                    timeoutInMinutes: ${{ coalesce(groupDeployment.timeoutInMinutes, 60) }}
                   dependsOn:
                     - ${{ if and(ne(env.developmentEnvironment, True), eq(coalesce(env.enableTemplateValidationBeforeDeployment, false), true)) }}:
                       - Template_Dry_Run_${{ upper(env.name) }}_${{ upper(region) }}

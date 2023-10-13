@@ -56,6 +56,7 @@ extends:
           - "*"
     groupedDeployments:
       - name: Deploy_ARM_For_IntegrationTests
+        timeoutInMinutes: 30
         deployments:
           - name: infra-inttest-resource
             path: tests/arm-templates
