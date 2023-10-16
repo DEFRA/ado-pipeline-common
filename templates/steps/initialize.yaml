@@ -19,12 +19,11 @@ steps:
   - ${{ each additionalRepo in parameters.additionalRepositories }}:
     - checkout: ${{ additionalRepo }}
       path: s/${{ additionalRepo }}
-
-  - template: /templates/steps/replace-tokens.yaml
-    parameters:
-      rootDirectorylocation: '$(Build.SourcesDirectory)'
-      targetFileslocation: |
-        $(Pipeline.Workspace)/s/self/**/*.parameters.json => *.transformed.parameters.json
-        $(Pipeline.Workspace)/s/self/**/*.bicepparam => *.transformed.bicepparam
-        ${{ parameters.tokenReplaceLocations }}
-      escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
+      
+  - ${{ if ne(parameters.tokenReplaceLocations, '') }}:
+    - template: /templates/steps/replace-tokens.yaml
+      parameters:
+        rootDirectorylocation: '$(Build.SourcesDirectory)'
+        targetFileslocation: |
+          ${{ parameters.tokenReplaceLocations }}
+        escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
