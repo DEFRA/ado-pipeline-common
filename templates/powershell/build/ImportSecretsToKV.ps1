@@ -45,15 +45,21 @@ try {
 
     Import-Module $PSHelperDirectory -Force
 
-    $exitCode = 0
-                                   
-    $secureSecretvalue = ConvertTo-SecureString -String $env:secretValue -AsPlainText -Force
-    Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value $secureSecretvalue"
-     
+    $exitCode = 0                                
+
+    try {
+        $oldValue = Invoke-CommandLine -Command "az keyvault secret show --name $env:secretName --vault-name $KeyVault | convertfrom-json"
+    }
+    catch {
+        $oldValue = ""
+    }        
+    if ($oldValue -ne $env:secretValue) {
+        Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value $env:secretValue"
+    }
 }
 catch {
     $exitCode = -2
-    Write-Error $_.Exception.ToString()
+    Write-Error $_.Exception.ToString() 
     throw $_.Exception
 }
 finally {
