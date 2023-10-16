@@ -53,8 +53,8 @@ try {
     catch {
         $oldValue = ""
     }        
-    if ($oldValue -ne $env:secretValue) {
-        Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value $env:secretValue"
+    if ($null -ne $oldValue -and ("" -ne $oldValue  -or  $oldValue.value -ne $env:secretValue )) {
+        $update=Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value $env:secretValue"
     }
 }
 catch {
