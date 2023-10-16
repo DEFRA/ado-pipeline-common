@@ -36,8 +36,22 @@ parameters:
   - name: connection
     displayName: Azure service connection
     type: string
+  - name: tokenReplaceEscapeConfig
+    type: string
+    default: ''
 
 steps:
+
+  - template: /templates/steps/replace-tokens.yaml
+    parameters:
+      rootDirectorylocation: '$(Build.SourcesDirectory)'
+      targetFileslocation: |
+        ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
+        ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
+        $(Build.SourcesDirectory)/self/${{ parameters.parameterFilePath }}/*.parameters.json => *.transformed.parameters.json
+        $(Build.SourcesDirectory)/self/${{ parameters.parameterFilePath }}/*.bicepparam => *.transformed.bicepparam
+      escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
+
   - template: /templates/steps/powershell.yaml
     parameters:
       azureResourceManagerConnection: ${{ parameters.connection }}

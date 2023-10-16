@@ -118,6 +118,7 @@ stages:
                       location: ${{ variables.location }}
                       resourceGroup: '${{ deployment.resourceGroupName }}'
                       connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
+                      tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
                 # - ${{ else }}:  RUN PESTER TESTS
 
   - ${{ each env in parameters.environments }}:
@@ -184,6 +185,7 @@ stages:
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
+                              tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
               - ${{ if and(or(ne(env.developmentEnvironment, True), eq(env.forceWhatIf, True)), startsWith(coalesce(env.outputTemplateChange, 'RunWithoutPause'), 'Run')) }}:
                 - job: Run_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
@@ -221,6 +223,7 @@ stages:
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
+                              tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
               - ${{ if and(eq(env.outputTemplateChange, 'RunWithPause'), or(ne(env.developmentEnvironment, True), env.forceWhatIf)) }}:
                 - job: Review_WhatIf_${{ upper(env.name) }}_${{ upper(region) }}
@@ -258,6 +261,8 @@ stages:
 
                 - deployment: Deploy_${{ upper(env.name) }}_${{ upper(region) }}_${{ upper(groupDeployment.name) }}
                   displayName: Deploy ${{ upper(groupDeployment.name) }} - ${{ upper(env.name) }} ${{ upper(region) }}
+                  ${{ if ne(parameters.privateAgentName, '') }}:
+                    timeoutInMinutes: ${{ coalesce(groupDeployment.timeoutInMinutes, 60) }}
                   dependsOn:
                     - ${{ if and(ne(env.developmentEnvironment, True), eq(coalesce(env.enableTemplateValidationBeforeDeployment, false), true)) }}:
                       - Template_Dry_Run_${{ upper(env.name) }}_${{ upper(region) }}
@@ -318,6 +323,7 @@ stages:
                                     location: ${{ variables.location }}
                                     resourceGroup: '${{ deployment.resourceGroupName }}'
                                     connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
+                                    tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
                                 - ${{ if coalesce(deployment.postDeployScriptsList, False) }}:
                                   - template: /templates/steps/powershell.yaml
