@@ -55,8 +55,11 @@ try {
     $versionFilePath = "./VERSION"
     $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
     $IsDefaultBranchBuild = "False"
-    $CurrentBranchName=(Get-ChildItem -Path Env:BUILD_SOURCEBRANCHNAME).value
-    if ($DefaultBranchName -eq $CurrentBranchName) {
+    $CurrentBranchName=(Get-ChildItem -Path Env:BUILD_SOURCEBRANCH).value
+    if ($CurrentBranchName -like "refs/tags*") {
+        $IsDefaultBranchBuild = "True"
+    }
+    elseif ($CurrentBranchName -eq ("refs/heads/" + $DefaultBranchName) ) {
         $IsDefaultBranchBuild = "True"
     }
     
@@ -103,12 +106,14 @@ try {
             Write-Output "${functionName}:appVersion upgraded"    
         }
         else {
-            Write-Output "${functionName}:appVersion not upgraded"    
+            Write-Output "${functionName}:appVersion not upgraded"   
             $exitCode = -2
         }
     }
 
-    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion;IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName;CurrentBranchName=$CurrentBranchName;"    
+    Write-Output "${functionName}:appVersion=$appVersion;oldAppVersion=$oldAppVersion"    
+    Write-Output "${functionName}:IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName"    
+    Write-Output "${functionName}:CurrentBranchName=$CurrentBranchName;"    
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
     Write-Output "##vso[task.setvariable variable=IsDefaultBranchBuild;isOutput=true]$IsDefaultBranchBuild"
