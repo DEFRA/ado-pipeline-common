@@ -133,7 +133,7 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'   
@@ -186,7 +186,7 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
