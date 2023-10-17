@@ -151,7 +151,7 @@ parameters:
     type: boolean
     default: false
   - name: deployConfigOnly
-    displayName: Deploy App Config Only
+    displayName: "Deploy App Config & Secrets Only"
     type: boolean
     default: false  
 pr:
@@ -218,7 +218,7 @@ parameters:
     type: boolean
     default: false
   - name: deployConfigOnly
-    displayName: Deploy App Config Only
+    displayName: "Deploy App Config & Secrets Only"
     type: boolean
     default: false  
 pr:
