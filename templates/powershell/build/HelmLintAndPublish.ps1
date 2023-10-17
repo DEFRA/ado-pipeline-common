@@ -15,8 +15,10 @@ Mandatory. Chart Cache Path on the build agent
 Optional. Command to run, lint or publish or Default = LintAndPublish 
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
+.PARAMETER chartHomeDir
+Mandatory. Directory Path of all helm charts
 .EXAMPLE
-.\HelmLintAndPublish.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ChartVersion <ChartVersion> ChartCachePath <ChartCachePath> Command <Command>  PSHelperDirectory <PSHelperDirectory>
+.\HelmLintAndPublish.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ChartVersion <ChartVersion> ChartCachePath <ChartCachePath> Command <Command>  PSHelperDirectory <PSHelperDirectory> chartHomeDir <chartHomeDir>
 #> 
 
 [CmdletBinding()]
@@ -27,7 +29,9 @@ param(
     [string] $ChartCachePath = ".",
     [string] $Command = "LintAndPublish",
     [Parameter(Mandatory)]
-    [string]$PSHelperDirectory
+    [string]$PSHelperDirectory,
+    [Parameter(Mandatory)]
+    [string]$chartHomeDir
 )
 
 Set-StrictMode -Version 3.0
@@ -54,6 +58,7 @@ Write-Debug "${functionName}:ChartVersion=$ChartVersion"
 Write-Debug "${functionName}:ChartCachePath=$ChartCachePath"
 Write-Debug "${functionName}:Command=$Command"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
+Write-Debug "${functionName}:chartHomeDir=$chartHomeDir"
 
 try {
     Import-Module $PSHelperDirectory -Force
@@ -62,46 +67,52 @@ try {
     if (!(Test-Path $ChartCachePath -PathType Container)) {
         New-Item -ItemType Directory -Force -Path $ChartCachePath
     }
-    $chartDirectory = Get-ChildItem -Recurse -Path ./ -Include Chart.yaml | Where-Object { $_.PSIsContainer -eq $false }
-    if (  $null -ne $chartDirectory ) {        
-        if ( $null -ne $chartDirectory.DirectoryName ) {
-            Set-Location $chartDirectory.DirectoryName
-        }   
-    }
 
-    $exitCode = 0
-    
-    $tagName = $AcrName + ".azurecr.io/helm" + $AcrRepoName + ":" + $ChartVersion
-    Write-Debug "${functionName}:Helm Tag=$tagName"
-        
-    if ( $Command.ToLower() -eq 'lint' ) {
-        Invoke-CommandLine -Command "helm dependency build"
-        Invoke-CommandLine -Command "helm lint"
-    }
-    elseif ( $Command.ToLower() -eq 'publish' ) {
-        Invoke-CommandLine -Command "az acr login --name $AcrName"   
-        # Load chart if exists in cache
-        if (Test-Path $chartCacheFilePath -PathType Leaf) {      
-            Invoke-CommandLine -Command "helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm"
+    $helmChartSuffixList = "", "-infra"
+    foreach ($helmChart in  $helmChartSuffixList) {
+        $helmChartName = "$AcrRepoName$helmChart"
+        $helmDir = "$chartHomeDir/$helmChartName"
+        $chartDirectory = Get-ChildItem -Recurse -Path $helmDir  -Include Chart.yaml | Where-Object { $_.PSIsContainer -eq $false }
+        if (  $null -ne $chartDirectory ) {        
+            if ( $null -ne $chartDirectory.DirectoryName ) {
+                Set-Location $chartDirectory.DirectoryName
+            }   
         }
-        else {    
+
+        $exitCode = 0
+    
+        $tagName = $AcrName + ".azurecr.io/helm" + $helmChartName + ":" + $ChartVersion
+        Write-Debug "${functionName}:Helm Tag=$tagName"
+        
+        if ( $Command.ToLower() -eq 'lint' ) {
+            Invoke-CommandLine -Command "helm dependency build"
+            Invoke-CommandLine -Command "helm lint"
+        }
+        elseif ( $Command.ToLower() -eq 'publish' ) {
+            Invoke-CommandLine -Command "az acr login --name $AcrName"   
+            # Load chart if exists in cache
+            if (Test-Path $chartCacheFilePath -PathType Leaf) {      
+                Invoke-CommandLine -Command "helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm"
+            }
+            else {    
+                Invoke-CommandLine -Command "helm dependency build"
+                Invoke-CommandLine -Command "helm package . --version $ChartVersion"
+                # Save the chart for future jobs
+                Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force                
+                Invoke-CommandLine -Command "helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm"
+            }        
+        }
+        elseif ( $Command.ToLower() -eq 'build' ) {
             Invoke-CommandLine -Command "helm dependency build"
             Invoke-CommandLine -Command "helm package . --version $ChartVersion"
             # Save the chart for future jobs
-            Copy-Item $AcrRepoName-$ChartVersion.tgz -Destination $ChartCachePath -Force                
-            Invoke-CommandLine -Command "helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm"
-        }        
-    }
-    elseif ( $Command.ToLower() -eq 'build' ) {
-        Invoke-CommandLine -Command "helm dependency build"
-        Invoke-CommandLine -Command "helm package . --version $ChartVersion"
-        # Save the chart for future jobs
-        Copy-Item $AcrRepoName-$ChartVersion.tgz -Destination $ChartCachePath -Force            
-    }    
-    if ($LastExitCode -ne 0) {
-        Write-Host "##vso[task.complete result=Failed;]DONE"
-        $exitCode = -2
-    }            
+            Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force            
+        }    
+        if ($LastExitCode -ne 0) {
+            Write-Host "##vso[task.complete result=Failed;]DONE"
+            $exitCode = -2
+        }          
+    }  
 }
 catch {
     $exitCode = -2
