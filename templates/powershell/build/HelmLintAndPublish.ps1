@@ -62,16 +62,11 @@ Write-Debug "${functionName}:chartHomeDir=$chartHomeDir"
 
 try {
     Import-Module $PSHelperDirectory -Force
-    
-    $chartCacheFilePath = $ChartCachePath + "/$AcrRepoName-$ChartVersion.tgz"
-    if (!(Test-Path $ChartCachePath -PathType Container)) {
-        New-Item -ItemType Directory -Force -Path $ChartCachePath
-    }
-
+        
     $helmChartSuffixList = "", "-infra"
     foreach ($helmChart in  $helmChartSuffixList) {
-        $helmChartName = "$AcrRepoName$helmChart"
-        $helmDir = "$chartHomeDir/$helmChartName"
+        $helmChartName = $AcrRepoName+$helmChart
+        $helmDir = $chartHomeDir+"/"+$helmChartName
         $chartDirectory = Get-ChildItem -Recurse -Path $helmDir  -Include Chart.yaml | Where-Object { $_.PSIsContainer -eq $false }
         if (  $null -ne $chartDirectory ) {        
             if ( $null -ne $chartDirectory.DirectoryName ) {
@@ -83,6 +78,11 @@ try {
         }
         else {
             break
+        }
+
+        $chartCacheFilePath = $ChartCachePath + "/$helmChartName-$ChartVersion.tgz"
+        if (!(Test-Path $ChartCachePath -PathType Container)) {
+            New-Item -ItemType Directory -Force -Path $ChartCachePath
         }
 
         $exitCode = 0
