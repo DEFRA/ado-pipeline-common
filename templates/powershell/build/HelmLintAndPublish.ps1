@@ -76,7 +76,13 @@ try {
         if (  $null -ne $chartDirectory ) {        
             if ( $null -ne $chartDirectory.DirectoryName ) {
                 Set-Location $chartDirectory.DirectoryName
+            }
+            else {
+                break
             }   
+        }
+        else {
+            break
         }
 
         $exitCode = 0
