@@ -44,8 +44,6 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
 
     Import-Module $PSHelperDirectory -Force
-    $exitCode = 0                                
-
     try {
 
         Write-Host "Get the secret($env:secretName) from KeyVault $KeyVault"
@@ -60,6 +58,8 @@ try {
         Write-Host "Set the secret($env:secretName) to KeyVault $KeyVault"
         Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value '$env:secretValue'" -IsSensitive > $null
     }
+
+    $exitCode = 0
 }
 catch {
     $exitCode = -2

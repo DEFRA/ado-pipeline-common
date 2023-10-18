@@ -135,7 +135,7 @@ stages:
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrName 'ssvadpinfcr3401'  -ImageRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              arguments: -AcrName 'ssvadpinfcr3401 -ImageRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
               addSpnToEnvironment: true          
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
@@ -151,8 +151,8 @@ stages:
         dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
-          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | "${{ parameters.appBuildConfig.imageRepoName }}-infra:$(appVersion)" | cache'
+          dockerCacheKey: 'docker | ${{ parameters.appBuildConfig.imageRepoName }} | $(appVersion) | cache'
+          helmCacheKey: 'helm | ${{ parameters.appBuildConfig.imageRepoName }} | $(appVersion) | cache'
         steps:
           - checkout: self
             path: s/
@@ -191,7 +191,7 @@ stages:
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrName 'ssvadpinfcr3401' -ImageRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              arguments: -AcrName 'ssvadpinfcr3401 -ImageRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
               addSpnToEnvironment: true          
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
@@ -219,8 +219,8 @@ stages:
           )
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
-          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | "${{ parameters.appBuildConfig.imageRepoName }}-infra:$(appVersion)" | cache'
+          dockerCacheKey: 'docker | ${{ parameters.appBuildConfig.imageRepoName }} | $(appVersion) | cache'
+          helmCacheKey: 'helm | ${{ parameters.appBuildConfig.imageRepoName }} | $(appVersion) | cache'
         steps:
           - checkout: PipelineCommon
             path: s/PipelineCommon
@@ -228,14 +228,14 @@ stages:
           - task: Cache@2
             displayName: Restore Cached docker image
             inputs:
-              key: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+              key: $(dockerCacheKey)
               path: $(Pipeline.Workspace)/docker
               cacheHitVar: CACHE_RESTORED  
 
           - task: Cache@2
             displayName: Restore Cached helm chart
             inputs:
-              key: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+              key: $(helmCacheKey)
               path: $(Pipeline.Workspace)/helm
               cacheHitVar: CACHE_RESTORED  
 

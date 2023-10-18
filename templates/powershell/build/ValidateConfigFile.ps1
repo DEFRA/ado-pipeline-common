@@ -42,8 +42,6 @@ Write-Debug "${functionName}:SchemaFilePath=$SchemaFilePath"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
 
 try {
-    
-    $exitCode = 0
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         $json = Get-Content $ConfigFilePath | Out-String
@@ -54,7 +52,9 @@ try {
     }
     else {
         Write-Host "${functionName} JSON File`t`tFailed validation"
-    }    
+    }
+    
+    $exitCode = 0
          
 }
 catch {
