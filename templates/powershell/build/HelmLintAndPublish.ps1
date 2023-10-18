@@ -101,6 +101,7 @@ try {
                 Invoke-CommandLine -Command "helm dependency build"
                 Invoke-CommandLine -Command "helm package . --version $ChartVersion"
                 # Save the chart for future jobs
+                Write-Host "Saving chart $helmChartName-$ChartVersion.tgz to $ChartCachePath"
                 Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force                
                 Invoke-CommandLine -Command "helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm"
             }
@@ -108,8 +109,9 @@ try {
         elseif ( $Command.ToLower() -eq 'build' ) {
             Invoke-CommandLine -Command "helm dependency build"
             Invoke-CommandLine -Command "helm package . --version $ChartVersion"
-            # Save the chart for future jobs
-            Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force            
+            # Save the chart for future jobs 
+            Write-Host "Saving chart $helmChartName-$ChartVersion.tgz to $ChartCachePath"
+            Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force -Debug        
         }
     }
     $exitCode = 0
@@ -132,5 +134,3 @@ finally {
     Pop-Location
 }
 
-
--ImageRepoName 'ffc-demo-web' -ChartVersion '4.32.3' -ChartCachePath 'D:\workspace\defra-ffc\ffc-demo-web\helm' -Command 'Lint'  -PSHelperDirectory 'D:\workspace\defra\ado-pipeline-common\templates\powershell\modules\ps-helpers' -chartHomeDir 'D:\workspace\defra-ffc\ffc-demo-web\helm'
