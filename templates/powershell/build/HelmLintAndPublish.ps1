@@ -131,3 +131,6 @@ finally {
     exit $exitCode
     Pop-Location
 }
+
+
+-ImageRepoName 'ffc-demo-web' -ChartVersion '4.32.3' -ChartCachePath 'D:\workspace\defra-ffc\ffc-demo-web\helm' -Command 'Lint'  -PSHelperDirectory 'D:\workspace\defra\ado-pipeline-common\templates\powershell\modules\ps-helpers' -chartHomeDir 'D:\workspace\defra-ffc\ffc-demo-web\helm'
