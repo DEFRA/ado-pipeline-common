@@ -66,21 +66,27 @@ try {
     $helmChartsDirList = Get-ChildItem -Path $chartHomeDir
 
     $helmChartsDirList | ForEach-Object {
-        $helmChartName = $AcrRepoName + $_.Name
-        $chartDirectory = Get-ChildItem -Recurse -Path $(Join-Path -Path $chartHomeDir -ChildPath $helmChartName)  -Include Chart.yaml | Where-Object { $_.PSIsContainer -eq $false }
-        Push-Location $chartDirectory.DirectoryName
-        
-        Write-Output "Working on Chart: $($helmChartDir.Name) in directory: $chartDirectory"
 
-        $chartCacheFilePath = $ChartCachePath + "/$helmChartName-$ChartVersion.tgz"
+        $helmChartName = $AcrRepoName + $_.Name
+        Write-Debug "${functionName}:helmChartName=$helmChartName"
+
+        $chartDirectory = Get-ChildItem -Recurse -Path $(Join-Path -Path $chartHomeDir -ChildPath $helmChartName)  -Include Chart.yaml | Where-Object { $_.PSIsContainer -eq $false }
+        
+        Write-Debug "${functionName}:Changing location to $($chartDirectory.DirectoryName)"
+        Push-Location $chartDirectory.DirectoryName
+        Write-Debug "${functionName}:Current location is '$(Get-Location)'"
+        
+        Write-Host "Working on Chart: $($helmChartDir.Name) in directory: $chartDirectory"
+        $chartCacheFilePath = Join-Path -Path $ChartCachePath -ChildPath "$helmChartName-$ChartVersion.tgz"
+        Write-Debug "${functionName}:chartCacheFilePath=$chartCacheFilePath"
+    
         if (!(Test-Path $ChartCachePath -PathType Container)) {
             New-Item -ItemType Directory -Force -Path $ChartCachePath
+            Write-Host "Created Chart Cache Path: $ChartCachePath"
         }
-    
-        $tagName = $AcrName + ".azurecr.io/helm" + $helmChartName + ":" + $ChartVersion
-        Write-Debug "${functionName}:Helm Tag=$tagName"
         
         Invoke-CommandLine -Command "az acr login --name $AcrName"
+        
         if ( $Command.ToLower() -eq 'lint' ) {
             Invoke-CommandLine -Command "helm dependency build"
             Invoke-CommandLine -Command "helm lint"
