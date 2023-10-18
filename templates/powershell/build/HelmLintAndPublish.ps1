@@ -61,6 +61,7 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:chartHomeDir=$chartHomeDir"
 
 try {
+    
     Import-Module $PSHelperDirectory -Force
     
     $helmChartsDirList = Get-ChildItem -Path $chartHomeDir
@@ -86,7 +87,7 @@ try {
         }
         
         Invoke-CommandLine -Command "az acr login --name $AcrName"
-        
+
         if ( $Command.ToLower() -eq 'lint' ) {
             Invoke-CommandLine -Command "helm dependency build"
             Invoke-CommandLine -Command "helm lint"

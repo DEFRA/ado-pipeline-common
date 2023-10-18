@@ -130,7 +130,7 @@ stages:
           
           - task: AzureCLI@2
             inputs:
-              azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+              azureSubscription: 'AZD-ADP-SSV3'
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
