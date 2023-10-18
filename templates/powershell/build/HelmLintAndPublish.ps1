@@ -77,7 +77,7 @@ try {
         Push-Location $chartDirectory.DirectoryName
         Write-Debug "${functionName}:Current location is '$(Get-Location)'"
         
-        Write-Host "Working on Chart: $($helmChartDir.Name) in directory: $chartDirectory"
+        Write-Host "Working on Chart: $helmChartName in directory: $chartDirectory"
         $chartCacheFilePath = Join-Path -Path $ChartCachePath -ChildPath "$helmChartName-$ChartVersion.tgz"
         Write-Debug "${functionName}:chartCacheFilePath=$chartCacheFilePath"
     
