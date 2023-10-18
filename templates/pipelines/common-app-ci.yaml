@@ -152,7 +152,7 @@ stages:
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
-          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | "${{ parameters.appBuildConfig.imageRepoName }}-infra:$(appVersion)" | cache'
         steps:
           - checkout: self
             path: s/
@@ -220,7 +220,7 @@ stages:
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
-          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | "${{ parameters.appBuildConfig.imageRepoName }}-infra:$(appVersion)" | cache'
         steps:
           - checkout: PipelineCommon
             path: s/PipelineCommon

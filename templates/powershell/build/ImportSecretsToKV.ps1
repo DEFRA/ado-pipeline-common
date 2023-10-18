@@ -44,18 +44,23 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
 
     Import-Module $PSHelperDirectory -Force
-
     $exitCode = 0                                
 
     try {
+
+        Write-Host "Get the secret($env:secretName) from KeyVault $KeyVault"
         $oldValue = Invoke-CommandLine -Command "az keyvault secret show --name $env:secretName --vault-name $KeyVault | convertfrom-json"
+        Write-Host "Secret($env:secretName) length:$($oldValue.Length)"
     }
     catch {
-        $oldValue = ""
+        $oldValue = $null
     }        
-    if ($null -ne $oldValue -and ("" -ne $oldValue  -or  $oldValue.value -ne $env:secretValue )) {
-        $update=Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value $env:secretValue"
+
+    if(($null -eq $oldValue) -or ($oldValue.value -ne $env:secretValue)){
+        Write-Host "Set the secret($env:secretName) to KeyVault $KeyVault"
+        Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value $env:secretValue" > $null
     }
+
 }
 catch {
     $exitCode = -2
