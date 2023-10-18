@@ -56,11 +56,10 @@ try {
         $oldValue = $null
     }        
 
-    if(($null -eq $oldValue) -or ($oldValue.value -ne $env:secretValue)){
+    if (($null -eq $oldValue) -or ($oldValue.value -ne $env:secretValue)) {
         Write-Host "Set the secret($env:secretName) to KeyVault $KeyVault"
-        Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value $env:secretValue" > $null
+        Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value '$env:secretValue'" -IsSensitive > $null
     }
-
 }
 catch {
     $exitCode = -2
