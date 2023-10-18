@@ -5,7 +5,7 @@ Helm lint and/or publish using Azure Service Connection
 Helm lint and/or publish using Azure Service Connection
 .PARAMETER AcrName
 Optional. Azure Container Registry used to push the helm chart
-.PARAMETER AcrRepoName
+.PARAMETER ImageRepoName
 Optional. Name of the Repo to push the chart in ACR
 .PARAMETER ChartVersion
 Optional. Chart Version 
@@ -18,13 +18,13 @@ Mandatory. Directory Path of PSHelper module
 .PARAMETER chartHomeDir
 Mandatory. Directory Path of all helm charts
 .EXAMPLE
-.\HelmLintAndPublish.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ChartVersion <ChartVersion> ChartCachePath <ChartCachePath> Command <Command>  PSHelperDirectory <PSHelperDirectory> chartHomeDir <chartHomeDir>
+.\HelmLintAndPublish.ps1  AcrName <AcrName> ImageRepoName <ImageRepoName> ChartVersion <ChartVersion> ChartCachePath <ChartCachePath> Command <Command>  PSHelperDirectory <PSHelperDirectory> chartHomeDir <chartHomeDir>
 #> 
 
 [CmdletBinding()]
 param(
     [string] $AcrName,
-    [string] $AcrRepoName,
+    [string] $ImageRepoName,
     [string] $ChartVersion,
     [string] $ChartCachePath = ".",
     [string] $Command = "LintAndPublish",
@@ -53,7 +53,7 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AcrName=$AcrName"
-Write-Debug "${functionName}:AcrRepoName=$AcrRepoName"
+Write-Debug "${functionName}:ImageRepoName=$ImageRepoName"
 Write-Debug "${functionName}:ChartVersion=$ChartVersion"
 Write-Debug "${functionName}:ChartCachePath=$ChartCachePath"
 Write-Debug "${functionName}:Command=$Command"
@@ -61,14 +61,14 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:chartHomeDir=$chartHomeDir"
 
 try {
-    
+
     Import-Module $PSHelperDirectory -Force
     
     $helmChartsDirList = Get-ChildItem -Path $chartHomeDir
 
     $helmChartsDirList | ForEach-Object {
 
-        $helmChartName = $AcrRepoName + $_.Name
+        $helmChartName = $_.Name
         Write-Debug "${functionName}:helmChartName=$helmChartName"
 
         $chartDirectory = Get-ChildItem -Recurse -Path $(Join-Path -Path $chartHomeDir -ChildPath $helmChartName)  -Include Chart.yaml | Where-Object { $_.PSIsContainer -eq $false }

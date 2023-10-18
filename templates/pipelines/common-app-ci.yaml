@@ -129,16 +129,17 @@ stages:
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
           
           - task: AzureCLI@2
+            displayName: 'Helm Lint'
             inputs:
               azureSubscription: 'AZD-ADP-SSV3'
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              arguments: -ImageRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
               addSpnToEnvironment: true          
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
-            displayName: 'Helm Lint'
+            
           
       - job: BuildImage
         displayName: 'Build Image'
@@ -183,14 +184,16 @@ stages:
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
 
-          - task: PowerShell@2
+          - task: AzureCLI@2
             displayName: 'Helm Build' 
             inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              failOnStderr: false
-              pwsh: true
+              azureSubscription: 'AZD-ADP-SSV3'
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: -ImageRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              addSpnToEnvironment: true          
+              failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
 
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
