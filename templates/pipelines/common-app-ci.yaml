@@ -181,7 +181,7 @@ stages:
               arguments: >
                  -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                  -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' 
-                 -Command "build" 
+                 -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               failOnStderr: false
               pwsh: true
@@ -194,7 +194,14 @@ stages:
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrName 'ssvadpinfcr3401 -ImageRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              arguments: > 
+                -AcrName 'ssvadpinfcr3401' 
+                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                -ChartVersion  $(appVersion) 
+                -ChartCachePath '$(Pipeline.Workspace)/helm' 
+                -Command 'build'
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
               addSpnToEnvironment: true          
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
