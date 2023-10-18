@@ -128,16 +128,18 @@ stages:
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
           
-          - task: PowerShell@2
-            displayName: 'Helm lint'   
+          - task: AzureCLI@2
             inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
               arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              failOnStderr: false
-              pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s'   
-
+              addSpnToEnvironment: true          
+              failOnStandardError: false
+              workingDirectory: '$(Pipeline.Workspace)/s'
+            displayName: 'Helm Lint'
+          
       - job: BuildImage
         displayName: 'Build Image'
         condition:  |
