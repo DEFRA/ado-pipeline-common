@@ -111,7 +111,7 @@ try {
             Invoke-CommandLine -Command "helm package . --version $ChartVersion"
             # Save the chart for future jobs 
             Write-Host "Saving chart $helmChartName-$ChartVersion.tgz to $ChartCachePath"
-            Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force -Debug        
+            Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force     
         }
     }
     $exitCode = 0
