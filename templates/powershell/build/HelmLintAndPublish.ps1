@@ -34,6 +34,88 @@ param(
     [string]$chartHomeDir
 )
 
+function Invoke-HelmLint {
+    param(
+        [Parameter(Mandatory)]
+        [string]$HelmChartName
+    )
+    begin{
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+    }
+    process {
+        Write-Host "Build Helm dependencies for $HelmChartName"
+        Invoke-CommandLine -Command "helm dependency build"
+
+        Write-Host "Linting Helm chart $HelmChartName"
+        Invoke-CommandLine -Command "helm lint"
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
+function Invoke-HelmBuild {
+    param(
+        [Parameter(Mandatory)]
+        [string]$HelmChartName,
+        [Parameter(Mandatory)]
+        [string]$ChartVersion,
+        [Parameter(Mandatory)]
+        [string]$PathToSaveChart
+    )
+    begin{
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+    }
+    process {
+        Invoke-CommandLine -Command "helm dependency build"
+        Invoke-CommandLine -Command "helm package . --version $ChartVersion"
+
+        Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $ChartCachePath"
+        Copy-Item "$helmChartName-$ChartVersion.tgz" -Destination $ChartCachePath -Force 
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
+function Invoke-Publish {
+    param(
+        [Parameter(Mandatory)]
+        [string]$HelmChartName,
+        [Parameter(Mandatory)]
+        [string]$ChartVersion,
+        [Parameter(Mandatory)]
+        [string]$PathToSaveChart
+    )
+    begin{
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+    }
+    process {
+        Write-Host "Publishing Helm chart $HelmChartName"
+        $acrHelmPath = "oci://$AcrName.azurecr.io/helm"
+         if (Test-Path $PathToSaveChart -PathType Leaf) { 
+            Write-Host "Publising cached chart $acrHelmPath from $PathToSaveChart"
+            Invoke-CommandLine -Command "helm push $PathToSaveChart $acrHelmPath"
+        }
+        else {    
+            Invoke-CommandLine -Command "helm dependency build"
+            Invoke-CommandLine -Command "helm package . --version $ChartVersion"
+
+            Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $PathToSaveChart"
+            Copy-Item "$HelmChartName-$ChartVersion.tgz" -Destination $PathToSaveChart -Force          
+            
+            Write-Host "Publising chart $acrHelmPath from $PathToSaveChart"
+            Invoke-CommandLine -Command "helm push $chartCacheFilePath $acrHelmPath"
+        }
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -89,29 +171,13 @@ try {
         Invoke-CommandLine -Command "az acr login --name $AcrName"
 
         if ( $Command.ToLower() -eq 'lint' ) {
-            Invoke-CommandLine -Command "helm dependency build"
-            Invoke-CommandLine -Command "helm lint"
+            Invoke-HelmLint -HelmChartName $helmChartName
         }
         elseif ( $Command.ToLower() -eq 'publish' ) {
-            # Load chart if exists in cache
-            if (Test-Path $chartCacheFilePath -PathType Leaf) {      
-                Invoke-CommandLine -Command "helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm"
-            }
-            else {    
-                Invoke-CommandLine -Command "helm dependency build"
-                Invoke-CommandLine -Command "helm package . --version $ChartVersion"
-                # Save the chart for future jobs
-                Write-Host "Saving chart $helmChartName-$ChartVersion.tgz to $ChartCachePath"
-                Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force                
-                Invoke-CommandLine -Command "helm push $chartCacheFilePath oci://$AcrName.azurecr.io/helm"
-            }
+            Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
         }
         elseif ( $Command.ToLower() -eq 'build' ) {
-            Invoke-CommandLine -Command "helm dependency build"
-            Invoke-CommandLine -Command "helm package . --version $ChartVersion"
-            # Save the chart for future jobs 
-            Write-Host "Saving chart $helmChartName-$ChartVersion.tgz to $ChartCachePath"
-            Copy-Item $helmChartName-$ChartVersion.tgz -Destination $ChartCachePath -Force     
+            Invoke-HelmBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath   
         }
     }
     $exitCode = 0
