@@ -31,7 +31,7 @@ parameters:
 - name: appDeployConfig
   type: object
   default: null
-- name: shareAcrConfig
+- name: sharedAcrConfig
   type: object
 variables:
 - group: NodeJSAppBuild
@@ -124,12 +124,12 @@ stages:
           - task: AzureCLI@2
             displayName: 'Helm Lint'
             inputs:
-              azureSubscription: '${{ parameters.shareAcrConfig.serviceConnection}}'
+              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
               arguments: > 
-                -AcrName '${{ parameters.shareAcrConfig.name }}' 
+                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
                 -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                 -ChartVersion  $(appVersion) 
                 -ChartCachePath '$(Pipeline.Workspace)/helm' 
@@ -190,12 +190,12 @@ stages:
           - task: AzureCLI@2
             displayName: 'Helm Build' 
             inputs:
-              azureSubscription: '${{ parameters.shareAcrConfig.serviceConnection}}'
+              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
               arguments: > 
-                -AcrName '${{ parameters.shareAcrConfig.name }}' 
+                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
                 -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                 -ChartVersion  $(appVersion) 
                 -ChartCachePath '$(Pipeline.Workspace)/helm' 
