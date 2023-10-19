@@ -11,35 +11,28 @@ parameters:
   type: string
   default: 'ubuntu-latest'
 - name: privateAgentName
-  displayName: Name of the private agent
   type: string
   default: ''
 - name: environments
-  displayName: list of deployment env
   type: object
 - name: packageFeedName
   type: string
   default: '' 
 - name: appBuildConfig
-  displayName: Details to build the app
   type: object 
 - name: appTestConfig
-  displayName: Details to test the app
   type: object
 - name: snykConfig
-  displayName: Details for Snyk Service settings
   type: object
 - name: npmConfig
-  displayName: Details for NPM settings
   type: object
 - name: sonarConfig
-  displayName: Details for Sonar Cloud Analysis
   type: object
 - name: appDeployConfig
-  displayName: Details to deploy the app
   type: object
   default: null
-  
+- name: shareAcrConfig
+  type: object
 variables:
 - group: NodeJSAppBuild
 - group: NodeJSAppBuild
@@ -131,11 +124,18 @@ stages:
           - task: AzureCLI@2
             displayName: 'Helm Lint'
             inputs:
-              azureSubscription: 'AZD-ADP-SSV3'
+              azureSubscription: '${{ parameters.shareAcrConfig.serviceConnection}}'
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrName 'ssvadpinfcr3401' -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command 'lint' -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              arguments: > 
+                -AcrName '${{ parameters.shareAcrConfig.name }}' 
+                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                -ChartVersion  $(appVersion) 
+                -ChartCachePath '$(Pipeline.Workspace)/helm' 
+                -Command 'lint' 
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
               addSpnToEnvironment: true          
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
@@ -190,12 +190,12 @@ stages:
           - task: AzureCLI@2
             displayName: 'Helm Build' 
             inputs:
-              azureSubscription: 'AZD-ADP-SSV3'
+              azureSubscription: '${{ parameters.shareAcrConfig.serviceConnection}}'
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
               arguments: > 
-                -AcrName 'ssvadpinfcr3401' 
+                -AcrName '${{ parameters.shareAcrConfig.name }}' 
                 -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                 -ChartVersion  $(appVersion) 
                 -ChartCachePath '$(Pipeline.Workspace)/helm' 
