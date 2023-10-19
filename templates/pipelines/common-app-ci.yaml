@@ -11,35 +11,28 @@ parameters:
   type: string
   default: 'ubuntu-latest'
 - name: privateAgentName
-  displayName: Name of the private agent
   type: string
   default: ''
 - name: environments
-  displayName: list of deployment env
   type: object
 - name: packageFeedName
   type: string
   default: '' 
 - name: appBuildConfig
-  displayName: Details to build the app
   type: object 
 - name: appTestConfig
-  displayName: Details to test the app
   type: object
 - name: snykConfig
-  displayName: Details for Snyk Service settings
   type: object
 - name: npmConfig
-  displayName: Details for NPM settings
   type: object
 - name: sonarConfig
-  displayName: Details for Sonar Cloud Analysis
   type: object
 - name: appDeployConfig
-  displayName: Details to deploy the app
   type: object
   default: null
-  
+- name: sharedAcrConfig
+  type: object
 variables:
 - group: NodeJSAppBuild
 - group: NodeJSAppBuild
@@ -128,16 +121,26 @@ stages:
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
           
-          - task: PowerShell@2
-            displayName: 'Helm lint'   
+          - task: AzureCLI@2
+            displayName: 'Helm Lint'
             inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "lint" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              failOnStderr: false
-              pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s'   
-
+              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: > 
+                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
+                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                -ChartVersion  $(appVersion) 
+                -ChartCachePath '$(Pipeline.Workspace)/helm' 
+                -Command 'lint' 
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              addSpnToEnvironment: true          
+              failOnStandardError: false
+              workingDirectory: '$(Pipeline.Workspace)/s'
+            
+          
       - job: BuildImage
         displayName: 'Build Image'
         condition:  |
@@ -148,8 +151,8 @@ stages:
         dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
-          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
         steps:
           - checkout: self
             path: s/
@@ -170,25 +173,37 @@ stages:
               path: $(Pipeline.Workspace)/helm
               cacheHitVar: CACHE_RESTORED
 
-
           - task: PowerShell@2
             displayName: 'Docker Build Image'
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
-              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              arguments: >
+                 -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                 -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' 
+                 -Command 'build'
+                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
 
-          - task: PowerShell@2
+          - task: AzureCLI@2
             displayName: 'Helm Build' 
             inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" -ChartVersion  $(appVersion) -ChartCachePath '$(Pipeline.Workspace)/helm' -Command "build" -PSHelperDirectory ${{ variables.PSHelperDirectory }} -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              failOnStderr: false
-              pwsh: true
+              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: > 
+                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
+                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                -ChartVersion  $(appVersion) 
+                -ChartCachePath '$(Pipeline.Workspace)/helm' 
+                -Command 'build'
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              addSpnToEnvironment: true          
+              failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
 
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
@@ -214,8 +229,8 @@ stages:
           )
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
-          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
         steps:
           - checkout: PipelineCommon
             path: s/PipelineCommon
@@ -223,14 +238,14 @@ stages:
           - task: Cache@2
             displayName: Restore Cached docker image
             inputs:
-              key: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+              key: $(dockerCacheKey)
               path: $(Pipeline.Workspace)/docker
               cacheHitVar: CACHE_RESTORED  
 
           - task: Cache@2
             displayName: Restore Cached helm chart
             inputs:
-              key: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | cache'
+              key: $(helmCacheKey)
               path: $(Pipeline.Workspace)/helm
               cacheHitVar: CACHE_RESTORED  
 
