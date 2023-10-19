@@ -170,14 +170,16 @@ try {
         
         Invoke-CommandLine -Command "az acr login --name $AcrName"
 
-        if ( $Command.ToLower() -eq 'lint' ) {
-            Invoke-HelmLint -HelmChartName $helmChartName
-        }
-        elseif ( $Command.ToLower() -eq 'publish' ) {
-            Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
-        }
-        elseif ( $Command.ToLower() -eq 'build' ) {
-            Invoke-HelmBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath   
+        switch ($Command.ToLower()) {
+            'lint' {
+                Invoke-HelmLint -HelmChartName $helmChartName
+            }
+            'publish' {
+                Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
+            }
+            'build' {
+                Invoke-HelmBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
+            }
         }
     }
     $exitCode = 0
