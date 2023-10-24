@@ -154,32 +154,36 @@ try {
         Write-Debug "${functionName}:helmChartName=$helmChartName"
 
         $chartDirectory = Get-ChildItem -Recurse -Path $(Join-Path -Path $chartHomeDir -ChildPath $helmChartName)  -Include Chart.yaml | Where-Object { $_.PSIsContainer -eq $false }
+        if ($chartDirectory) {
+            Write-Debug "${functionName}:Changing location to $($chartDirectory.DirectoryName)"
+            Push-Location $chartDirectory.DirectoryName
+            Write-Debug "${functionName}:Current location is '$(Get-Location)'"
         
-        Write-Debug "${functionName}:Changing location to $($chartDirectory.DirectoryName)"
-        Push-Location $chartDirectory.DirectoryName
-        Write-Debug "${functionName}:Current location is '$(Get-Location)'"
-        
-        Write-Host "Working on Chart: $helmChartName in directory: $chartDirectory"
-        $chartCacheFilePath = Join-Path -Path $ChartCachePath -ChildPath "$helmChartName-$ChartVersion.tgz"
-        Write-Debug "${functionName}:chartCacheFilePath=$chartCacheFilePath"
+            Write-Host "Working on Chart: $helmChartName in directory: $chartDirectory"
+            $chartCacheFilePath = Join-Path -Path $ChartCachePath -ChildPath "$helmChartName-$ChartVersion.tgz"
+            Write-Debug "${functionName}:chartCacheFilePath=$chartCacheFilePath"
     
-        if (!(Test-Path $ChartCachePath -PathType Container)) {
-            New-Item -ItemType Directory -Force -Path $ChartCachePath
-            Write-Host "Created Chart Cache Path: $ChartCachePath"
-        }
+            if (!(Test-Path $ChartCachePath -PathType Container)) {
+                New-Item -ItemType Directory -Force -Path $ChartCachePath
+                Write-Host "Created Chart Cache Path: $ChartCachePath"
+            }
         
-        Invoke-CommandLine -Command "az acr login --name $AcrName"
+            Invoke-CommandLine -Command "az acr login --name $AcrName"
 
-        switch ($Command.ToLower()) {
-            'lint' {
-                Invoke-HelmLint -HelmChartName $helmChartName
+            switch ($Command.ToLower()) {
+                'lint' {
+                    Invoke-HelmLint -HelmChartName $helmChartName
+                }
+                'publish' {
+                    Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
+                }
+                'build' {
+                    Invoke-HelmBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
+                }
             }
-            'publish' {
-                Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
-            }
-            'build' {
-                Invoke-HelmBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
-            }
+        }
+        else {
+            Write-Host "ChartDirectory does not exit for $helmChartName."
         }
     }
     $exitCode = 0
