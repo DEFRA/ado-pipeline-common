@@ -18,7 +18,7 @@ steps:
     inputs:
       connectedServiceName: ${{ coalesce(keyvault.ServiceConnection, parameters.azureResourceManagerConnection) }}
       keyVaultName: '${{ upper(keyvault.Name) }}'
-      secretsFilter: ${{ coalesce('keyvault.SecretsFilter', '*') }}
+      secretsFilter: ${{ coalesce(keyvault.SecretsFilter, '*') }}
       runAsPreJob: ${{ keyvault.runAsPreJob }}
 
 - ${{ each script in parameters.scriptsList }}:
