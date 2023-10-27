@@ -40,7 +40,8 @@ steps:
           serviceName: ${{ parameters.serviceName }}
           env: ${{ parameters.environmentObj.name }}
           keyVaultContentType: "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8"
-          resourceid: "{\"uri\":\"https://${{ parameters.environmentObj.appKeyVault }}.vault.azure.net/secrets/"
+          keyVaultRefPrefix: "{\"uri\":\"https://${{ parameters.environmentObj.appKeyVault }}.vault.azure.net/secrets"
+          keyVaultRefSuffix: "\"}"
         targetFiles: |
           ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
 
