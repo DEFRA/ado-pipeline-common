@@ -65,6 +65,7 @@ steps:
             displayName: WhatIf - ${{ parameters.templateName }}
           scriptPath: templates/powershell/Template-Deployment.ps1
           Type: AzureCLI
+          AzureCLIScriptType: pscore
           ${{ if ne(parameters.parameterFilePath, '') }}:
             scriptArguments: >
                 -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
