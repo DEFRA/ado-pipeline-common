@@ -200,13 +200,13 @@ try {
         }
         
         if ( $Command.ToLower() -eq 'build' ) {
-            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName    
+            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -DockerFileName $dbMigrationDockerFileName  
         }
         elseif ( $Command.ToLower() -eq 'push' ) {
-            Invoke-DockerPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName  
+            Invoke-DockerPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName -DockerFileName $dbMigrationDockerFileName
         }
         else {
-            Invoke-DockerBuildAndPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName     
+            Invoke-DockerBuildAndPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName -DockerFileName $dbMigrationDockerFileName
         }    
         if ($LastExitCode -ne 0) {
             Write-Host "##vso[task.complete result=Failed;]DONE"
