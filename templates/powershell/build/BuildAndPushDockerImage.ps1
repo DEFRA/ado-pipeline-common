@@ -34,6 +34,102 @@ param(
     [string]$PSHelperDirectory
 )
 
+function Invoke-DockerBuild {
+    param(
+        [Parameter(Mandatory)]
+        [string]$DockerCacheFilePath,
+        [Parameter(Mandatory)]
+        [string]$TagName,
+        [string]$DockerFileName = "Dockerfile"
+    )
+    begin{
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
+        Write-Debug "${functionName}:TagName=$TagName"
+        Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+    }
+    process {
+        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=linux/arm64 ."
+        # Save the image for future jobs
+        Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"   
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
+function Invoke-DockerPush {
+    param(
+        [Parameter(Mandatory)]
+        [string]$DockerCacheFilePath,
+        [Parameter(Mandatory)]
+        [string]$TagName,
+        [Parameter(Mandatory)]
+        [string]$AcrName,
+        [Parameter(Mandatory)]
+        [string]$AcrTagName,
+        [string]$DockerFileName = "Dockerfile"
+    )
+    begin{
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
+        Write-Debug "${functionName}:TagName=$TagName"
+        Write-Debug "${functionName}:TagName=$AcrName"
+        Write-Debug "${functionName}:TagName=$AcrTagName"
+        Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+    }
+    process {
+        # Load image if exists in cache
+        if (Test-Path $DockerCacheFilePath -PathType Leaf) {
+        Invoke-CommandLine -Command "docker load -i $DockerCacheFilePath"        
+        }
+        else {
+            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=linux/arm64 ."  
+            Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"          
+        }
+        Invoke-CommandLine -Command "az acr login --name $AcrName"
+        Invoke-CommandLine -Command "docker tag $TagName $AcrTagName"          
+        Invoke-CommandLine -Command "docker push $AcrTagName"   
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
+function Invoke-DockerBuildAndPush {
+    param(
+        [Parameter(Mandatory)]
+        [string]$DockerCacheFilePath,
+        [Parameter(Mandatory)]
+        [string]$TagName,
+        [Parameter(Mandatory)]
+        [string]$AcrName,
+        [Parameter(Mandatory)]
+        [string]$AcrTagName,
+        [string]$DockerFileName = "Dockerfile"
+    )
+    begin{
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
+        Write-Debug "${functionName}:TagName=$TagName"
+        Write-Debug "${functionName}:TagName=$AcrName"
+        Write-Debug "${functionName}:TagName=$AcrTagName"
+        Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+    }
+    process {
+        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=linux/arm64 ."
+        Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
+        Invoke-CommandLine -Command "az acr login --name $AcrName"
+        Invoke-CommandLine -Command "docker push $AcrTagName"    
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -62,45 +158,66 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
     Import-Module $PSHelperDirectory -Force
 
-    $tagName = $AcrRepoName + ":" + $ImageVersion
-    $AcrtagName = $AcrName + ".azurecr.io/image/" + $AcrRepoName + ":" + $ImageVersion
+    #Application Image
+    Write-Host "Processing Application Docker file: Dockerfile"
+    [string]$tagName = $AcrRepoName + ":" + $ImageVersion
+    [string]$AcrtagName = $AcrName + ".azurecr.io/image/" + $tagName
     Write-Debug "${functionName}:Docker Image=$tagName"
+    Write-Debug "${functionName}:AcrtagName=$AcrtagName"
 
-    $dockerCacheFilePath = $ImageCachePath + "/cache.tar"
+    [string]$dockerCacheFilePath = $ImageCachePath + "/cache.tar"
     if (!(Test-Path $ImageCachePath -PathType Container)) {
         New-Item -ItemType Directory -Force -Path $ImageCachePath
-    }
-
-    $exitCode = 0
+    } 
     
     if ( $Command.ToLower() -eq 'build' ) {
-        Invoke-CommandLine -Command "docker buildx build -t $tagName --platform=linux/arm64 ."
-        # Save the image for future jobs
-        Invoke-CommandLine -Command "docker save -o $dockerCacheFilePath $tagName"      
+        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName    
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
-        # Load image if exists in cache
-        if (Test-Path $dockerCacheFilePath -PathType Leaf) {
-            Invoke-CommandLine -Command "docker load -i $dockerCacheFilePath"        
-        }
-        else {
-            Invoke-CommandLine -Command "docker buildx build -t $tagName --platform=linux/arm64 ."  
-             Invoke-CommandLine -Command "docker save -o $dockerCacheFilePath $tagName"          
-        }
-        Invoke-CommandLine -Command "az acr login --name $AcrName"
-        Invoke-CommandLine -Command "docker tag $tagName $AcrtagName"          
-        Invoke-CommandLine -Command "docker push $AcrtagName"   
+        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName  
     }
     else {
-        Invoke-CommandLine -Command "docker buildx build -t $tagName --platform=linux/arm64 ."
-        Invoke-CommandLine -Command "docker save -o $dockerCacheFilePath $tagName"
-        Invoke-CommandLine -Command "az acr login --name $AcrName"
-        Invoke-CommandLine -Command "docker push $AcrtagName"    
+        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName     
     }    
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.complete result=Failed;]DONE"
         $exitCode = -2
-    }            
+    }  
+
+    #DB Migration Image
+    [string]$dbMigrationDockerFileName = "db-migration.Dockerfile"
+    if (Test-Path $dbMigrationDockerFileName -PathType Leaf) {
+
+        Write-Host "Processing DB Migration Docker file: $dbMigrationDockerFileName"
+        [string]$dbMigrationTagName = $AcrRepoName  + "-dbmigration:" + $ImageVersion
+        [string]$AcrDbMigrationTagName = $AcrName + ".azurecr.io/image/" + $dbMigrationTagName
+        Write-Debug "${functionName}:DB Migration Docker Image=$dbMigrationTagName"
+        Write-Debug "${functionName}:AcrDbMigrationTagName=$AcrDbMigrationTagName"
+    
+        [string]$dbDockerCacheFilePath = $ImageCachePath + "/db-cache.tar"
+        if (!(Test-Path $ImageCachePath -PathType Container)) {
+            New-Item -ItemType Directory -Force -Path $ImageCachePath
+        }
+        
+        if ( $Command.ToLower() -eq 'build' ) {
+            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName    
+        }
+        elseif ( $Command.ToLower() -eq 'push' ) {
+            Invoke-DockerPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName  
+        }
+        else {
+            Invoke-DockerBuildAndPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName     
+        }    
+        if ($LastExitCode -ne 0) {
+            Write-Host "##vso[task.complete result=Failed;]DONE"
+            $exitCode = -2
+        }  
+    } 
+    else{
+        Write-Host "No DB Migration Docker file exist."
+    }
+
+    $exitCode = 0          
 }
 catch {
     $exitCode = -2
