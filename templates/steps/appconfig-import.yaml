@@ -53,3 +53,4 @@ steps:
         ConfigurationFile: '${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
         FileContentProfile: appconfig/kvset
         DryRun: ${{ parameters.dryRun }}
+        Strict: true
