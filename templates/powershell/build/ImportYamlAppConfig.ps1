@@ -74,26 +74,29 @@ try {
     
     # If App Config Key not present in config file then delete the record
     foreach ($obj in $keysInAppConfig) {
-        if ($keysInConfigFile -Contains $obj.key ) {
-            Write-Host $obj.key 
-            $keyValueInAppConfig.Add($obj.key, $obj.value)
+        [string]$key = $obj.key 
+        [string]$value = $obj.value 
+        if ($keysInConfigFile -Contains $key ) {
+            $keyValueInAppConfig.Add($key, $value)
         }
         else { 
-            Write-Host "Key Does not exist in the config file - Deleting $obj.key" 
-            Invoke-CommandLine -Command "az appconfig kv delete --endpoint $endpoint --auth-mode login --key $obj.key --label $ServiceName --yes" > $null
+            Write-Host "Key Does not exist in the config file - Deleting $key" 
+            Invoke-CommandLine -Command "az appconfig kv delete --endpoint $endpoint --auth-mode login --key $key --label $ServiceName --yes" > $null
         }
     }
 
     foreach ($configFileObj in $ConfigFileContent) {
         # If App config value for a matching key is deferent in the config file then add or update key/value
-        if ( $keyValueInAppConfig.Item($configFileObj.key) -ne $configFileObj.value  ) {
+        [string]$key = $configFileObj.key 
+        [string]$value = $configFileObj.value 
+        if ( $keyValueInAppConfig.Item($key) -ne $value  ) {
 
             if ($configFileObj.ContainsKey("type") -and $configFileObj.type -eq "keyvault" ) {
-                [string]$keyVaultRef = "https://" + $KeyVault + ".vault.azure.net/Secrets/" + $configFileObj.value            
-                Invoke-CommandLine -Command "az appconfig kv set-keyvault --endpoint $endpoint --auth-mode login --key $configFileObj.key --secret-identifier $keyVaultRef  --label $ServiceName --yes"
+                [string]$keyVaultRef = "https://" + $KeyVault + ".vault.azure.net/Secrets/" + $value            
+                Invoke-CommandLine -Command "az appconfig kv set-keyvault --endpoint $endpoint --auth-mode login --key $key --secret-identifier $keyVaultRef  --label $ServiceName --yes"
             }
             else {
-                Invoke-CommandLine -Command "az appconfig kv set --endpoint $endpoint --auth-mode login --key $configFileObj.key --value $configFileObj.value  --label $ServiceName --yes"
+                Invoke-CommandLine -Command "az appconfig kv set --endpoint $endpoint --auth-mode login --key $key --value $value  --label $ServiceName --yes"
             }
         }
     }
