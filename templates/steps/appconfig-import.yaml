@@ -21,7 +21,7 @@ steps:
   - checkout: PipelineCommon
     path: s/PipelineCommon
 
-  - ${{ if ne(parameters.appDeployConfig, '') }}:      
+  - ${{ if and( ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filetype, 'yaml')) }}:      
     - task: PowerShell@2
       displayName: 'Validate Config File'
       inputs:
@@ -71,3 +71,29 @@ steps:
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'
+  - ${{ if and( ne(parameters.appDeployConfig, ''), eq(parameters.appDeployConfig.filetype, 'yaml')) }}:  
+    - task: replacetokens@5
+      displayName: 'Replace tokens in config'
+      inputs:
+        tokenPattern: doublebraces
+        inlineVariables: |
+          serviceName: ${{ parameters.serviceName }}
+          env: ${{ parameters.environmentObj.name }}
+        targetFiles: |
+          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.yaml
+    - task: AzureCLI@2
+      displayName: 'Import Azure App Configuration '
+      inputs:
+        azureSubscription: '${{ parameters.environmentObj.serviceConnection}}'
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ImportYamlAppConfig.ps1'
+        arguments: > 
+          -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
+          -ServiceName '${{ parameters.serviceName }}' 
+          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.yaml'
+          -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
+          -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
+        addSpnToEnvironment: true          
+        failOnStandardError: false
+        workingDirectory: '$(Pipeline.Workspace)/s'          
