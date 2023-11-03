@@ -56,7 +56,7 @@ try {
     Import-Module $PSHelperDirectory -Force
 
     Write-Host "Get the keys from AppConfig $AppConfig"        
-    $keysInAppConfig = Invoke-CommandLine -Command "az appconfig kv list -n $AppConfig --label $ServiceName --fields key | ConvertFrom-Json"
+    $keysInAppConfig = Invoke-CommandLine -Command "az appconfig kv list --endpoint https://$AppConfig.azconfig.io --auth-mode login --label $ServiceName --fields key | ConvertFrom-Json"
     $ConfigFileContent = Get-Content -Raw -Path $ConfigFilePath | ConvertFrom-Json
     $keysInConfigFile = $ConfigFileContent | Foreach { $_.items } | Foreach { $_.key }
     foreach ($key in $keysInAppConfig.key) {
