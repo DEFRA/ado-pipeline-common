@@ -63,16 +63,17 @@ try {
     Install-Module powershell-yaml -Force
     Import-Module powershell-yaml -Force
 
-    $endpoint = "https://" + $AppConfig + ".azconfig.io" 
+    [string]$endpoint = "https://" + $AppConfig + ".azconfig.io" 
     $ConfigFileContent = Get-Content -Raw -Path $ConfigFilePath | ConvertFrom-YAML
     foreach ($item in $ConfigFileContent) {
+        [string]$key = $item.key
         Write-Debug $item.key + $item.value 
         if ($null -ne $item.type -and $item.type -eq "keyvault" ) {
-            $keyVaultRef = "https://" + $KeyVault + ".vault.azure.net/Secrets/" + $item.value
-            Invoke-CommandLine -Command "az appconfig kv set-keyvault --endpoint $endpoint --auth-mode login --key $item.key --secret-identifier $keyVaultRef  --label $ServiceName --yes"
+            [string]$keyVaultRef = "https://" + $KeyVault + ".vault.azure.net/Secrets/" + $item.value            
+            Invoke-CommandLine -Command "az appconfig kv set-keyvault --endpoint $endpoint --auth-mode login --key $key  --secret-identifier $keyVaultRef  --label $ServiceName --yes"
         }
         else {
-            Invoke-CommandLine -Command "az appconfig kv set --endpoint $endpoint --auth-mode login --key $item.key --value $item.value  --label $ServiceName --yes"
+            Invoke-CommandLine -Command "az appconfig kv set --endpoint $endpoint --auth-mode login --key $key --value $item.value  --label $ServiceName --yes"
         }
     }
 
