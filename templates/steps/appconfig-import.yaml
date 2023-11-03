@@ -13,6 +13,8 @@ parameters:
   type: string
 - name: serviceName
   type: string
+- name: PSHelperDirectory
+  type: string   
 steps:
   - checkout: Self
     path: s/ 
@@ -65,7 +67,7 @@ steps:
           -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
           -ServiceName '${{ parameters.serviceName }}' 
           -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
-          -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+          -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'

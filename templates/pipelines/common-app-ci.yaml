@@ -336,6 +336,7 @@ stages:
                           appDeployConfig: ${{ parameters.appDeployConfig }}
                           workingDirectory: '$(Pipeline.Workspace)/s'
                           serviceName: ${{ parameters.serviceName }}
+                          PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                           
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
