@@ -53,3 +53,19 @@ steps:
         ConfigurationFile: '${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
         FileContentProfile: appconfig/kvset
         DryRun: ${{ parameters.dryRun }}
+    
+    - task: AzureCLI@2
+      displayName: 'Delete Unused Keys'
+      inputs:
+        azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/DeleteUnusedKeys.ps1'
+        arguments: > 
+          -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
+          -ServiceName '${{ parameters.serviceName }}' 
+          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+          -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+        addSpnToEnvironment: true          
+        failOnStandardError: false
+        workingDirectory: '$(Pipeline.Workspace)/s'
