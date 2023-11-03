@@ -57,7 +57,7 @@ steps:
     - task: AzureCLI@2
       displayName: 'Delete Unused Keys'
       inputs:
-        azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
+        azureSubscription: '${{ parameters.environmentObj.serviceConnection}}'
         scriptType: pscore
         scriptLocation: scriptPath
         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/DeleteUnusedKeys.ps1'
