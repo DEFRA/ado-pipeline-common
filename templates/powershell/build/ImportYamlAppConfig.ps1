@@ -71,6 +71,7 @@ try {
     $keysInAppConfig = Invoke-CommandLine -Command "az appconfig kv list --endpoint $endpoint --auth-mode login --label $ServiceName --fields key value | ConvertFrom-Json"
     $keyValueInAppConfig = @{}
     
+    # If App Config Key not present in config file then delete the record
     foreach ($obj in $keysInAppConfig) {
         if ($keysInConfigFile -Contains $obj.key ) {
             Write-Host $obj.key 
@@ -82,17 +83,17 @@ try {
         }
     }
 
-    foreach ($item in $ConfigFileContent) {
-        [string]$key = $item.key
+    foreach ($configFileObj in $ConfigFileContent) {
+        [string]$key = $configFileObj.key
         # If App config value for a matching key is deferent in the config file then add or update key/value
-        if ( $keyValueInAppConfig.Item($key) -ne $item.value  ) {
+        if ( $keyValueInAppConfig.Item($key) -ne $configFileObj.value  ) {
 
-            if ($item.ContainsKey("type") -and $item.type -eq "keyvault" ) {
-                [string]$keyVaultRef = "https://" + $KeyVault + ".vault.azure.net/Secrets/" + $item.value            
+            if ($configFileObj.ContainsKey("type") -and $configFileObj.type -eq "keyvault" ) {
+                [string]$keyVaultRef = "https://" + $KeyVault + ".vault.azure.net/Secrets/" + $configFileObj.value            
                 Invoke-CommandLine -Command "az appconfig kv set-keyvault --endpoint $endpoint --auth-mode login --key $key --secret-identifier $keyVaultRef  --label $ServiceName --yes"
             }
             else {
-                Invoke-CommandLine -Command "az appconfig kv set --endpoint $endpoint --auth-mode login --key $key --value $item.value  --label $ServiceName --yes"
+                Invoke-CommandLine -Command "az appconfig kv set --endpoint $endpoint --auth-mode login --key $key --value $configFileObj.value  --label $ServiceName --yes"
             }
         }
     }
