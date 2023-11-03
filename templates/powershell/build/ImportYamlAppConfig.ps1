@@ -68,7 +68,7 @@ try {
     foreach ($item in $ConfigFileContent) {
         [string]$key = $item.key
         Write-Debug "${functionName}:$key" 
-        if ($null -ne $item.type -and $item.type -eq "keyvault" ) {
+        if ($item.ContainsKey("type") -and $item.type -eq "keyvault" ) {
             [string]$keyVaultRef = "https://" + $KeyVault + ".vault.azure.net/Secrets/" + $item.value            
             Invoke-CommandLine -Command "az appconfig kv set-keyvault --endpoint $endpoint --auth-mode login --key $key --secret-identifier $keyVaultRef  --label $ServiceName --yes"
         }
