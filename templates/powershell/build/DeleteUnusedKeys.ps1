@@ -65,7 +65,7 @@ try {
         }
         else { 
             Write-Host "Key Does not exist in the config file - Deleting $key" 
-            Invoke-CommandLine -Command "az appconfig kv delete -n $AppConfig --key $key --label $ServiceName --yes > $null "
+            Invoke-CommandLine -Command "az appconfig kv delete -n $AppConfig --key $key --label $ServiceName --yes"
         }
     }
 
