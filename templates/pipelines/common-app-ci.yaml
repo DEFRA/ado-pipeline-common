@@ -42,6 +42,8 @@ variables:
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
   value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+- name: AppConfigModuleDirectory
+  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/app-config'  
 stages:         
   - stage: Application_CI
     displayName: 'Application CI'
@@ -336,7 +338,8 @@ stages:
                           appDeployConfig: ${{ parameters.appDeployConfig }}
                           workingDirectory: '$(Pipeline.Workspace)/s'
                           serviceName: ${{ parameters.serviceName }}
-                          
+                          PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                          AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}                          
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
                         parameters:
