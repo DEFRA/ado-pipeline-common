@@ -47,16 +47,6 @@ steps:
         targetFiles: |
           ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
           $(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish artifact'
-      inputs:
-        targetPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'
-        artifact: schema  
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish artifact'
-      inputs:
-        targetPath: '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
-        artifact: file  
     - task: AzureCLI@2
       displayName: 'Import Azure App Configuration '
       inputs:

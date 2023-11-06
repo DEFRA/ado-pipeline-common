@@ -73,8 +73,8 @@ try {
 
     if ($ConfigFilePath.EndsWith(".json")) {
         if (Test-Path $ConfigFilePath -PathType Leaf) {
-            
-            if ((Test-Json -Json ( Get-Content $ConfigFilePath -Raw) -SchemaFile $SchemaFilePath) -eq $true) {
+
+            if ((Test-Json -Json ( Get-Content -Path $ConfigFilePath -Raw) -SchemaFile $SchemaFilePath) -eq $true) {
                 Write-Host "${functionName} JSON File`t`tPassed validation"
 
                 # If Valid - import config values
@@ -82,7 +82,7 @@ try {
             }
             else {
                 Write-Host "${functionName} JSON File`t`tFailed validation"
-                throw [System.IO.InvalidDataException]::new($SchemaFilePath)
+                throw [System.IO.InvalidDataException]::new($ConfigFilePath)
             }  
         }        
           
