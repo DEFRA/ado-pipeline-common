@@ -71,9 +71,6 @@ try {
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
 
-    Install-Module powershell-yaml -Force
-    Import-Module powershell-yaml -Force
-
     if ($ConfigFilePath.EndsWith(".json")) {
         if (Test-Path $ConfigFilePath -PathType Leaf) {
             $json = Get-Content $ConfigFilePath | Out-String
@@ -81,13 +78,16 @@ try {
         
         if (($json | Test-Json -SchemaFile $SchemaFilePath) -eq $true) {
             Write-Host "${functionName} JSON File`t`tPassed validation"
-            
+
             # If Valid - import config values
             Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile
         }
         else {
             Write-Host "${functionName} JSON File`t`tFailed validation"
         }    
+    }
+    else {
+        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -KeyVaultName $KeyVault
     }
    
     $exitCode = 0
