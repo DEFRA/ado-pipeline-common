@@ -1,11 +1,11 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
-    [string] $ServicePrincipalId,
-    [Parameter(Mandatory)]
-    [string] $ServicePrincipalKey,
-    [Parameter(Mandatory)]
-    [string] $AzureSubscription,
+    # [Parameter(Mandatory)]
+    # [string] $ServicePrincipalId,
+    # [Parameter(Mandatory)]
+    # [string] $ServicePrincipalKey,
+    # [Parameter(Mandatory)]
+    # [string] $AzureSubscription,
     [Parameter(Mandatory)]
     [string] $TenantId,
     [Parameter(Mandatory)]
@@ -35,8 +35,8 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:ServicePrincipalId=$ServicePrincipalId"
-Write-Debug "${functionName}:AzureSubscription=$AzureSubscription"
+# Write-Debug "${functionName}:ServicePrincipalId=$ServicePrincipalId"
+# Write-Debug "${functionName}:AzureSubscription=$AzureSubscription"
 Write-Debug "${functionName}:TenantId=$TenantId"
 Write-Debug "${functionName}:AppConfigName=$AppConfigName"
 Write-Debug "${functionName}:Label=$Label"
@@ -57,10 +57,10 @@ try {
     Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
     Import-Module $moduleDir.FullName -Force
 
-    Write-Host "${functionName}:Connecting to Azure..."
-    Invoke-CommandLine -Command "az login --service-principal --tenant $TenantId --username $ServicePrincipalId --password $ServicePrincipalKey" -NoOutput
-    Invoke-CommandLine -Command "az account set --name $AzureSubscription" -NoOutput
-    Write-Host "${functionName}:Connected to Azure and set context to '$AzureSubscription'"
+    # Write-Host "${functionName}:Connecting to Azure..."
+    # Invoke-CommandLine -Command "az login --service-principal --tenant $TenantId --username $ServicePrincipalId --password $ServicePrincipalKey" -NoOutput
+    # Invoke-CommandLine -Command "az account set --name $AzureSubscription" -NoOutput
+    # Write-Host "${functionName}:Connected to Azure and set context to '$AzureSubscription'"
     
     if ($ConfigData) {
         $ConfigDataFilePath = Join-Path -Path $WorkingDirectory -ChildPath "$AppConfigName-$Label.json"
