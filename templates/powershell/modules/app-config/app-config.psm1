@@ -433,7 +433,7 @@ function Get-AppConfigValuesFromYamlFile {
 			throw [System.IO.FileNotFoundException]::new($file.FullName)
 		}
 
-		[string]$content = Get-Content -Path $Path
+		[string]$content = Get-Content -Raw -Path $Path
 
 		Write-Debug "${functionName}:process:content=$content"
 
