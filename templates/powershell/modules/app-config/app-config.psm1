@@ -547,6 +547,13 @@ function Import-AppConfigValues {
 		}else{
 			throw [System.IO.InvalidDataException]::new($importFile.FullName)
 		}
+
+		#Validate if each record has a label matching the service
+		foreach ($item in $desiredItems) {
+			if ($item.Label -ne $Label) {
+				throw [System.IO.InvalidDataException]::new("Invalid Label for $item.key ")
+			}
+		}
 		
 		[AppConfigDifferences]$delta = New-AppConfigDifference -Source $desiredItems -Destination $existingItems
         

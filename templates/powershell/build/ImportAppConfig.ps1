@@ -10,8 +10,6 @@ Mandatory. Azure Application Configuration
 Mandatory. ServiceName
 .PARAMETER ConfigFilePath
 Mandatory. App Config file path. 
-.PARAMETER SchemaFilePath
-Mandatory. App Config Validation Schema file path. 
 .PARAMETER KeyVault
 Mandatory. Application Keyvault
 .PARAMETER PSHelperDirectory
@@ -19,7 +17,7 @@ Mandatory. Directory Path of PSHelper module
 .PARAMETER AppConfigModuleDirectory
 Mandatory. Directory Path of App-Config module
 .EXAMPLE
-.\ImportYamlAppConfig.ps1 -AppConfig <AppConfig> -ServiceName <ServiceName> -ConfigFilePath <ConfigFilePath> -SchemaFilePath <SchemaFilePath> -KeyVault <KeyVault> -PSHelperDirectory <PSHelperDirectory> -AppConfigModuleDirectory <AppConfigModuleDirectory>
+.\ImportYamlAppConfig.ps1 -AppConfig <AppConfig> -ServiceName <ServiceName> -ConfigFilePath <ConfigFilePath> -KeyVault <KeyVault> -PSHelperDirectory <PSHelperDirectory> -AppConfigModuleDirectory <AppConfigModuleDirectory>
 #> 
 
 [CmdletBinding()]
@@ -30,8 +28,6 @@ param(
     [string] $ServiceName,
     [Parameter(Mandatory)]
     [string] $ConfigFilePath,
-    [Parameter(Mandatory)]
-    [string] $SchemaFilePath,
     [Parameter(Mandatory)]
     [string] $KeyVault,
     [Parameter(Mandatory)]
@@ -61,7 +57,6 @@ Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AppConfig=$AppConfig"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
-Write-Debug "${functionName}:SchemaFilePath=$SchemaFilePath"
 Write-Debug "${functionName}:KeyVault=$KeyVault"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
