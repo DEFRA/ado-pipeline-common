@@ -24,15 +24,15 @@ steps:
     path: s/PipelineCommon
 
   - ${{ if and( ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filetype, 'yaml')) }}:      
-    # - task: PowerShell@2
-    #   displayName: 'Validate Config File'
-    #   inputs:
-    #     targetType: filePath
-    #     filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
-    #     arguments: -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'  -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
-    #     failOnStderr: true
-    #     pwsh: true
-    #     workingDirectory: '$(Pipeline.Workspace)/s'
+    - task: PowerShell@2
+      displayName: 'Validate Config File'
+      inputs:
+        targetType: filePath
+        filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
+        arguments: -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'  -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+        failOnStderr: true
+        pwsh: true
+        workingDirectory: '$(Pipeline.Workspace)/s'
 
     - task: replacetokens@5
       displayName: 'Replace tokens in config'
