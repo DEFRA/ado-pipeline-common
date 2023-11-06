@@ -72,21 +72,20 @@ try {
     Import-Module $AppConfigModuleDirectory -Force
 
     if ($ConfigFilePath.EndsWith(".json")) {
-        # if (Test-Path $ConfigFilePath -PathType Leaf) {
-        #     $json = Get-Content $ConfigFilePath -Raw | Out-String
-        # }
-        
-        # if (($json | Test-Json -SchemaFile $SchemaFilePath) -eq $true) {
-        #     Write-Host "${functionName} JSON File`t`tPassed validation"
-
-        #     # If Valid - import config values
+        if (Test-Path $ConfigFilePath -PathType Leaf) {
             
-        # }
-        # else {
-        #     Write-Host "${functionName} JSON File`t`tFailed validation"
-        #     throw [System.IO.InvalidDataException]::new($SchemaFilePath)
-        # }   
-        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile 
+            if ((Test-Json -Json ( Get-Content $ConfigFilePath -Raw) -SchemaFile $SchemaFilePath) -eq $true) {
+                Write-Host "${functionName} JSON File`t`tPassed validation"
+
+                # If Valid - import config values
+                Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile
+            }
+            else {
+                Write-Host "${functionName} JSON File`t`tFailed validation"
+                throw [System.IO.InvalidDataException]::new($SchemaFilePath)
+            }  
+        }        
+          
     }
     else {
         Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -KeyVaultName $KeyVault
