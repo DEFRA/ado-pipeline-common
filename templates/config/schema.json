@@ -3,7 +3,7 @@
     "$id": "http://example.com/root.json",
     "type": "array",
     "items": {
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
             "key": {
                 "type": "string",
@@ -20,9 +20,6 @@
             },
             "content_type": {
                 "type": "string"
-            },
-            "tags": {
-                "type": "enum"
             }
         },
         "required": [
