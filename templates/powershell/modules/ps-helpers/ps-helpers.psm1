@@ -11,6 +11,8 @@
     If true, the command ignore the error.
 .PARAMETER ReturnExitCode
     If true, the command will return LASTEXITCODE.
+.PARAMETER NoOutput
+    If true, the command will not output anything.
 #>
 
 function Invoke-CommandLine {
@@ -19,7 +21,8 @@ function Invoke-CommandLine {
         [string]$Command,
         [switch]$IsSensitive,
         [switch]$IgnoreErrorCode,
-        [switch]$ReturnExitCode
+        [switch]$ReturnExitCode,
+        [switch]$NoOutput
     )
   
     [string]$functionName = $MyInvocation.MyCommand
@@ -76,10 +79,8 @@ function Invoke-CommandLine {
     if ($ReturnExitCode) {
         Write-Output $errCode
     }
-    else {
+    elseif (-not $NoOutput) {
         Write-Output $output
     }
     Write-Debug "${functionName}:Exited"
-  }
-
-  
+}
