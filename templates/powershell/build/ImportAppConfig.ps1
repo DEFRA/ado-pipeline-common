@@ -73,7 +73,7 @@ try {
 
     if ($ConfigFilePath.EndsWith(".json")) {
         if (Test-Path $ConfigFilePath -PathType Leaf) {
-            $json = Get-Content $ConfigFilePath | Out-String
+            $json = Get-Content $ConfigFilePath -Raw | Out-String
         }
         
         if (($json | Test-Json -SchemaFile $SchemaFilePath) -eq $true) {
