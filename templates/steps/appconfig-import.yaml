@@ -14,7 +14,9 @@ parameters:
 - name: serviceName
   type: string
 - name: PSHelperDirectory
-  type: string   
+  type: string
+- name: AppConfigModuleDirectory
+  type: string     
 steps:
   - checkout: Self
     path: s/ 
@@ -22,15 +24,15 @@ steps:
     path: s/PipelineCommon
 
   - ${{ if and( ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filetype, 'yaml')) }}:      
-    - task: PowerShell@2
-      displayName: 'Validate Config File'
-      inputs:
-        targetType: filePath
-        filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
-        arguments: -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'  -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
-        failOnStderr: true
-        pwsh: true
-        workingDirectory: '$(Pipeline.Workspace)/s'
+    # - task: PowerShell@2
+    #   displayName: 'Validate Config File'
+    #   inputs:
+    #     targetType: filePath
+    #     filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
+    #     arguments: -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'  -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+    #     failOnStderr: true
+    #     pwsh: true
+    #     workingDirectory: '$(Pipeline.Workspace)/s'
 
     - task: replacetokens@5
       displayName: 'Replace tokens in config'
@@ -45,32 +47,43 @@ steps:
           resourceid: 'uri":"https://${{ parameters.environmentObj.appKeyVault }}.vault.azure.net/secrets'
         targetFiles: |
           ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
+          $(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json
 
-  
-    - task: AzureAppConfigurationPush@6
-      displayName: 'Import Azure App Configuration'
-      inputs:
-        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
-        AppConfigurationEndpoint: 'https://${{ parameters.environmentObj.appConfiguration }}.azconfig.io'
-        ConfigurationFile: '${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
-        FileContentProfile: appconfig/kvset
-        DryRun: ${{ parameters.dryRun }}
-    
     - task: AzureCLI@2
-      displayName: 'Delete Unused Keys'
+      displayName: 'Import Azure App Configuration '
       inputs:
         azureSubscription: '${{ parameters.environmentObj.serviceConnection}}'
         scriptType: pscore
         scriptLocation: scriptPath
-        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/DeleteUnusedKeys.ps1'
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ImportAppConfig.ps1'
         arguments: > 
           -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
           -ServiceName '${{ parameters.serviceName }}' 
           -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+          -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'
+          -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
+          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
         addSpnToEnvironment: true          
         failOnStandardError: false
-        workingDirectory: '$(Pipeline.Workspace)/s'
+        workingDirectory: '$(Pipeline.Workspace)/s'    
+
+    
+    # - task: AzureCLI@2
+    #   displayName: 'Delete Unused Keys'
+    #   inputs:
+    #     azureSubscription: '${{ parameters.environmentObj.serviceConnection}}'
+    #     scriptType: pscore
+    #     scriptLocation: scriptPath
+    #     scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/DeleteUnusedKeys.ps1'
+    #     arguments: > 
+    #       -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
+    #       -ServiceName '${{ parameters.serviceName }}' 
+    #       -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+    #       -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
+    #     addSpnToEnvironment: true          
+    #     failOnStandardError: false
+    #     workingDirectory: '$(Pipeline.Workspace)/s'
   - ${{ if and( ne(parameters.appDeployConfig, ''), eq(parameters.appDeployConfig.filetype, 'yaml')) }}:  
     - task: replacetokens@5
       displayName: 'Replace tokens in config'
@@ -87,13 +100,15 @@ steps:
         azureSubscription: '${{ parameters.environmentObj.serviceConnection}}'
         scriptType: pscore
         scriptLocation: scriptPath
-        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ImportYamlAppConfig.ps1'
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ImportAppConfig.ps1'
         arguments: > 
           -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
           -ServiceName '${{ parameters.serviceName }}' 
           -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.yaml'
+          -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'
           -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
+          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
         addSpnToEnvironment: true          
         failOnStandardError: false
-        workingDirectory: '$(Pipeline.Workspace)/s'          
+        workingDirectory: '$(Pipeline.Workspace)/s'      
