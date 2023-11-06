@@ -84,6 +84,7 @@ try {
         }
         else {
             Write-Host "${functionName} JSON File`t`tFailed validation"
+            throw [System.IO.InvalidDataException]::new($SchemaFilePath)
         }    
     }
     else {
