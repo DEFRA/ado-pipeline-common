@@ -6,7 +6,8 @@ param(
     [string] $Label,
     [string] $ConfigDataFilePath,
     [array] $ConfigData,
-    [string]$WorkingDirectory = $PWD
+    [string]$WorkingDirectory = $PWD,
+    [switch]$DeleteEntriesNotInFile
 )
 
 Set-StrictMode -Version 3.0
@@ -51,7 +52,12 @@ try {
         $ConfigData | Out-File -FilePath $ConfigDataFilePath
     }
     
-    Import-AppConfigValues -Path $ConfigDataFilePath -ConfigStore $AppConfigName -Label $Label -DeleteEntriesNotInFile
+    if ($DeleteEntriesNotInFile) {
+        Import-AppConfigValues -Path $ConfigDataFilePath -ConfigStore $AppConfigName -Label $Label -DeleteEntriesNotInFile
+    }
+    else {
+        Import-AppConfigValues -Path $ConfigDataFilePath -ConfigStore $AppConfigName -Label $Label
+    }
 
     Invoke-CommandLine -Command "az logout" -NoOutput
 
