@@ -22,20 +22,20 @@ steps:
     path: s/ 
   - checkout: PipelineCommon
     path: s/PipelineCommon
-  - pwsh: |
-      $PSVersionTable
-      sudo apt-get install -y powershell
-    errorActionPreference: silentlyContinue
-    displayName: 'Upgrade PowerShell Version'
-  - ${{ if and( ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filetype, 'yaml')) }}:      
+  - ${{ if ne(parameters.appDeployConfig, '') }}:          
+    - pwsh: |
+        $PSVersionTable
+        sudo apt-get install -y powershell
+      errorActionPreference: silentlyContinue
+      displayName: 'Upgrade PowerShell Version'  
     - task: PowerShell@2
       displayName: 'Validate Config File'
       inputs:
         targetType: filePath
         filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
         arguments: > 
-         -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'  
-         -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+         -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.${{ parameters.environmentObj.filetype }}'  
+         -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.environmentObj.filetype }}'
          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
         failOnStderr: true
         pwsh: true
@@ -51,7 +51,7 @@ steps:
           keyVaultContentType: "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8"
           resourceid: 'uri":"https://${{ parameters.environmentObj.appKeyVault }}.vault.azure.net/secrets'
         targetFiles: |
-          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
+          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.environmentObj.filetype }}
     - task: AzureCLI@2
       displayName: 'Import Azure App Configuration '
       inputs:
@@ -62,50 +62,11 @@ steps:
         arguments: > 
           -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
           -ServiceName '${{ parameters.serviceName }}' 
-          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'          
+          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.environmentObj.filetype }}'          
           -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'  
-    
-  - ${{ if and( ne(parameters.appDeployConfig, ''), eq(parameters.appDeployConfig.filetype, 'yaml')) }}:  
-    - task: PowerShell@2
-      displayName: 'Validate Config File'
-      inputs:
-        targetType: filePath
-        filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
-        arguments: > 
-         -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.yaml'  
-         -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.yaml'
-         -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
-        failOnStderr: true
-        pwsh: true
-        workingDirectory: '$(Pipeline.Workspace)/s'
-    - task: replacetokens@5
-      displayName: 'Replace tokens in config'
-      inputs:
-        tokenPattern: doublebraces
-        inlineVariables: |
-          serviceName: ${{ parameters.serviceName }}
-          env: ${{ parameters.environmentObj.name }}
-        targetFiles: |
-          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.yaml
-    - task: AzureCLI@2
-      displayName: 'Import Azure App Configuration '
-      inputs:
-        azureSubscription: '${{ parameters.environmentObj.serviceConnection}}'
-        scriptType: pscore
-        scriptLocation: scriptPath
-        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ImportAppConfig.ps1'
-        arguments: > 
-          -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
-          -ServiceName '${{ parameters.serviceName }}' 
-          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.yaml'          
-          -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
-          -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
-          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
-        addSpnToEnvironment: true          
-        failOnStandardError: false
-        workingDirectory: '$(Pipeline.Workspace)/s'      
+  
