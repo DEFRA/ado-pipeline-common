@@ -51,15 +51,16 @@ try {
     Import-Module $AppConfigModuleDirectory -Force
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
-        if ($ConfigFilePath.EndsWith(".json")) {
-            [string]$json = Get-Content -Raw -Path $ConfigFilePath 
-            [string]$jsonSchema = Get-Content -Raw -Path $SchemaFilePath 
-            $result = ( $json | Test-Json -Schema $jsonSchema)
+        [string]$ConfigFileContent = Get-Content -Encoding UTF8 -Raw -Path $ConfigFilePath 
+        [string]$SchemaFileContent = Get-Content -Encoding UTF8 -Raw -Path $SchemaFilePath 
+        Write-Host $ConfigFileContent
+        Write-Host $SchemaFileContent
+        if ($ConfigFilePath.EndsWith(".json")) {        
+            $result = ( $ConfigFileContent | Test-Json -Schema $SchemaFileContent)
         }
         elseif ($ConfigFilePath.EndsWith(".yaml")) {
-            [string]$Yaml = Get-Content -Raw -Path $ConfigFilePath 
-            [string]$jsonSchema = Get-Content -Raw -Path $SchemaFilePath 
-            $result = ( $Yaml | Test-Yaml -Schema $jsonSchema)
+
+            $result = ( $ConfigFileContent | Test-Yaml -Schema $SchemaFileContent)
         }
         else {
             throw [System.IO.InvalidDataException]::new($ConfigFilePath)            
