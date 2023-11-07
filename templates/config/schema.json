@@ -1,9 +1,8 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "http://example.com/root.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "array",
     "items": {
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
             "key": {
                 "type": "string",
@@ -20,9 +19,6 @@
             },
             "content_type": {
                 "type": "string"
-            },
-            "tags": {
-                "type": "enum"
             }
         },
         "required": [
