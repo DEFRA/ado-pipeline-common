@@ -47,16 +47,16 @@ Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 
 try {
-    
+
     Import-Module $AppConfigModuleDirectory -Force
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         if ($ConfigFilePath.EndsWith(".json")) {
-            $json = Get-Content $ConfigFilePath | Out-String
+            [string]$json = Get-Content -Raw -Path $ConfigFilePath
             $result = ( $json | Test-Json -SchemaFile $SchemaFilePath)
         }
         elseif ($ConfigFilePath.EndsWith(".yaml")) {
-            $Yaml = Get-Content $ConfigFilePath | Out-String
+            [string]$Yaml = Get-Content -Raw -Path $ConfigFilePath
             $result = ( $Yaml | Test-Yaml -SchemaFile $SchemaFilePath)
         }
         else {
