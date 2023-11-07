@@ -338,6 +338,7 @@ stages:
                           appDeployConfig: ${{ parameters.appDeployConfig }}
                           workingDirectory: '$(Pipeline.Workspace)/s'
                           serviceName: ${{ parameters.serviceName }}
+                          filetype: ${{ parameters.appDeployConfig.filetype }}
                           PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                           AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}                          
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
