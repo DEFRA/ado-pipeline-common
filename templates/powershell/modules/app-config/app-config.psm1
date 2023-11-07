@@ -914,9 +914,12 @@ function Test-Yaml {
 
 	end {
 		$steppablePipeline.End()
-		if ($null -ne $steppablePipeline) {
-			$steppablePipeline.Clean()
-		}
+
 	}
+	# clean {
+	# 	if ($null -ne $steppablePipeline) {
+	# 		$steppablePipeline.Clean()
+	# 	}
+	# }
 	
 }
