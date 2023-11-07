@@ -47,6 +47,8 @@ Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 
 try {
+    
+    Import-Module $AppConfigModuleDirectory -Force
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         if ($ConfigFilePath.EndsWith(".json")) {
