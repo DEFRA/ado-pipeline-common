@@ -1,5 +1,5 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "http://example.com/root.json",
     "type": "array",
     "items": {
@@ -20,9 +20,6 @@
             },
             "content_type": {
                 "type": "string"
-            },
-            "tags": {
-                "type": "enum"
             }
         },
         "required": [
