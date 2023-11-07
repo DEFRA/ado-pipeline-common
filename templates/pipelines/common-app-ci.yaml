@@ -292,7 +292,7 @@ stages:
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
         - name: configFileType
-          ${{ if and(ne(parameters.appDeployConfig, ''),eq(parameters.appDeployConfig.filetype, '')  }}:          
+          ${{ if and(ne(parameters.appDeployConfig, ''),eq(parameters.appDeployConfig.filetype, '')) }}:          
             value: 'json'
           ${{ else }}:          
             value: ${{parameters.appDeployConfig.filetype}}
