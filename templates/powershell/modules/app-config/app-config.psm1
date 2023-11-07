@@ -865,3 +865,58 @@ function Set-AppConfigValue {
 		Write-Debug "${functionName}:end:End"
 	}
 }
+
+function Test-Yaml {
+	[CmdletBinding(DefaultParameterSetName = '__AllParameterSets', HelpUri = 'https://go.microsoft.com/fwlink/?LinkID=2096609')]
+	param(
+		[Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
+		[string]
+		${Yaml},
+
+		[Parameter(ParameterSetName = 'SchemaString', Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[string]
+		${Schema},
+
+		[Parameter(ParameterSetName = 'SchemaFile', Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[string]
+		${SchemaFile})
+
+	begin {
+		
+		Install-Module powershell-yaml -Force
+
+		function Yaml2Json ($Yaml) { $Yaml | ConvertFrom-Yaml | ConvertTo-Json -Depth 64 }
+		$outBuffer = $null
+		if ($PSBoundParameters.TryGetValue('OutBuffer', [ref]$outBuffer)) { $PSBoundParameters['OutBuffer'] = 1 }
+		$Parameters = @{}
+		foreach ($PSBoundParameters in $PSBoundParameters.GetEnumerator()) {
+			switch ($PSBoundParameters.Key) {
+				'Yaml' { $Parameters['Json'] = Yaml2Json $PSBoundParameters.Value }
+				'Schema' { $Parameters['Schema'] = Yaml2Json $PSBoundParameters.Value }
+				'SchemaFile' { $Parameters['Schema'] = Yaml2Json (Get-Content -Raw -LiteralPath $PSBoundParameters.Value) }
+				Default { $Parameters[$PSBoundParameters.Key] = $PSBoundParameters.Value }
+			}
+		}
+
+		$wrappedCmd = $ExecutionContext.InvokeCommand.GetCommand('Microsoft.PowerShell.Utility\Test-Json', [System.Management.Automation.CommandTypes]::Cmdlet)
+		$scriptCmd = { & $wrappedCmd @Parameters }
+
+		$steppablePipeline = $scriptCmd.GetSteppablePipeline($myInvocation.CommandOrigin)
+		$steppablePipeline.Begin($PSCmdlet)
+	}
+
+	process {
+		$Json = Yaml2Json $_
+		$steppablePipeline.Process($Json)
+	}
+
+	end {
+		$steppablePipeline.End()
+		if ($null -ne $steppablePipeline) {
+			$steppablePipeline.Clean()
+		}
+	}
+	
+}
