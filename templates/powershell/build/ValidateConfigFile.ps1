@@ -53,6 +53,8 @@ try {
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         if ($ConfigFilePath.EndsWith(".json")) {
             [string]$json = Get-Content -Raw -Path $ConfigFilePath
+            [string]$jsonschema = Get-Content -Raw -Path $SchemaFilePath
+            Write-Host $jsonschema
             $result = ( $json | Test-Json -SchemaFile $SchemaFilePath)
         }
         elseif ($ConfigFilePath.EndsWith(".yaml")) {
