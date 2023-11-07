@@ -53,8 +53,9 @@ try {
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         [string]$ConfigFileContent = Get-Content -Raw -Path $ConfigFilePath 
         [string]$SchemaFileContent = Get-Content -Raw -Path $SchemaFilePath 
-        Write-Host $ConfigFileContent
-        Write-Host $SchemaFileContent
+
+        Write-Debug $ConfigFileContent
+        
         if ($ConfigFilePath.EndsWith(".json")) {        
             $result = ( Test-Json -Json $ConfigFileContent -Schema $SchemaFileContent)
         }
