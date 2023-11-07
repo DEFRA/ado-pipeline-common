@@ -52,11 +52,11 @@ try {
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         if ($ConfigFilePath.EndsWith(".json")) {
-            [string]$json = Get-Content $ConfigFilePath | Out-String
+            [string]$json = Get-Content -Encoding unicode -Path $ConfigFilePath  | Out-String
             $result = ( $json | Test-Json -SchemaFile $SchemaFilePath)
         }
         elseif ($ConfigFilePath.EndsWith(".yaml")) {
-            [string]$Yaml = Get-Content -Raw -Path $ConfigFilePath
+            [string]$Yaml = Get-Content -Encoding unicode -Path $ConfigFilePath
             $result = ( $Yaml | Test-Yaml -SchemaFile $SchemaFilePath)
         }
         else {
