@@ -25,6 +25,7 @@ steps:
   - pwsh: |
       $PSVersionTable
       sudo apt-get install -y powershell
+    errorActionPreference: silentlyContinue
     displayName: 'Upgrade PowerShell Version'
   - ${{ if and( ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filetype, 'yaml')) }}:      
     - task: PowerShell@2
