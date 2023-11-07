@@ -52,12 +52,14 @@ try {
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         if ($ConfigFilePath.EndsWith(".json")) {
-            [string]$json = Get-Content -Encoding unicode -Path $ConfigFilePath  | Out-String
-            $result = ( $json | Test-Json -SchemaFile $SchemaFilePath)
+            [string]$json = Get-Content -Raw -Path $ConfigFilePath 
+            [string]$jsonSchema = Get-Content -Raw -Path $SchemaFilePath 
+            $result = ( $json | Test-Json -Schema $jsonSchema)
         }
         elseif ($ConfigFilePath.EndsWith(".yaml")) {
-            [string]$Yaml = Get-Content -Encoding unicode -Path $ConfigFilePath
-            $result = ( $Yaml | Test-Yaml -SchemaFile $SchemaFilePath)
+            [string]$Yaml = Get-Content -Raw -Path $ConfigFilePath 
+            [string]$jsonSchema = Get-Content -Raw -Path $SchemaFilePath 
+            $result = ( $Yaml | Test-Yaml -Schema $jsonSchema)
         }
         else {
             throw [System.IO.InvalidDataException]::new($ConfigFilePath)            
