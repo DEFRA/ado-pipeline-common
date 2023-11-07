@@ -17,9 +17,6 @@ parameters:
   type: string
 - name: AppConfigModuleDirectory
   type: string
-- name: filetype
-  type: string
-  default: 'json'
 steps:
   - checkout: Self
     path: s/ 
@@ -37,8 +34,8 @@ steps:
         targetType: filePath
         filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
         arguments: > 
-         -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.${{ parameters.filetype }}'  
-         -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.filetype }}'
+         -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.${{ parameters.appDeployConfig.filetype }}'  
+         -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.appDeployConfig.filetype }}'
          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
         failOnStderr: true
         pwsh: true
@@ -54,7 +51,7 @@ steps:
           keyVaultContentType: "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8"
           resourceid: 'uri":"https://${{ parameters.environmentObj.appKeyVault }}.vault.azure.net/secrets'
         targetFiles: |
-          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.filetype }}
+          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.appDeployConfig.filetype }}
     - task: AzureCLI@2
       displayName: 'Import Azure App Configuration '
       inputs:
@@ -65,7 +62,7 @@ steps:
         arguments: > 
           -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
           -ServiceName '${{ parameters.serviceName }}' 
-          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.filetype }}'          
+          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.appDeployConfig.filetype }}'          
           -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
