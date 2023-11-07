@@ -48,17 +48,18 @@ Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 
 try {
 
-    Import-Module $AppConfigModuleDirectory -Force
+    #Import-Module $AppConfigModuleDirectory -Force
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         if ($ConfigFilePath.EndsWith(".json")) {
             [string]$json = Get-Content -Raw -Path $ConfigFilePath
+             Write-Host $json
             $result = ( $json | Test-Json -SchemaFile $SchemaFilePath)
         }
-        elseif ($ConfigFilePath.EndsWith(".yaml")) {
-            [string]$Yaml = Get-Content -Raw -Path $ConfigFilePath
-            $result = ( $Yaml | Test-Yaml -SchemaFile $SchemaFilePath)
-        }
+        # elseif ($ConfigFilePath.EndsWith(".yaml")) {
+        #     [string]$Yaml = Get-Content -Raw -Path $ConfigFilePath
+        #     $result = ( $Yaml | Test-Yaml -SchemaFile $SchemaFilePath)
+        # }
         else {
             throw [System.IO.InvalidDataException]::new($ConfigFilePath)            
         }
