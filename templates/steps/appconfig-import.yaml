@@ -22,7 +22,10 @@ steps:
     path: s/ 
   - checkout: PipelineCommon
     path: s/PipelineCommon
-
+  - pwsh: |
+      $PSVersionTable
+      sudo apt-get install -y powershell
+    displayName: 'Upgrade PowerShell Version'
   - ${{ if and( ne(parameters.appDeployConfig, ''), ne(parameters.appDeployConfig.filetype, 'yaml')) }}:      
     - task: PowerShell@2
       displayName: 'Validate Config File'
