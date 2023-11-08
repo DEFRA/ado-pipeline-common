@@ -110,6 +110,7 @@ try {
         else {
             throw [System.IO.InvalidDataException]::new($ConfigFilePath)            
         }
+        Write-Host "${functionName} File $CommonConfigFilePath merged to $ConfigFilePath "
     }
                
     $exitCode = 0
