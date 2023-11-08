@@ -35,9 +35,10 @@ steps:
       displayName: 'Validate Config File'
       inputs:
         targetType: filePath
-        filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
+        filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateAndMergeConfigFile.ps1'
         arguments: > 
-         -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.${{ parameters.configFileType }}'  
+         -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.${{ parameters.configFileType }}'
+         -CommonConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.configFileType }}'
          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
         failOnStderr: true
