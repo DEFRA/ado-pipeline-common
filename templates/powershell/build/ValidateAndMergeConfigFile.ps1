@@ -52,12 +52,15 @@ Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 
 try {
 
+    [bool]$CommonConfigFileExists = $false
+
     Import-Module $AppConfigModuleDirectory -Force
     if (Test-Path $SchemaFilePath -PathType Leaf) {
         [string]$SchemaFileContent = Get-Content -Raw -Path $SchemaFilePath 
     }
 
     if (Test-Path $CommonConfigFilePath -PathType Leaf) {
+        [bool]$CommonConfigFileExists = $true
         [string]$CommonConfigFileContent = Get-Content -Raw -Path $CommonConfigFilePath 
         if ($CommonConfigFilePath.EndsWith(".json")) {        
             $result = ( Test-Json -Json $CommonConfigFileContent -Schema $SchemaFileContent)
@@ -96,14 +99,17 @@ try {
         }
     }
 
-    if ($ConfigFilePath.EndsWith(".json")) { 
-        @($CommonConfigFileContent; $ConfigFileContent) | ConvertTo-Json | Out-File $ConfigFilePath
-    }
-    elseif ($ConfigFilePath.EndsWith(".yaml")) {
-        $CommonConfigFileContent  | Out-File -append $ConfigFilePath
-    }
-    else {
-        throw [System.IO.InvalidDataException]::new($ConfigFilePath)            
+    if ($CommonConfigFileExists) {
+        if ($ConfigFilePath.EndsWith(".json")) { 
+            @($ConfigFileContent; $CommonConfigFileContent) | ConvertTo-Json | Out-File $ConfigFilePath
+        }
+        elseif ($ConfigFilePath.EndsWith(".yaml")) {
+            "`n"  | Out-File -append $ConfigFilePath
+            $CommonConfigFileContent  | Out-File -append $ConfigFilePath
+        }
+        else {
+            throw [System.IO.InvalidDataException]::new($ConfigFilePath)            
+        }
     }
                
     $exitCode = 0
