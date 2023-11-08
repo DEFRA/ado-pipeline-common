@@ -32,7 +32,7 @@ steps:
       errorActionPreference: silentlyContinue
       displayName: 'Upgrade PowerShell Version'  
     - task: PowerShell@2
-      displayName: 'Validate Config File'
+      displayName: 'Validate and Merge Config Files'
       inputs:
         targetType: filePath
         filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateAndMergeConfigFile.ps1'

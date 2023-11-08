@@ -60,9 +60,9 @@ dependsOn: Application_CI
       steps:
         task: Download artificats (code version, docker image, helm chart)
         task: Push secrets from variable group to application keyvault
-        task: Validate Azure App Configuration json file
+        task: Validate and Merge Azure App Configuration json or yaml file(s)
         task: Replace Tokens in Configuration json file
-        task: Push Azure App Configuration to AzureAppConfig
+        task: Push changes in App Configuration file to AzureAppConfig
         task: Push Docker Image to ACR
         task: Push Helm Chart to ACR
 
@@ -97,7 +97,8 @@ parameters:
     displayName: Details to deploy the app
     type: object
     default: null
-
+  - name: sharedAcrConfig
+    type: object
 resources:
   repositories:
     - repository: PipelineCommon
@@ -117,6 +118,9 @@ extends:
     appBuildConfig: ${{ parameters.appBuildConfig }}        #Mandatory: Object which contains configration used for building the application. Such as appFrameworkType, defaultBranch, frameworkVersion, projectPath, manifestPath, imageRepoName
     appTestConfig: ${{ parameters.appTestConfig }}          #Mandatory: Object which contains configration used for testing the application. Such as testFilePath, acceptanceTestFilePath etc
     appDeployConfig: ${{ parameters.appDeployConfig }}      #Mandatory: Object which contains configration used for application deployment. Such as config file path.
+    sharedAcrConfig:                                        #Mandatory: Object which contains configration for helm lint and build
+      name: 'ssvadpinfcr3401'
+      serviceConnection: 'AZD-ADP-SSV3'
     snykConfig:                                             #Optional: 
       snykConnection: 'Connection name'                     #Mandatory: Name of the connection in ADO
       snykOrganizationName: 'defra'                         #Mandatory: Name of snyk organization
@@ -200,12 +204,13 @@ extends:
             testFilePath: './docker-compose.test.yaml'
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
+            filetype: "yaml"                #Optional: default value json
             variableGroups:                 #Optional: List of variable groups which contain secrets
               - variableGroup1              #Optional: Variable Group name 
               - variableGroup2      
             variables:                      #Optional: List of variables used by the service
-              - variable1
-              - variable2
+              - servicename-variable1
+              - servicename-variable2
 
 ```
 
@@ -266,10 +271,11 @@ extends:
             acceptanceTestFilePath: "./docker-compose.acceptance.yaml"
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
+            filetype: "yaml"                #Optional: default value json
             variableGroups:                 #Optional: List of variable groups which contain secrets
               - variableGroup1              #Optional: Variable Group name 
               - variableGroup2      
             variables:                      #Optional: List of variables used by the service
-              - variable1
-              - variable2
+              - servicename-variable1
+              - servicename-variable2
 ```
