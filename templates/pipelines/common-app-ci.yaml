@@ -291,11 +291,6 @@ stages:
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
-        - name: configFileType
-          ${{ if and(ne(parameters.appDeployConfig, ''),eq(parameters.appDeployConfig.filetype, '')) }}:          
-            value: 'json'
-          ${{ else }}:          
-            value: ${{parameters.appDeployConfig.filetype}}
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
             name: ${{ deploymentEnv.privateAgentName }}
@@ -343,7 +338,7 @@ stages:
                           appDeployConfig: ${{ parameters.appDeployConfig }}
                           workingDirectory: '$(Pipeline.Workspace)/s'
                           serviceName: ${{ parameters.serviceName }}
-                          configFileType: ${{ variables.configFileType }}
+                          configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
                           PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                           AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}                          
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
