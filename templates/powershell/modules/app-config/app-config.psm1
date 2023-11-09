@@ -590,6 +590,7 @@ function Import-AppConfigValues {
 				$SentinelItem.Key = $sentinelKey
 				$SentinelItem.value = $BuildId
 				$SentinelItem.Label = $Label
+				$SentinelItem.ContentType = $null
 			}
 			$SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore
 		}
