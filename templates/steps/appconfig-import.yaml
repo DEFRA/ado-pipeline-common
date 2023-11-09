@@ -13,43 +13,65 @@ parameters:
   type: string
 - name: serviceName
   type: string
+- name: PSHelperDirectory
+  type: string
+- name: AppConfigModuleDirectory
+  type: string
+- name: configFileType
+  type: string
+  default: 'json'
 steps:
   - checkout: Self
     path: s/ 
   - checkout: PipelineCommon
     path: s/PipelineCommon
-
-  - ${{ if ne(parameters.appDeployConfig, '') }}:      
+  - ${{ if ne(parameters.appDeployConfig, '') }}:          
+    - pwsh: |
+        $PSVersionTable
+        sudo apt-get install -y powershell
+      errorActionPreference: silentlyContinue
+      displayName: 'Upgrade PowerShell Version'  
     - task: PowerShell@2
-      displayName: 'Validate Config File'
+      displayName: 'Validate and Merge Config Files'
       inputs:
         targetType: filePath
-        filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateConfigFile.ps1'
-        arguments: -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.json'  -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
+        filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ValidateAndMergeConfigFile.ps1'
+        arguments: > 
+         -SchemaFilePath '$(Pipeline.Workspace)/s/PipelineCommon/templates/config/schema.${{ parameters.configFileType }}'
+         -CommonConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.configFileType }}'
+         -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
+         -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
         failOnStderr: true
         pwsh: true
         workingDirectory: '$(Pipeline.Workspace)/s'
-
     - task: replacetokens@5
       displayName: 'Replace tokens in config'
       inputs:
         tokenPattern: doublebraces
         inlineVariables: |
-          subscriptionId: ${{ parameters.environmentObj.subscriptionId }}
           keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
           serviceName: ${{ parameters.serviceName }}
           env: ${{ parameters.environmentObj.name }}
           keyVaultContentType: "application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8"
           resourceid: 'uri":"https://${{ parameters.environmentObj.appKeyVault }}.vault.azure.net/secrets'
         targetFiles: |
-          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json
-
-  
-    - task: AzureAppConfigurationPush@6
-      displayName: 'Import Azure App Configuration'
+          ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}
+    - task: AzureCLI@2
+      displayName: 'Import Azure App Configuration '
       inputs:
-        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
-        AppConfigurationEndpoint: 'https://${{ parameters.environmentObj.appConfiguration }}.azconfig.io'
-        ConfigurationFile: '${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.json'
-        FileContentProfile: appconfig/kvset
-        DryRun: ${{ parameters.dryRun }}
+        azureSubscription: '${{ parameters.environmentObj.serviceConnection}}'
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/ImportAppConfig.ps1'
+        arguments: > 
+          -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
+          -ServiceName '${{ parameters.serviceName }}' 
+          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'          
+          -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
+          -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
+          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
+          -BuildId $(Build.BuildId) 
+        addSpnToEnvironment: true          
+        failOnStandardError: false
+        workingDirectory: '$(Pipeline.Workspace)/s'  
+  

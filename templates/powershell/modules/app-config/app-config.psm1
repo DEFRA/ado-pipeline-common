@@ -378,6 +378,97 @@ function Get-AppConfigValuesFromFile {
 	}
 }
 
+
+<# 
+  .SYNOPSIS 
+    Gets the [AppConfigEntry] items from the specified yaml file.
+
+  .DESCRIPTION
+    Gets the [AppConfigEntry] items from the specified yaml file.
+
+  .PARAMETER Path
+    The path to the file to read the contents from.
+
+  .NOTES
+    The file format is json.  
+    	- key: ""
+          value: ""
+    	  type: "" or "keyvault"
+
+  .INPUTS
+    [string] names of files to get the [AppConfigEntry] items from 
+	[string] default Label to be applied
+	[string] keyvault name for any objects of type keyvault
+
+  .OUTPUTS
+    [AppConfigEntry] for each entry in the file
+#>
+function Get-AppConfigValuesFromYamlFile {
+	param (
+		[Parameter(ValueFromPipeline, Mandatory)]
+		[string]$Path,
+		[Parameter(ValueFromPipeline, Mandatory)]
+		[string]$DefaultLabel,
+		[Parameter(ValueFromPipeline, Mandatory)]
+		[string]$KeyVault
+	)
+
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:begin:Start"
+		Write-Debug "${functionName}:begin:End"
+
+		Install-Module powershell-yaml -Force
+		Import-Module powershell-yaml -Force
+	}
+
+	process {
+		Write-Debug "${functionName}:process:Start"
+		Write-Debug "${functionName}:process:Path=$Path"
+
+		[System.IO.FileInfo]$file = $Path
+		Write-Debug "${functionName}:process:file.FullName=$($file.FullName)"
+
+		if (-not $file.Exists) {
+			throw [System.IO.FileNotFoundException]::new($file.FullName)
+		}
+
+		[string]$content = Get-Content -Raw -Path $Path
+
+		Write-Debug "${functionName}:process:content=$content"
+
+		[string]$kvContentType = 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+
+		$ConfigFileContent = $content | ConvertFrom-YAML
+		foreach ($configFileObj in $ConfigFileContent) {
+			$configFileObj.Label = $DefaultLabel
+			if ($configFileObj.ContainsKey("type") -and $configFileObj.type -eq "keyvault" ) {
+				$configFileObj.ContentType = $kvContentType
+
+				[System.Text.StringBuilder]$kvBuilder = [System.Text.StringBuilder]::new("{ `"uri`" : `" https://")
+				[void]$kvBuilder.Append($KeyVault)
+				[void]$kvBuilder.Append(".vault.azure.net/Secrets/")
+				[void]$kvBuilder.Append($configFileObj.Value)
+				[void]$kvBuilder.Append(" `" } ")
+				[string]$keyVaultRef = $kvBuilder.ToString()
+
+				$configFileObj.Value = $keyVaultRef
+			}
+		}
+
+		$output = $ConfigFileContent | ConvertTo-AppConfigEntry | Sort-Object -Property Key, Label
+
+		Write-Output $output
+
+		Write-Debug "${functionName}:process:End"
+	}
+
+	end {
+		Write-Debug "${functionName}:end:Start"
+		Write-Debug "${functionName}:end:End"
+	}
+}
+
 <# 
   .SYNOPSIS 
     Imports appConfiguration values into the specified store from the specified file.
@@ -392,8 +483,17 @@ function Get-AppConfigValuesFromFile {
   .PARAMETER ConfigStore
     The name of the appConfiguration store to import to.
 
+  .PARAMETER Label
+    The name of the service
+
   .PARAMETER DeleteEntriesNotInFile
     This switch enables the removal of any entry that isn't contained in the import file.  
+
+  .PARAMETER KeyVaultName
+    The name of the keyvault to be used for objects while importing from yaml file
+
+  .PARAMETER BuildId
+    Build Id to update the sentinel value
 
   .NOTES
     The file format is json.  
@@ -417,7 +517,9 @@ function Import-AppConfigValues {
 		[string]$ConfigStore,
 		[Parameter(Mandatory)]
 		[string]$Label,
-		[switch]$DeleteEntriesNotInFile
+		[switch]$DeleteEntriesNotInFile,
+		[string]$KeyVaultName,
+		[string]$BuildId
 	)
 
 	begin {
@@ -426,6 +528,7 @@ function Import-AppConfigValues {
 		Write-Debug "${functionName}:begin:ConfigStore=$ConfigStore"
 		Write-Debug "${functionName}:begin:Label=$Label"
 		Write-Debug "${functionName}:begin:Path=$Path"
+		Write-Debug "${functionName}:begin:KeyVaultName=$KeyVaultName"
 
 		[array]$outputs = @()
 		[System.IO.FileInfo]$importFile = $Path
@@ -439,9 +542,24 @@ function Import-AppConfigValues {
 
 	process {
 		Write-Debug "${functionName}:process:Start"
-
 		[AppConfigEntry[]]$existingItems = Get-AppConfigValues -ConfigStore $ConfigStore -Label $Label
-		[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromFile -Path $importFile.FullName
+		if ($importFile.FullName.EndsWith(".json")) {
+			[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromFile -Path $importFile.FullName
+		}
+		elseif ($importFile.FullName.EndsWith(".yaml")) {
+			[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromYamlFile -Path $importFile.FullName -DefaultLabel $Label -KeyVault $KeyVaultName 
+		}
+		else {
+			throw [System.IO.InvalidDataException]::new($importFile.FullName)
+		}
+
+		#Validate if each record has a label matching the service
+		$desiredItems | ForEach-Object {
+			if ($_.Label -ne $Label) {
+				throw [System.IO.InvalidDataException]::new("Invalid Label for $item.key ")
+			}
+		}			
+		
 		[AppConfigDifferences]$delta = New-AppConfigDifference -Source $desiredItems -Destination $existingItems
         
 		if ($delta.Add.Count -gt 0) {
@@ -454,6 +572,27 @@ function Import-AppConfigValues {
 
 		if ($DeleteEntriesNotInFile -and $delta.Remove.Count -gt 0) {
 			$outputs += @($delta.Remove | Remove-AppConfigValue -ConfigStore $ConfigStore)
+		}
+
+		#If there are any changes in config values, update sentinelItem to build id.
+		if ($outputs) {
+			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
+			[string]$sentinelKey = 'Sentinel'
+			if ([string]::IsNullOrWhiteSpace($BuildId)) {
+				$BuildId = Get-Date -Format "dd/MM/yyyyHH:mm"
+			}
+			if ($existingAppConfig.ContainsKey($sentinelKey)) {
+				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
+				$SentinelItem.value = $BuildId
+			}
+			else {
+				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
+				$SentinelItem.Key = $sentinelKey
+				$SentinelItem.value = $BuildId
+				$SentinelItem.Label = $Label
+				$SentinelItem.ContentType = $null
+			}
+			$SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore
 		}
 
 		Write-Debug "${functionName}:process:End"
@@ -564,7 +703,7 @@ function New-AppConfigDifference {
 		[AppConfigDifferences]$differences = [AppConfigDifferences]::new()
 		$differences.Add = $addEntries.Values
 		$differences.Update = $updateEntries.Values
-		$differences.Remove = $removeEntries.Values
+		$differences.Remove = $removeEntries.Values		
 
 		Write-Output $differences
         
@@ -750,4 +889,62 @@ function Set-AppConfigValue {
 		Write-Debug "${functionName}:end:Start"
 		Write-Debug "${functionName}:end:End"
 	}
+}
+
+function Test-Yaml {
+	[CmdletBinding(DefaultParameterSetName = '__AllParameterSets', HelpUri = 'https://go.microsoft.com/fwlink/?LinkID=2096609')]
+	param(
+		[Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
+		[string]
+		${Yaml},
+
+		[Parameter(ParameterSetName = 'SchemaString', Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[string]
+		${Schema},
+
+		[Parameter(ParameterSetName = 'SchemaFile', Position = 1)]
+		[ValidateNotNullOrEmpty()]
+		[string]
+		${SchemaFile})
+
+	begin {
+		
+		Install-Module powershell-yaml -Force
+
+		function Yaml2Json ($Yaml) { $Yaml | ConvertFrom-Yaml | ConvertTo-Json -Depth 64 }
+		$outBuffer = $null
+		if ($PSBoundParameters.TryGetValue('OutBuffer', [ref]$outBuffer)) { $PSBoundParameters['OutBuffer'] = 1 }
+		$Parameters = @{}
+		foreach ($PSBoundParameters in $PSBoundParameters.GetEnumerator()) {
+			switch ($PSBoundParameters.Key) {
+				'Yaml' { $Parameters['Json'] = Yaml2Json $PSBoundParameters.Value }
+				'Schema' { $Parameters['Schema'] = Yaml2Json $PSBoundParameters.Value }
+				'SchemaFile' { $Parameters['Schema'] = Yaml2Json (Get-Content -Raw -LiteralPath $PSBoundParameters.Value) }
+				Default { $Parameters[$PSBoundParameters.Key] = $PSBoundParameters.Value }
+			}
+		}
+
+		$wrappedCmd = $ExecutionContext.InvokeCommand.GetCommand('Microsoft.PowerShell.Utility\Test-Json', [System.Management.Automation.CommandTypes]::Cmdlet)
+		$scriptCmd = { & $wrappedCmd @Parameters }
+
+		$steppablePipeline = $scriptCmd.GetSteppablePipeline($myInvocation.CommandOrigin)
+		$steppablePipeline.Begin($PSCmdlet)
+	}
+
+	process {
+		$Json = Yaml2Json $_
+		$steppablePipeline.Process($Json)
+	}
+
+	end {
+		$steppablePipeline.End()
+
+	}
+	# clean {
+	# 	if ($null -ne $steppablePipeline) {
+	# 		$steppablePipeline.Clean()
+	# 	}
+	# }
+	
 }
