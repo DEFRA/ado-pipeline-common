@@ -492,6 +492,9 @@ function Get-AppConfigValuesFromYamlFile {
   .PARAMETER KeyVaultName
     The name of the keyvault to be used for objects while importing from yaml file
 
+  .PARAMETER BuildId
+    Build Id to update the sentinel value
+
   .NOTES
     The file format is json.  
         {
@@ -515,7 +518,8 @@ function Import-AppConfigValues {
 		[Parameter(Mandatory)]
 		[string]$Label,
 		[switch]$DeleteEntriesNotInFile,
-		[string]$KeyVaultName
+		[string]$KeyVaultName,
+		[string]$BuildId
 	)
 
 	begin {
@@ -568,6 +572,26 @@ function Import-AppConfigValues {
 
 		if ($DeleteEntriesNotInFile -and $delta.Remove.Count -gt 0) {
 			$outputs += @($delta.Remove | Remove-AppConfigValue -ConfigStore $ConfigStore)
+		}
+
+		#If there are any changes in config values, update sentinelItem to build id.
+		if ($outputs) {
+			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
+			[string]$sentinelKey = 'Sentinel'
+			if ([string]::IsNullOrWhiteSpace($BuildId)) {
+				$BuildId = Get-Date -Format "dd/MM/yyyyHH:mm"
+			}
+			if ($existingAppConfig.ContainsKey($sentinelKey)) {
+				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
+				$SentinelItem.value = $BuildId
+			}
+			else {
+				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
+				$SentinelItem.Key = $sentinelKey
+				$SentinelItem.value = $BuildId
+				$SentinelItem.Label = $Label
+			}
+			$SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore
 		}
 
 		Write-Debug "${functionName}:process:End"
@@ -678,7 +702,7 @@ function New-AppConfigDifference {
 		[AppConfigDifferences]$differences = [AppConfigDifferences]::new()
 		$differences.Add = $addEntries.Values
 		$differences.Update = $updateEntries.Values
-		$differences.Remove = $removeEntries.Values
+		$differences.Remove = $removeEntries.Values		
 
 		Write-Output $differences
         

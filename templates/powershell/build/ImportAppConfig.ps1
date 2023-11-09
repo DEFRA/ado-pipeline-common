@@ -16,8 +16,10 @@ Mandatory. Application Keyvault
 Mandatory. Directory Path of PSHelper module
 .PARAMETER AppConfigModuleDirectory
 Mandatory. Directory Path of App-Config module
+.PARAMETER BuildId
+Mandatory. Build ID
 .EXAMPLE
-.\ImportYamlAppConfig.ps1 -AppConfig <AppConfig> -ServiceName <ServiceName> -ConfigFilePath <ConfigFilePath> -KeyVault <KeyVault> -PSHelperDirectory <PSHelperDirectory> -AppConfigModuleDirectory <AppConfigModuleDirectory>
+.\ImportYamlAppConfig.ps1 -AppConfig <AppConfig> -ServiceName <ServiceName> -ConfigFilePath <ConfigFilePath> -KeyVault <KeyVault> -PSHelperDirectory <PSHelperDirectory> -AppConfigModuleDirectory <AppConfigModuleDirectory> -BuildId <BuildId>
 #> 
 
 [CmdletBinding()]
@@ -33,7 +35,9 @@ param(
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [Parameter(Mandatory)]
-    [string]$AppConfigModuleDirectory
+    [string]$AppConfigModuleDirectory,
+    [Parameter(Mandatory)]
+    [string]$BuildId
 )
 
 Set-StrictMode -Version 3.0
@@ -67,10 +71,10 @@ try {
     Import-Module $AppConfigModuleDirectory -Force
 
     if ($ConfigFilePath.EndsWith(".json")) {
-        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile
+        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -BuildId $BuildId
     }
     else {
-        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -KeyVaultName $KeyVault
+        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -KeyVaultName $KeyVault -BuildId $BuildId
     }
    
     $exitCode = 0
