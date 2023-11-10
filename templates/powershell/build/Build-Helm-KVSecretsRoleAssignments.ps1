@@ -49,7 +49,7 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
 
     if (Test-Path $InfraChartHomeDir) {
-        if (!([string]::IsNullOrEmpty($KeyVaultVSecretNames) -and ($KeyVaultVSecretNames -ne "null"))) {
+        if (!([string]::IsNullOrEmpty($KeyVaultVSecretNames)) -and ($KeyVaultVSecretNames -ne "null")) {
             Import-Module $PSHelperDirectory -Force
 
             if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
