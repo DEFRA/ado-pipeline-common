@@ -198,7 +198,7 @@ stages:
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Build-Helm-KVSecretsRoleAssignments.ps1'
               arguments: >
                 -KeyVaultVSecretNames '${{ convertToJson(parameters.appDeployConfig.variables) }}' 
-                -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}'
+                -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               workingDirectory: $(Pipeline.Workspace)/s      
 
