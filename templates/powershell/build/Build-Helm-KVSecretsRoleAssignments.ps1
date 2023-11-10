@@ -49,49 +49,53 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
 
     if (Test-Path $InfraChartHomeDir) {
-        Import-Module $PSHelperDirectory -Force
+        if (!([string]::IsNullOrEmpty($KeyVaultVSecretNames))) {
+            Import-Module $PSHelperDirectory -Force
 
-        if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
-            Write-Host "powershell-yaml Module does not exists. Installing now.."
-            Install-Module powershell-yaml -Force
-            Write-Host "powershell-yaml Installed Successfully."
-        } 
-        else {
-            Write-Host "powershell-yaml Module exist"
-        }
+            if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
+                Write-Host "powershell-yaml Module does not exists. Installing now.."
+                Install-Module powershell-yaml -Force
+                Write-Host "powershell-yaml Installed Successfully."
+            } 
+            else {
+                Write-Host "powershell-yaml Module exist"
+            }
 
-        $kvSecretNames = $KeyVaultVSecretNames | ConvertFrom-Json
+            $kvSecretNames = $KeyVaultVSecretNames | ConvertFrom-Json
 
-        Write-Debug "${functionName}:kvSecretNames:$kvSecretNames"
+            Write-Debug "${functionName}:kvSecretNames:$kvSecretNames"
     
-        $valuesYamlPath = "$InfraChartHomeDir\values.yaml"
-        [string]$content = Get-Content -Raw -Path $valuesYamlPath
-        Write-Debug "$valuesYamlPath content before: $content"
-        $valuesObject = ConvertFrom-YAML $content -Ordered
+            $valuesYamlPath = "$InfraChartHomeDir\values.yaml"
+            [string]$content = Get-Content -Raw -Path $valuesYamlPath
+            Write-Debug "$valuesYamlPath content before: $content"
+            $valuesObject = ConvertFrom-YAML $content -Ordered
 
-        $keyVaultSecrets = [System.Collections.Generic.List[hashtable]]@()
-        foreach ($secret in $kvSecretNames) {
-            $roleAssignments = [System.Collections.Generic.List[hashtable]]@()
-            $roleAssignments.Add(@{
-                    roleName = "keyvaultsecretuser"
-                })
+            $keyVaultSecrets = [System.Collections.Generic.List[hashtable]]@()
+            foreach ($secret in $kvSecretNames) {
+                $roleAssignments = [System.Collections.Generic.List[hashtable]]@()
+                $roleAssignments.Add(@{
+                        roleName = "keyvaultsecretuser"
+                    })
 
-            $keyVaultSecrets.Add(@{
-                    name            = $secret
-                    roleAssignments = $roleAssignments
-                })
+                $keyVaultSecrets.Add(@{
+                        name            = $secret
+                        roleAssignments = $roleAssignments
+                    })
+            }
+
+            $valuesObject.Add("keyVaultSecrets", $keyVaultSecrets)
+
+            Write-Host "Converting valuesObject to yaml and writing it to file : $valuesYamlPath"
+            $output = Convertto-yaml $valuesObject
+            Write-Debug "$valuesYamlPath content after: $output"
+            $output | Out-File $valuesYamlPath
+
+            Write-Host "Adding 'keyvault-secrets-role-assignment.yaml' file to $InfraChartHomeDir\templates folder"
+            '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$InfraChartHomeDir\templates\keyvault-secrets-role-assignment.yaml"
         }
-
-        $valuesObject.Add("keyVaultSecrets", $keyVaultSecrets)
-
-        Write-Host "Converting valuesObject to yaml and writing it to file : $valuesYamlPath"
-        $output = Convertto-yaml $valuesObject
-        Write-Debug "$valuesYamlPath content after: $output"
-        $output | Out-File $valuesYamlPath
-
-        Write-Host "Adding 'keyvault-secrets-role-assignment.yaml' file to $InfraChartHomeDir\templates folder"
-        '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$InfraChartHomeDir\templates\keyvault-secrets-role-assignment.yaml"
-
+        else {
+            Write-Host "KeyVaultVSecretNames are empty. Skipped creation of Keyvault roleassignments"
+        }
     }
     else {
         Write-Host "Helm Infra chart path '$InfraChartHomeDir' does not exit. Skipped creation of Keyvault roleassignments"
