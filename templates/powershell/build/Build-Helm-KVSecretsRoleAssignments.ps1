@@ -55,7 +55,7 @@ try {
     
     $valuesYamlPath = "$InfraChartHomeDir\values.yaml"
     [string]$content = Get-Content -Raw -Path $valuesYamlPath
-    Write-Debug "$valuesYamlPath content before: $output"
+    Write-Debug "$valuesYamlPath content before: $content"
     $valuesObject = ConvertFrom-YAML $content -Ordered
 
     $keyVaultSecrets = [System.Collections.Generic.List[hashtable]]@()
