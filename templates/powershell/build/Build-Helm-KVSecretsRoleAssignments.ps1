@@ -48,6 +48,15 @@ try {
 
     Import-Module $PSHelperDirectory -Force
 
+    if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
+        Write-Host "powershell-yaml Module does not exists. Installing now.."
+        Install-Module powershell-yaml -Force
+        Write-Host "powershell-yaml Installed Successfully."
+    } 
+    else {
+        Write-Host "powershell-yaml Module exist"
+    }
+
     # $kvSecretNames = $KeyVaultVSecretNames | ConvertFrom-Json -AsHashtable
     $kvSecretNames = $KeyVaultVSecretNames | ConvertFrom-Json
 
