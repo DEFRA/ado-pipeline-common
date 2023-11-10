@@ -68,7 +68,6 @@ try {
     $valuesObject = ConvertFrom-YAML $content -Ordered
 
     $keyVaultSecrets = [System.Collections.Generic.List[hashtable]]@()
-    # $secretNames = @("Secret1", "Secret2", "Secret2")
     foreach ($secret in $kvSecretNames) {
         $roleAssignments = [System.Collections.Generic.List[hashtable]]@()
         $roleAssignments.Add(@{
@@ -84,7 +83,7 @@ try {
     $valuesObject.Add("keyVaultSecrets", $keyVaultSecrets)
 
     Write-Host "Converting valuesObject to yaml and writing it to file : $valuesYamlPath"
-    $output = Convertto-yaml $yml
+    $output = Convertto-yaml $valuesObject
     Write-Debug "$valuesYamlPath content after: $output"
     $output | Out-File $valuesYamlPath
 
