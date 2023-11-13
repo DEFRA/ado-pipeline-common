@@ -189,6 +189,19 @@ stages:
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
 
+          - task: PowerShell@2
+            displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
+            inputs:
+              pwsh: true
+              azurePowerShellVersion: latestVersion
+              targetType: 'filePath'
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Build-Helm-KVSecretsRoleAssignments.ps1'
+              arguments: >
+                -KeyVaultVSecretNames '${{ convertToJson(parameters.appDeployConfig.variables) }}' 
+                -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              workingDirectory: $(Pipeline.Workspace)/s      
+
           - task: AzureCLI@2
             displayName: 'Helm Build' 
             inputs:
