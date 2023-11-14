@@ -21,7 +21,9 @@ param(
     [Parameter(Mandatory)]
     [string] $InfraChartHomeDir,
     [Parameter(Mandatory)]
-    [string]$PSHelperDirectory
+    [string]$PSHelperDirectory,
+    [Parameter(Mandatory)]
+    [string]$ServiceName
 )
 
 Set-StrictMode -Version 3.0

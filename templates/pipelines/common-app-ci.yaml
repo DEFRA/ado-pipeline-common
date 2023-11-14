@@ -200,6 +200,7 @@ stages:
                 -KeyVaultVSecretNames '${{ convertToJson(parameters.appDeployConfig.variables) }}' 
                 -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                -ServiceName ${{ parameters.serviceName }}
               workingDirectory: $(Pipeline.Workspace)/s      
 
           - task: AzureCLI@2
