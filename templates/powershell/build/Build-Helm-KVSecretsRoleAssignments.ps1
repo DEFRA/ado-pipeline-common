@@ -68,17 +68,33 @@ try {
             $valuesYamlPath = "$InfraChartHomeDir\values.yaml"
             [string]$content = Get-Content -Raw -Path $valuesYamlPath
             Write-Debug "$valuesYamlPath content before: $content"
-            $valuesObject = ConvertFrom-YAML $content -Ordered
+            if($content) {
+                $valuesObject = ConvertFrom-YAML $content -Ordered
+            }
+            else {
+                $valuesObject = [ordered]@{}
+            }
 
             $keyVaultSecrets = [System.Collections.Generic.List[hashtable]]@()
             foreach ($secret in $kvSecretNames) {
+                
+                #Logic to remove servicename from the secretname
+                #for e.g. "ffc-demo-payment-web-COOKIE-PASSWORD" will get replace with "COOKIE-PASSWORD"
+                if($secret -like "$ServiceName*"){
+                    $NoOfStartingCharsToTrunk = $ServiceName.Length + 1
+                    $secretWithoutServiceName = $secret.subString($NoOfStartingCharsToTrunk, ($secret.Length - $NoOfStartingCharsToTrunk) )
+                }
+                else {
+                    $secretWithoutServiceName = $secret
+                }
+
                 $roleAssignments = [System.Collections.Generic.List[hashtable]]@()
                 $roleAssignments.Add(@{
                         roleName = "keyvaultsecretuser"
                     })
 
                 $keyVaultSecrets.Add(@{
-                        name            = $secret
+                        name            = $secretWithoutServiceName
                         roleAssignments = $roleAssignments
                     })
             }
