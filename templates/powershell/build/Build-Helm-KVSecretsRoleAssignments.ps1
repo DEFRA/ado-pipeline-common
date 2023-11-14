@@ -13,7 +13,7 @@ Mandatory. Service Name
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 .EXAMPLE
-.\Build-Helm-KVSecretsRoleAssignments.ps1 -KeyVaultVSecretNames <KeyVaultVSecretNames> -InfraChartHomeDir <InfraChartHomeDir> -PSHelperDirectory <PSHelperDirectory>
+.\Build-Helm-KVSecretsRoleAssignments.ps1 -KeyVaultVSecretNames <KeyVaultVSecretNames> -InfraChartHomeDir <InfraChartHomeDir> -ServiceName <ServiceName> -PSHelperDirectory <PSHelperDirectory>
 #> 
 
 [CmdletBinding()]
@@ -48,6 +48,7 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:KeyVaultVSecretNames=$KeyVaultVSecretNames"
 Write-Debug "${functionName}:InfraChartHomeDir=$InfraChartHomeDir"
+Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
