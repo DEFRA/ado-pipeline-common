@@ -63,19 +63,19 @@ steps:
       workingDirectory: '$(Pipeline.Workspace)/s'
     displayName: 'Docker Push Image'
   - task: replacetokens@5
-      displayName: 'Replace tokens in config'
-      inputs:
-        tokenPattern: doublebraces
-        inlineVariables: |          
-          imageRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
-          appVersion: $(GetAppVersion.appVersion)          
-          userAssignedIdentity: ${{ parameters.environmentObj.userAssignedIdentity }} 
-          managedEnvironmentId: ${{ parameters.environmentObj.managedEnvironmentId }}
-          acrName: ${{ parameters.environmentObj.acrName }}  
-          keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
-          appBaseUrl: ${{ parameters.environmentObj.appBaseUrl }}
-        targetFiles: |
-          $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}
+    displayName: 'Replace tokens in config'
+    inputs:
+      tokenPattern: doublebraces
+      inlineVariables: |          
+        imageRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+        appVersion: $(GetAppVersion.appVersion)          
+        userAssignedIdentity: ${{ parameters.environmentObj.userAssignedIdentity }} 
+        managedEnvironmentId: ${{ parameters.environmentObj.managedEnvironmentId }}
+        acrName: ${{ parameters.environmentObj.acrName }}  
+        keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
+        appBaseUrl: ${{ parameters.environmentObj.appBaseUrl }}
+      targetFiles: |
+        $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}
   - task: AzureCLI@2
     displayName: 'Create ContainerApp'
     inputs:
