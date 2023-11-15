@@ -54,7 +54,7 @@ Write-Output "${functionName}:Filepath=$Filepath"
 Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
-    
+     
     Import-Module $PSHelperDirectory -Force   
 
     if ("Build" -eq $Command) {
@@ -78,8 +78,9 @@ try {
     }
     else {
         Write-Output "${functionName}:Invalid Command"
+        $exitCode = -2
     }       
-
+    $exitCode = 0
 }
 catch {
     $exitCode = -2
