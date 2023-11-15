@@ -107,7 +107,7 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,BuildImage]
+        dependsOn: [Initialise,Build]
         condition: |
           and(
             succeeded(), 
