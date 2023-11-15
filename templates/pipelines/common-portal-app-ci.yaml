@@ -71,6 +71,8 @@ stages:
               arguments: -Command "Build" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
+              errorActionPreference: silentlyContinue
+              warningPreference: silentlyContinue
             displayName: Build App            
             name: BuildApp            
         
