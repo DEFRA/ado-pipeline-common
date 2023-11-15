@@ -1,0 +1,99 @@
+<#
+.SYNOPSIS
+Deploy backstage app
+.DESCRIPTION
+Deploy backstage app
+.PARAMETER Command
+Mandatory. Command to be executed Build or Deploy
+.PARAMETER AppName
+Optional. Name of the app
+.PARAMETER ResourceGroup
+Optional. Name of the Resource group
+.PARAMETER Filepath
+Optional. File Path of the yaml file
+.PARAMETER PSHelperDirectory
+Mandatory. Directory Path of PSHelper module
+
+.EXAMPLE
+.\BuildAndDeployBackstageApp.ps1 -Command <Command> -AppName <AppName> -ResourceGroup <ResourceGroup> -Filepath <Filepath> -PSHelperDirectory <PSHelperDirectory>
+#> 
+
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory)]
+    [string]$Command,
+    [string]$AppName,
+    [string]$ResourceGroup,
+    [string]$Filepath,
+    [Parameter(Mandatory)]
+    [string]$PSHelperDirectory
+)
+
+Set-StrictMode -Version 3.0
+
+[string]$functionName = $MyInvocation.MyCommand
+[datetime]$startTime = [datetime]::UtcNow
+
+[int]$exitCode = -1
+[bool]$setHostExitCode = (Test-Path -Path ENV:TF_BUILD) -and ($ENV:TF_BUILD -eq "true")
+[bool]$enableDebug = (Test-Path -Path ENV:SYSTEM_DEBUG) -and ($ENV:SYSTEM_DEBUG -eq "true")
+
+Set-Variable -Name ErrorActionPreference -Value Continue -scope global
+Set-Variable -Name InformationPreference -Value Continue -Scope global
+
+if ($enableDebug) {
+    Set-Variable -Name VerbosePreference -Value Continue -Scope global
+    Set-Variable -Name DebugPreference -Value Continue -Scope global
+}
+
+Write-Host "${functionName} started at $($startTime.ToString('u'))"
+Write-Output "${functionName}:Command=$Command"
+Write-Output "${functionName}:AppName=$AppName"
+Write-Output "${functionName}:ResourceGroup=$ResourceGroup"
+Write-Output "${functionName}:Filepath=$Filepath"
+Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
+
+try {
+    
+    Import-Module $PSHelperDirectory -Force   
+
+    if ("Build" -eq $Command) {
+        Invoke-CommandLine -Command "yarn install --frozen-lockfile"        
+        Invoke-CommandLine -Command "yarn tsc"        
+        Invoke-CommandLine -Command "yarn build:backend"        
+    
+        Write-Output "${functionName}:Build Complete"    
+    }
+    elseif ("Deploy" -eq $Command) {
+        $obj = Invoke-CommandLine -Command "az containerapp show -n $AppName -g $ResourceGroup --query id " 
+        if ($null -ne $obj) {
+            Write-Output "${functionName}: App already exists. Updating"
+            Invoke-CommandLine -Command "az containerapp update -n $AppName -g $ResourceGroup  --yaml $Filepath"   
+        }
+        else {
+            Invoke-CommandLine -Command "az containerapp create -n $AppName -g $ResourceGroup  --yaml $Filepath"   
+        }
+                 
+        Write-Output "${functionName}:Deploy Complete" 
+    }
+    else {
+        Write-Output "${functionName}:Invalid Command"
+    }       
+
+}
+catch {
+    $exitCode = -2
+    Write-Error $_.Exception.ToString()
+    throw $_.Exception
+}
+finally {
+    [DateTime]$endTime = [DateTime]::UtcNow
+    [Timespan]$duration = $endTime.Subtract($startTime)
+
+    Write-Host "${functionName} finished at $($endTime.ToString('u')) (duration $($duration -f 'g')) with exit code $exitCode"
+    if ($setHostExitCode) {
+        Write-Debug "${functionName}:Setting host exit code"
+        $host.SetShouldExit($exitCode)
+    }
+    exit $exitCode
+}

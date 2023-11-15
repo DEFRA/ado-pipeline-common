@@ -15,9 +15,11 @@ Mandatory. Container image Cache Path on the build agent
 Optional. Command to run, Build or Push or Default = BuildAndPush  
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
+.PARAMETER DockerFilePath
+Optional. Directory Path of Dockerfile
 
 .EXAMPLE
-.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory>
+.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory> DockerFilePath <DockerFilePath>
 #> 
 
 [CmdletBinding()]
@@ -31,7 +33,8 @@ param(
     [string] $ImageCachePath,    
     [string] $Command = "BuildAndPush",
     [Parameter(Mandatory)]
-    [string]$PSHelperDirectory
+    [string]$PSHelperDirectory,
+    [string]$DockerFilePath = "Dockerfile"
 )
 
 function Invoke-DockerBuild {
@@ -76,8 +79,8 @@ function Invoke-DockerPush {
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
         Write-Debug "${functionName}:TagName=$TagName"
-        Write-Debug "${functionName}:TagName=$AcrName"
-        Write-Debug "${functionName}:TagName=$AcrTagName"
+        Write-Debug "${functionName}:AcrName=$AcrName"
+        Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
     }
     process {
@@ -115,8 +118,8 @@ function Invoke-DockerBuildAndPush {
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
         Write-Debug "${functionName}:TagName=$TagName"
-        Write-Debug "${functionName}:TagName=$AcrName"
-        Write-Debug "${functionName}:TagName=$AcrTagName"
+        Write-Debug "${functionName}:AcrName=$AcrName"
+        Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
     }
     process {
@@ -154,6 +157,7 @@ Write-Debug "${functionName}:ImageVersion=$ImageVersion"
 Write-Debug "${functionName}:ImageCachePath=$ImageCachePath"
 Write-Debug "${functionName}:Command=$Command"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
+Write-Debug "${functionName}:DockerFilePath=$DockerFilePath"
 
 try {
     Import-Module $PSHelperDirectory -Force
@@ -171,13 +175,13 @@ try {
     } 
     
     if ( $Command.ToLower() -eq 'build' ) {
-        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName    
+        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -DockerFileName $DockerFilePath  
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
-        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName  
+        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath 
     }
     else {
-        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName     
+        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath    
     }    
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.complete result=Failed;]DONE"
