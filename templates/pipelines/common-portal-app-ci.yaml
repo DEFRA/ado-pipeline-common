@@ -54,11 +54,6 @@ stages:
 
       - job: Build
         displayName: 'Build'  
-        condition: |
-          and(
-            succeeded('Initialise'),
-            ${{ eq(parameters.deployConfigOnly, false) }}
-          )
         dependsOn: Initialise
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]      
