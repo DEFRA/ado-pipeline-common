@@ -205,7 +205,6 @@ stages:
                             environmentObj: ${{ deploymentEnv }} 
                             appDeployConfig: ${{ parameters.appDeployConfig }} 
                             workingDirectory: '$(Pipeline.Workspace)/s'
-                            serviceName: ${{ parameters.serviceName }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             secretName: ${{ secret }}                            
                       - template: /templates/steps/portal-cd.yaml

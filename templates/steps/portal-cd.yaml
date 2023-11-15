@@ -67,7 +67,7 @@ steps:
       inputs:
         tokenPattern: doublebraces
         inlineVariables: |          
-          appName: ${{ parameters.serviceName }}
+          imageRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
           appVersion: $(GetAppVersion.appVersion)          
           userAssignedIdentity: ${{ parameters.environmentObj.userAssignedIdentity }} 
           managedEnvironmentId: ${{ parameters.environmentObj.managedEnvironmentId }}
