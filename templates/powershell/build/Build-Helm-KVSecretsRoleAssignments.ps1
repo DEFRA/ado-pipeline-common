@@ -7,7 +7,7 @@ Adds keyvault-secrets-role-assignment.yaml template to Infra Helm chart folder a
 .PARAMETER KeyVaultVSecretNames
 Mandatory. Keyvault Secret Names in string format
 .PARAMETER InfraChartHomeDir
-Mandatory. Directory Path of Infra Chart HomeDirectory
+Mandatory. Directory Path of Infra Chart HomeDirectory..................
 .PARAMETER ServiceName
 Mandatory. Service Name
 .PARAMETER PSHelperDirectory
