@@ -9,6 +9,8 @@ parameters:
   default: ''
 - name: environments
   type: object
+- name: snykConfig
+  type: object
 - name: appBuildConfig
   type: object   
 - name: appDeployConfig
