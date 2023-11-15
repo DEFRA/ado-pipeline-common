@@ -1,7 +1,6 @@
 parameters:
-- name: agentImage
+- name: serviceName
   type: string
-  default: 'ubuntu-latest'
 - name: environmentObj
   displayName: deployment env
   type: object

@@ -207,6 +207,7 @@ stages:
                             secretName: ${{ secret }}                            
                       - template: /templates/steps/portal-cd.yaml
                         parameters:
+                            serviceName: ${{ parameters.serviceName }}
                             environmentObj: ${{ deploymentEnv }}
                             appBuildConfig: ${{ parameters.appBuildConfig }}
                             appDeployConfig: ${{ parameters.appDeployConfig }}
