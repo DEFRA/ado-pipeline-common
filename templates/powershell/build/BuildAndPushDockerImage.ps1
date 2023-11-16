@@ -17,11 +17,11 @@ Optional. Command to run, Build or Push or Default = BuildAndPush
 Mandatory. Directory Path of PSHelper module
 .PARAMETER DockerFilePath
 Optional. Directory Path of Dockerfile
-.PARAMETER TargetFlatform
+.PARAMETER TargetPlatform
 Optional. Target Flatform for Docker build
 
 .EXAMPLE
-.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory> DockerFilePath <DockerFilePath> TargetFlatform <TargetFlatform>
+.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory> DockerFilePath <DockerFilePath> TargetPlatform <TargetPlatform>
 #> 
 
 [CmdletBinding()]
@@ -37,7 +37,7 @@ param(
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [string]$DockerFilePath = "Dockerfile",
-    [string]$TargetFlatform = "linux/arm64"
+    [string]$TargetPlatform = "linux/arm64"
 )
 
 function Invoke-DockerBuild {
@@ -48,14 +48,16 @@ function Invoke-DockerBuild {
         [string]$TagName,
         [string]$AcrName = "" ,        
         [string]$DockerFileName = "Dockerfile",
-        [string]$TargetFlatform = "linux/arm64"
+        [string]$TargetPlatform = "linux/arm64"
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
         Write-Debug "${functionName}:TagName=$TagName"
+        Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
     }
     process {
         if ("" -ne $AcrName) {
@@ -66,7 +68,7 @@ function Invoke-DockerBuild {
             Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName --yes"            
         }
         else {
-            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
+            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
         }
         # Save the image for future jobs
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"   
@@ -87,7 +89,7 @@ function Invoke-DockerPush {
         [Parameter(Mandatory)]
         [string]$AcrTagName,
         [string]$DockerFileName = "Dockerfile",
-        [string]$TargetFlatform = "linux/arm64"
+        [string]$TargetPlatform = "linux/arm64"
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
@@ -97,6 +99,7 @@ function Invoke-DockerPush {
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
     }
     process {
         # Load image if exists in cache
@@ -104,7 +107,7 @@ function Invoke-DockerPush {
             Invoke-CommandLine -Command "docker load -i $DockerCacheFilePath"        
         }
         else {
-            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."  
+            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."  
             Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"          
         }
         Invoke-CommandLine -Command "az acr login --name $AcrName"
@@ -127,7 +130,7 @@ function Invoke-DockerBuildAndPush {
         [Parameter(Mandatory)]
         [string]$AcrTagName,
         [string]$DockerFileName = "Dockerfile",
-        [string]$TargetFlatform = "linux/arm64"
+        [string]$TargetPlatform = "linux/arm64"
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
@@ -137,9 +140,10 @@ function Invoke-DockerBuildAndPush {
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
     }
     process {
-        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
+        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
         Invoke-CommandLine -Command "az acr login --name $AcrName"
         Invoke-CommandLine -Command "docker push $AcrTagName"    
@@ -191,13 +195,13 @@ try {
     } 
     
     if ( $Command.ToLower() -eq 'build' ) {
-        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform
+        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -DockerFileName $DockerFilePath -TargetPlatform $TargetPlatform
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
-        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform
+        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetPlatform $TargetPlatform
     }
     else {
-        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform    
+        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetPlatform $TargetPlatform    
     }    
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.complete result=Failed;]DONE"
@@ -220,7 +224,7 @@ try {
         }
         
         if ( $Command.ToLower() -eq 'build' ) {
-            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -DockerFileName $dbMigrationDockerFileName  
+            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -DockerFileName $dbMigrationDockerFileName  
         }
         elseif ( $Command.ToLower() -eq 'push' ) {
             Invoke-DockerPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName -DockerFileName $dbMigrationDockerFileName
