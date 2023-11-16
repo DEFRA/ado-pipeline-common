@@ -63,7 +63,7 @@ function Invoke-DockerBuild {
             Invoke-CommandLine -Command "az acr build -t $TagName -r $AcrName -f $DockerFileName ."
             Invoke-CommandLine -Command "docker pull $AcrName.azurecr.io/$TagName"
             Invoke-CommandLine -Command "docker tag $AcrName.azurecr.io/$TagName $TagName"
-            Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName"            
+            Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName --yes"            
         }
         else {
             Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
