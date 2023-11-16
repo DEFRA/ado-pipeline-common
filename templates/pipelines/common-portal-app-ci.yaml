@@ -94,6 +94,7 @@ stages:
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                  -DockerFilePath '${{ parameters.appBuildConfig.dockerfilePath }}' 
+                 -TargetFlatform 'linux/amd64'
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
