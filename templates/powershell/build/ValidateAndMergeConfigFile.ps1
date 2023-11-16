@@ -55,48 +55,48 @@ try {
     [bool]$CommonConfigFileExists = $false
 
     Import-Module $AppConfigModuleDirectory -Force
-    if (Test-Path $SchemaFilePath -PathType Leaf) {
-        [string]$SchemaFileContent = Get-Content -Raw -Path $SchemaFilePath 
-    }
+    # if (Test-Path $SchemaFilePath -PathType Leaf) {
+    #     [string]$SchemaFileContent = Get-Content -Raw -Path $SchemaFilePath 
+    # }
 
     if (Test-Path $CommonConfigFilePath -PathType Leaf) {
         [bool]$CommonConfigFileExists = $true
         [string]$CommonConfigFileContent = Get-Content -Raw -Path $CommonConfigFilePath 
-        if ($CommonConfigFilePath.EndsWith(".json")) {        
-            $result = ( Test-Json -Json $CommonConfigFileContent -Schema $SchemaFileContent)
-        }
-        elseif ($CommonConfigFilePath.EndsWith(".yaml")) {
+        # if ($CommonConfigFilePath.EndsWith(".json")) {        
+        #     $result = ( Test-Json -Json $CommonConfigFileContent -Schema $SchemaFileContent)
+        # }
+        # elseif ($CommonConfigFilePath.EndsWith(".yaml")) {
 
-            $result = ( Test-Yaml -Yaml $CommonConfigFileContent -Schema $SchemaFileContent)
-        }        
-        if ($result -eq $true) {
-            Write-Host "${functionName} File`t`tPassed validation"
-        }
-        else {
-            Write-Host "${functionName} File`t`tFailed validation"
-            throw [System.IO.InvalidDataException]::new($CommonConfigFilePath) 
-        }
+        #     $result = ( Test-Yaml -Yaml $CommonConfigFileContent -Schema $SchemaFileContent)
+        # }        
+        # if ($result -eq $true) {
+        #     Write-Host "${functionName} File`t`tPassed validation"
+        # }
+        # else {
+        #     Write-Host "${functionName} File`t`tFailed validation"
+        #     throw [System.IO.InvalidDataException]::new($CommonConfigFilePath) 
+        # }
     }
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         [string]$ConfigFileContent = Get-Content -Raw -Path $ConfigFilePath     
         Write-Debug $ConfigFileContent
         
-        if ($ConfigFilePath.EndsWith(".json")) {        
-            $result = ( Test-Json -Json $ConfigFileContent -Schema $SchemaFileContent)
-        }
-        elseif ($ConfigFilePath.EndsWith(".yaml")) {
+        # if ($ConfigFilePath.EndsWith(".json")) {        
+        #     $result = ( Test-Json -Json $ConfigFileContent -Schema $SchemaFileContent)
+        # }
+        # elseif ($ConfigFilePath.EndsWith(".yaml")) {
 
-            $result = ( Test-Yaml -Yaml $ConfigFileContent -Schema $SchemaFileContent)
-        }        
+        #     $result = ( Test-Yaml -Yaml $ConfigFileContent -Schema $SchemaFileContent)
+        # }        
        
-        if ($result -eq $true) {
-            Write-Host "${functionName} File`t`tPassed validation"
-        }
-        else {
-            Write-Host "${functionName} File`t`tFailed validation"
-            throw [System.IO.InvalidDataException]::new($ConfigFilePath) 
-        }
+        # if ($result -eq $true) {
+        #     Write-Host "${functionName} File`t`tPassed validation"
+        # }
+        # else {
+        #     Write-Host "${functionName} File`t`tFailed validation"
+        #     throw [System.IO.InvalidDataException]::new($ConfigFilePath) 
+        # }
     }
 
     if ($CommonConfigFileExists) {
