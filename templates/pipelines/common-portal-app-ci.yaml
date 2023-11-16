@@ -64,22 +64,17 @@ stages:
           - checkout: PipelineCommon
             path: s/PipelineCommon          
 
-          - task: AzureCLI@2
-            displayName: Build App            
-            name: BuildApp 
+          - task: PowerShell@2
             inputs:
-              azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndDeployBackstageApp.ps1'
-              arguments: >
-                -Command "Build"       
-                -PSHelperDirectory ${{ parameters.PSHelperDirectory }}        
-              addSpnToEnvironment: true  
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndDeployBackstageApp.ps1'
+              arguments: -Command "Build" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
               errorActionPreference: silentlyContinue
-              warningPreference: silentlyContinue        
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'         
+              warningPreference: silentlyContinue
+            displayName: Build App            
+            name: BuildApp            
         
           - task: Cache@2
             displayName: Cache docker
@@ -95,8 +90,7 @@ stages:
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
               arguments: >
                  -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-                 -ImageVersion  $(appVersion) 
-                 -ImageCachePath '$(Pipeline.Workspace)/docker' 
+                 -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' 
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                  -DockerFilePath '${{ parameters.appBuildConfig.dockerfilePath }}' 
