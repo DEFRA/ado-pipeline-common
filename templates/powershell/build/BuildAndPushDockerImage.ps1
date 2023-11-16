@@ -55,7 +55,9 @@ function Invoke-DockerBuild {
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
         Write-Debug "${functionName}:TagName=$TagName"
+        Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetFlatform=$TargetFlatform"
     }
     process {
         if ("" -ne $AcrName) {
@@ -97,6 +99,7 @@ function Invoke-DockerPush {
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetFlatform=$TargetFlatform"
     }
     process {
         # Load image if exists in cache
@@ -137,6 +140,7 @@ function Invoke-DockerBuildAndPush {
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetFlatform=$TargetFlatform"
     }
     process {
         Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
@@ -174,6 +178,7 @@ Write-Debug "${functionName}:ImageCachePath=$ImageCachePath"
 Write-Debug "${functionName}:Command=$Command"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:DockerFilePath=$DockerFilePath"
+Write-Debug "${functionName}:TargetFlatform=$TargetFlatform"
 
 try {
     Import-Module $PSHelperDirectory -Force
