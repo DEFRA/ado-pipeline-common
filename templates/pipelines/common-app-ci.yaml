@@ -175,19 +175,24 @@ stages:
               path: $(Pipeline.Workspace)/helm
               cacheHitVar: CACHE_RESTORED
 
-          - task: PowerShell@2
-            displayName: 'Docker Build Image'
+          - task: AzureCLI@2                   
             inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
+              azureSubscription: ${{ parameters.sharedAcrConfig.serviceConnection }}
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
               arguments: >
-                 -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-                 -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' 
-                 -Command 'build'
-                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-              failOnStderr: false
-              pwsh: true
+                -AcrName ${{ parameters.sharedAcrConfig.name }} 
+                -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
+                -ImageVersion  $(appVersion) 
+                -ImageCachePath $(Pipeline.Workspace)/docker 
+                -Command "build" 
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              addSpnToEnvironment: true          
+              failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
+            displayName: 'Docker Build Image'
+
 
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'

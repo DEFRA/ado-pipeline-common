@@ -15,14 +15,18 @@ Mandatory. Container image Cache Path on the build agent
 Optional. Command to run, Build or Push or Default = BuildAndPush  
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
+.PARAMETER DockerFilePath
+Optional. Directory Path of Dockerfile
+.PARAMETER TargetFlatform
+Optional. Target Flatform for Docker build
 
 .EXAMPLE
-.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory>
+.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory> DockerFilePath <DockerFilePath> TargetFlatform <TargetFlatform>
 #> 
 
 [CmdletBinding()]
 param(
-    [string] $AcrName,
+    [string] $AcrName="",
     [Parameter(Mandatory)]
     [string] $AcrRepoName,
     [Parameter(Mandatory)]
@@ -31,7 +35,9 @@ param(
     [string] $ImageCachePath,    
     [string] $Command = "BuildAndPush",
     [Parameter(Mandatory)]
-    [string]$PSHelperDirectory
+    [string]$PSHelperDirectory,
+    [string]$DockerFilePath = "Dockerfile",
+    [string]$TargetFlatform = "linux/arm64"
 )
 
 function Invoke-DockerBuild {
@@ -40,9 +46,11 @@ function Invoke-DockerBuild {
         [string]$DockerCacheFilePath,
         [Parameter(Mandatory)]
         [string]$TagName,
-        [string]$DockerFileName = "Dockerfile"
+        [string]$AcrName = "" ,        
+        [string]$DockerFileName = "Dockerfile",
+        [string]$TargetFlatform = "linux/arm64"
     )
-    begin{
+    begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
@@ -50,7 +58,16 @@ function Invoke-DockerBuild {
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
     }
     process {
-        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=linux/arm64 ."
+        if ("" -ne $AcrName) {
+            Invoke-CommandLine -Command "az acr login --name $AcrName"
+            Invoke-CommandLine -Command "az acr build -t $TagName -r $AcrName -f $DockerFileName ."
+            Invoke-CommandLine -Command "docker pull $AcrName.azurecr.io/$TagName"
+            Invoke-CommandLine -Command "docker tag $AcrName.azurecr.io/$TagName $TagName"
+            Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName --yes"            
+        }
+        else {
+            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
+        }
         # Save the image for future jobs
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"   
     }
@@ -69,24 +86,25 @@ function Invoke-DockerPush {
         [string]$AcrName,
         [Parameter(Mandatory)]
         [string]$AcrTagName,
-        [string]$DockerFileName = "Dockerfile"
+        [string]$DockerFileName = "Dockerfile",
+        [string]$TargetFlatform = "linux/arm64"
     )
-    begin{
+    begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
         Write-Debug "${functionName}:TagName=$TagName"
-        Write-Debug "${functionName}:TagName=$AcrName"
-        Write-Debug "${functionName}:TagName=$AcrTagName"
+        Write-Debug "${functionName}:AcrName=$AcrName"
+        Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
     }
     process {
         # Load image if exists in cache
         if (Test-Path $DockerCacheFilePath -PathType Leaf) {
-        Invoke-CommandLine -Command "docker load -i $DockerCacheFilePath"        
+            Invoke-CommandLine -Command "docker load -i $DockerCacheFilePath"        
         }
         else {
-            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=linux/arm64 ."  
+            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."  
             Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"          
         }
         Invoke-CommandLine -Command "az acr login --name $AcrName"
@@ -108,19 +126,20 @@ function Invoke-DockerBuildAndPush {
         [string]$AcrName,
         [Parameter(Mandatory)]
         [string]$AcrTagName,
-        [string]$DockerFileName = "Dockerfile"
+        [string]$DockerFileName = "Dockerfile",
+        [string]$TargetFlatform = "linux/arm64"
     )
-    begin{
+    begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
         Write-Debug "${functionName}:TagName=$TagName"
-        Write-Debug "${functionName}:TagName=$AcrName"
-        Write-Debug "${functionName}:TagName=$AcrTagName"
+        Write-Debug "${functionName}:AcrName=$AcrName"
+        Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
     }
     process {
-        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=linux/arm64 ."
+        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
         Invoke-CommandLine -Command "az acr login --name $AcrName"
         Invoke-CommandLine -Command "docker push $AcrTagName"    
@@ -154,6 +173,7 @@ Write-Debug "${functionName}:ImageVersion=$ImageVersion"
 Write-Debug "${functionName}:ImageCachePath=$ImageCachePath"
 Write-Debug "${functionName}:Command=$Command"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
+Write-Debug "${functionName}:DockerFilePath=$DockerFilePath"
 
 try {
     Import-Module $PSHelperDirectory -Force
@@ -171,13 +191,13 @@ try {
     } 
     
     if ( $Command.ToLower() -eq 'build' ) {
-        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName    
+        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
-        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName  
+        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform
     }
     else {
-        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName     
+        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform    
     }    
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.complete result=Failed;]DONE"
@@ -189,7 +209,7 @@ try {
     if (Test-Path $dbMigrationDockerFileName -PathType Leaf) {
 
         Write-Host "Processing DB Migration Docker file: $dbMigrationDockerFileName"
-        [string]$dbMigrationTagName = $AcrRepoName  + "-dbmigration:" + $ImageVersion
+        [string]$dbMigrationTagName = $AcrRepoName + "-dbmigration:" + $ImageVersion
         [string]$AcrDbMigrationTagName = $AcrName + ".azurecr.io/image/" + $dbMigrationTagName
         Write-Debug "${functionName}:DB Migration Docker Image=$dbMigrationTagName"
         Write-Debug "${functionName}:AcrDbMigrationTagName=$AcrDbMigrationTagName"
@@ -213,7 +233,7 @@ try {
             $exitCode = -2
         }  
     } 
-    else{
+    else {
         Write-Host "No DB Migration Docker file exist."
     }
 
