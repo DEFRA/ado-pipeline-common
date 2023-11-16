@@ -187,7 +187,7 @@ stages:
                 -ImageVersion  $(appVersion) 
                 -ImageCachePath $(Pipeline.Workspace)/docker 
                 -Command "build" 
-                -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               addSpnToEnvironment: true          
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
