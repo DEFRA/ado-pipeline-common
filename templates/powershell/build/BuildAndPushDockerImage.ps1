@@ -26,7 +26,7 @@ Optional. Target Flatform for Docker build
 
 [CmdletBinding()]
 param(
-    [string] $AcrName,
+    [string] $AcrName = "",
     [Parameter(Mandatory)]
     [string] $AcrRepoName,
     [Parameter(Mandatory)]
@@ -46,6 +46,7 @@ function Invoke-DockerBuild {
         [string]$DockerCacheFilePath,
         [Parameter(Mandatory)]
         [string]$TagName,
+        [string]$AcrName = "" ,        
         [string]$DockerFileName = "Dockerfile",
         [string]$TargetFlatform = "linux/arm64"
     )
@@ -57,7 +58,16 @@ function Invoke-DockerBuild {
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
     }
     process {
-        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
+        if ("" -ne $AcrName) {
+            Invoke-CommandLine -Command "az acr login --name $AcrName"
+            Invoke-CommandLine -Command "az acr build -t $TagName -r $AcrName -f $DockerFileName ."
+            Invoke-CommandLine -Command "docker pull $AcrName.azurecr.io/$TagName"
+            Invoke-CommandLine -Command "docker tag $AcrName.azurecr.io/$TagName $TagName"
+            Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName --yes"            
+        }
+        else {
+            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
+        }
         # Save the image for future jobs
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"   
     }
@@ -181,7 +191,7 @@ try {
     } 
     
     if ( $Command.ToLower() -eq 'build' ) {
-        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform
+        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
         Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetFlatform $TargetFlatform
