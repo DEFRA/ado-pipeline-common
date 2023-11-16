@@ -55,7 +55,9 @@ function Invoke-DockerBuild {
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:DockerCacheFilePath=$DockerCacheFilePath"
         Write-Debug "${functionName}:TagName=$TagName"
+        Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetFlatform=$TargetFlatform"
     }
     process {
         if ("" -ne $AcrName) {
@@ -97,6 +99,7 @@ function Invoke-DockerPush {
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetFlatform=$TargetFlatform"
     }
     process {
         # Load image if exists in cache
@@ -137,6 +140,7 @@ function Invoke-DockerBuildAndPush {
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:TargetFlatform=$TargetFlatform"
     }
     process {
         Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetFlatform ."
@@ -220,7 +224,7 @@ try {
         }
         
         if ( $Command.ToLower() -eq 'build' ) {
-            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -DockerFileName $dbMigrationDockerFileName  
+            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -DockerFileName $dbMigrationDockerFileName  
         }
         elseif ( $Command.ToLower() -eq 'push' ) {
             Invoke-DockerPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName -DockerFileName $dbMigrationDockerFileName
