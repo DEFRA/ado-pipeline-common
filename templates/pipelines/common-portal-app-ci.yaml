@@ -108,7 +108,7 @@ stages:
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
-                dockerfilePath: ${{ parameters.appBuildConfig.dockerfilePath }}
+                dockerfilePath: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.appBuildConfig.dockerfilePath }}'
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
