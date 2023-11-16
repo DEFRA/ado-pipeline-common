@@ -65,7 +65,7 @@ try {
         Write-Output "${functionName}:Build Complete"    
     }
     elseif ("Deploy" -eq $Command) {
-        $obj = Invoke-CommandLine -Command "az containerapp show -n $AppName -g $ResourceGroup --query id " 
+        $obj = Invoke-CommandLine -Command "az containerapp show -n $AppName -g $ResourceGroup --query id " -IgnoreErrorCode
         if ($null -ne $obj) {
             Write-Output "${functionName}: App already exists. Updating"
             Invoke-CommandLine -Command "az containerapp update -n $AppName -g $ResourceGroup  --yaml $Filepath"   
