@@ -90,7 +90,8 @@ stages:
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
               arguments: >
                  -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-                 -ImageVersion  $(appVersion) -ImageCachePath '$(Pipeline.Workspace)/docker' 
+                 -ImageVersion  $(appVersion) 
+                 -ImageCachePath '$(Pipeline.Workspace)/docker' 
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                  -DockerFilePath '${{ parameters.appBuildConfig.dockerfilePath }}' 
@@ -107,6 +108,7 @@ stages:
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
+                dockerfilePath: ${{ parameters.appBuildConfig.dockerfilePath }}
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
