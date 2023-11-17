@@ -1,0 +1,219 @@
+parameters:
+- name: serviceName
+  type: string
+- name: deployFromFeature
+  type: boolean
+  default: false  
+- name: privateAgentName
+  type: string
+  default: ''
+- name: environments
+  type: object
+- name: snykConfig
+  type: object
+- name: appBuildConfig
+  type: object   
+- name: appDeployConfig
+  type: object
+  default: null
+variables:
+- name: IsDefaultBranchBuild
+  value: ${{ or( in(variables['Build.SourceBranch'], 'refs/heads/main','refs/heads/master'), contains(variables['Build.SourceBranch'],'refs/tags') ) }}
+- name: IsPrBuild
+  value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
+- name: PSHelperDirectory
+  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers' 
+stages:         
+  - stage: Application_CI
+    displayName: 'Application CI'
+    ${{ if ne(parameters.privateAgentName, '') }}:
+      pool:
+        name: ${{ parameters.privateAgentName }}
+    ${{ if eq(parameters.privateAgentName, '') }}:
+      pool:
+        vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+    jobs:
+      - job: Initialise
+        displayName: 'Initialise'     
+        steps:
+          - checkout: self
+            path: s/source
+
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+
+          - task: PowerShell@2
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Extract-CodeVersion.ps1'
+              arguments: -AppFrameworkType 'nodejs' -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s/source${{ parameters.appBuildConfig.appPath }}'
+            displayName: GetAppVersion            
+            name: GetAppVersion
+
+      - job: Build
+        displayName: 'Build'  
+        dependsOn: Initialise
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]      
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'      
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/PipelineCommon          
+
+          - task: PowerShell@2
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndDeployBackstageApp.ps1'
+              arguments: -Command "Build" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
+              errorActionPreference: silentlyContinue
+              warningPreference: silentlyContinue
+            displayName: Build App            
+            name: BuildApp            
+        
+          - task: Cache@2
+            displayName: Cache docker
+            inputs:
+              key: $(dockerCacheKey)
+              path: $(Pipeline.Workspace)/docker
+              cacheHitVar: CACHE_RESTORED
+       
+          - task: PowerShell@2
+            displayName: 'Docker Build Image'
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
+              arguments: >
+                 -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                 -ImageVersion  $(appVersion) 
+                 -ImageCachePath '$(Pipeline.Workspace)/docker' 
+                 -Command 'build'
+                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                 -DockerFilePath '${{ parameters.appBuildConfig.dockerfilePath }}' 
+                 -TargetPlatform 'linux/amd64'
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
+
+          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+            - template: /templates/steps/security-scan-container.yaml
+              parameters:
+                snykConnection: ${{ parameters.snykConfig.snykConnection }}
+                snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
+                acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+                acrRepoTagVersion: $(appVersion)
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
+                dockerfilePath: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.appBuildConfig.dockerfilePath }}'
+
+      - job: PublishArtifacts
+        displayName: 'Publish Artifacts'   
+        dependsOn: [Initialise,Build]
+        condition: |
+          and(
+            succeeded(), 
+            or(
+              eq( variables.IsDefaultBranchBuild , true),
+              eq( variables.IsPrBuild , true),
+              eq( ${{ parameters.deployFromFeature }} , true)              
+            ) 
+          )
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+        steps:
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+
+          - task: Cache@2
+            displayName: Restore Cached docker image
+            inputs:
+              key: $(dockerCacheKey)
+              path: $(Pipeline.Workspace)/docker
+              cacheHitVar: CACHE_RESTORED  
+
+          - task: PowerShell@2
+            displayName: 'Set App Version'   
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/GetSet-CodeVersion.ps1'
+              arguments: -Command "Set" -AppVersion $(appVersion) -ArtifactFilePath  $(System.ArtifactsDirectory)/version
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s' 
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish version'
+            inputs:
+              targetPath: '$(System.ArtifactsDirectory)/version'
+              artifact: appversion
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish docker'
+            inputs:
+              targetPath: '$(Pipeline.Workspace)/docker'
+              artifact: docker
+          
+  - ${{ if or( eq(variables.IsDefaultBranchBuild, true), eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true) ) }}:              
+    - ${{ each deploymentEnv in parameters.environments }}:      
+      - stage: ${{ deploymentEnv.name }}
+        dependsOn: ${{ deploymentEnv.dependsOn }}
+        displayName: 'Application CD ${{ deploymentEnv.name }}'
+        variables:
+        - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
+          - ${{ if contains( varGroup, deploymentEnv.name) }}:
+            - group: '${{ varGroup }}'
+        - name: serviceName
+          value: ${{ parameters.serviceName }}
+        - name: PSHelperDirectory
+          value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+        ${{ if ne(deploymentEnv.privateAgentName, '') }}:
+          pool:
+            name: ${{ deploymentEnv.privateAgentName }}
+        ${{ else }}:
+          pool:
+            vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+        jobs:        
+          - deployment: PublishTo${{ deploymentEnv.name }}
+            condition:  |
+              or(
+                eq( variables.IsDefaultBranchBuild, true),
+                and(
+                  or(
+                    eq(variables.IsPrBuild, true),
+                    eq(${{ parameters.deployFromFeature }},true)
+                  ),
+                  eq('${{ deploymentEnv.type }}','dev')
+                ) 
+              ) 
+            displayName: 'Publish To ${{ deploymentEnv.name }}'
+            environment: ${{ deploymentEnv.name }}
+            strategy:
+              runOnce:
+                deploy:          
+                  steps:
+                    - ${{ if ne(parameters.appDeployConfig, '') }}:
+                      - checkout: Self
+                        path: s/ 
+                      - checkout: PipelineCommon
+                        path: s/PipelineCommon  
+                      - ${{ each secret in parameters.appDeployConfig.variables }} :
+                        - template: /templates/steps/secrets-import-kv.yaml
+                          parameters:
+                            environmentObj: ${{ deploymentEnv }} 
+                            appDeployConfig: ${{ parameters.appDeployConfig }} 
+                            workingDirectory: '$(Pipeline.Workspace)/s'
+                            serviceName: ${{ parameters.serviceName }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                            secretName: ${{ secret }}                            
+                      - template: /templates/steps/portal-cd.yaml
+                        parameters:
+                            serviceName: ${{ parameters.serviceName }}
+                            environmentObj: ${{ deploymentEnv }}
+                            appBuildConfig: ${{ parameters.appBuildConfig }}
+                            appDeployConfig: ${{ parameters.appDeployConfig }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
