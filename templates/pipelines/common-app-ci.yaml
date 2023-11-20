@@ -184,15 +184,23 @@ stages:
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
             displayName: 'Docker Build Image'
+          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+            - template: /templates/steps/security-scan-container.yaml
+              parameters:
+                snykConnection: ${{ parameters.snykConfig.snykConnection }}
+                snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
+                acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+                acrRepoTagVersion: $(appVersion)
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
                 
       - job: BuildImage
         displayName: 'Build Image'
         condition:  |
           and(
-            succeeded('BuildDockerImage'),
+            succeeded('Initialise'),
             ${{ eq(parameters.deployConfigOnly, false) }}    
           )
-        dependsOn: [Initialise,BuildDockerImage]
+        dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
@@ -243,18 +251,9 @@ stages:
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
 
-          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
-            - template: /templates/steps/security-scan-container.yaml
-              parameters:
-                snykConnection: ${{ parameters.snykConfig.snykConnection }}
-                snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
-                acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
-                acrRepoTagVersion: $(appVersion)
-                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
-
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildImage]
+        dependsOn: [Initialise,Build,BuildDockerImage,BuildImage]
         condition: |
           and(
             succeeded(), 
