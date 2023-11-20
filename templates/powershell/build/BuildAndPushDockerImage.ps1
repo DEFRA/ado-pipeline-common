@@ -89,7 +89,7 @@ function Invoke-DockerPush {
         [Parameter(Mandatory)]
         [string]$AcrTagName,
         [string]$DockerFileName = "Dockerfile",
-        [string]$TargetPlatform = "linux/arm64"
+        [string]$TargetPlatform = "linux/amd64"
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
