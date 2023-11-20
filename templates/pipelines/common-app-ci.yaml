@@ -153,8 +153,6 @@ stages:
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
-        pool:
-          vmImage: 'ubuntu-latest'
         steps:
           - checkout: self
             path: s/
