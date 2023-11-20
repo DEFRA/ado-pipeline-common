@@ -142,9 +142,8 @@ stages:
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
             
-          
-      - job: BuildImage
-        displayName: 'Build Image'
+      - job: BuildDockerImage
+        displayName: 'Build Docker Image'
         condition:  |
           and(
             succeeded('Initialise'),
@@ -154,7 +153,8 @@ stages:
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
-          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+        pool:
+          vmImage: 'ubuntu-latest'
         steps:
           - checkout: self
             path: s/
@@ -167,13 +167,6 @@ stages:
               key: $(dockerCacheKey)
               path: $(Pipeline.Workspace)/docker
               cacheHitVar: CACHE_RESTORED
-          
-          - task: Cache@2
-            displayName: Cache helm chart
-            inputs:
-              key: $(helmCacheKey)
-              path: $(Pipeline.Workspace)/helm
-              cacheHitVar: CACHE_RESTORED
 
           - task: AzureCLI@2                   
             inputs:
@@ -181,8 +174,7 @@ stages:
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
-              arguments: >
-                -AcrName ${{ parameters.sharedAcrConfig.name }} 
+              arguments: >                 
                 -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
                 -ImageVersion  $(appVersion) 
                 -ImageCachePath $(Pipeline.Workspace)/docker 
@@ -192,7 +184,31 @@ stages:
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
             displayName: 'Docker Build Image'
-
+                
+      - job: BuildImage
+        displayName: 'Build Image'
+        condition:  |
+          and(
+            succeeded('BuildDockerImage'),
+            ${{ eq(parameters.deployConfigOnly, false) }}    
+          )
+        dependsOn: [Initialise,BuildDockerImage]
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+          
+          - task: Cache@2
+            displayName: Cache helm chart
+            inputs:
+              key: $(helmCacheKey)
+              path: $(Pipeline.Workspace)/helm
+              cacheHitVar: CACHE_RESTORED
 
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
