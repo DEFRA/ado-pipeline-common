@@ -99,9 +99,9 @@ extends:
         subscriptionId: 'Subscription id'                   #Mandatory:  Subscription ID
         resourceGroup: 'Resource group name'                #Mandatory: Resource group to which the application to be deployed
         appKeyVault: 'application keyvault name'            #Mandatory:  Name of the Azure application keyvault instance to push the secrets from variable groups
-        userAssignedIdentity: 'userAssignedIdentity resource id' #Mandatory: userAssignedIdentity resource id
-        managedEnvironmentId : 'EnvironmentId resource id' #Mandatory: EnvironmentId resource id
-        appBaseUrl: 'https://portal.com'                    #Mandatory: Application base url
+        userAssignedIdentity: 'userAssignedIdentity Name' #Mandatory: userAssignedIdentity Name
+        managedEnvironmentId : 'EnvironmentId Name' #Mandatory: EnvironmentId Name
+        containerAppName: 'name of the container app'       #Mandatory: Name of the container app
         dependsOn: [ Application_CI ]                       #Mandatory: Names of one ore more stages. Application_CI stage is mandatory for all deployments
 
 

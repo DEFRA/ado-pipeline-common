@@ -69,11 +69,10 @@ steps:
       inlineVariables: |          
         imageRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
         appVersion: $(GetAppVersion.appVersion)          
-        userAssignedIdentity: ${{ parameters.environmentObj.userAssignedIdentity }} 
-        managedEnvironmentId: ${{ parameters.environmentObj.managedEnvironmentId }}
+        userAssignedIdentity: '/subscriptions/${{ parameters.environmentObj.subscriptionId }}/resourcegroups/${{ parameters.environmentObj.resourceGroup }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${{ parameters.environmentObj.userAssignedIdentity }}' 
+        managedEnvironmentId: '/subscriptions/${{ parameters.environmentObj.subscriptionId }}/resourcegroups/${{ parameters.environmentObj.resourceGroup }}/providers/Microsoft.App/managedEnvironments/${{ parameters.environmentObj.managedEnvironmentId }}'
         acrName: ${{ parameters.environmentObj.acrName }}  
         keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
-        appBaseUrl: ${{ parameters.environmentObj.appBaseUrl }}
       targetFiles: |
         $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}
   - task: AzureCLI@2
@@ -85,7 +84,7 @@ steps:
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndDeployBackstageApp.ps1'
       arguments: >
         -Command "Deploy" 
-        -AppName ${{ parameters.serviceName }}
+        -AppName ${{ parameters.environmentObj.containerAppName }}
         -ResourceGroup ${{ parameters.environmentObj.resourceGroup }}
         -Filepath  ${{ parameters.appDeployConfig.filepath }}        
         -PSHelperDirectory ${{ parameters.PSHelperDirectory }}        
