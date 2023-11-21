@@ -40,13 +40,15 @@ stage: Application_CI
         task: Sonar Analysis Publish
         task: Snyk application security scan # Fail pipeline for threashold breach, if PR build
         task: Helm Lint
-    job: BuildImage
+    job: BuildDockerImage
     dependsOn: Initialise
         task: Docker Build Image
-        task: Helm Build Chart
         task: Snyk container security scan # Fail pipeline for threashold breach, if PR build
+    job: BuildHelmChart
+    dependsOn: Initialise
+        task: Helm Build Chart
     job: Publish Artifacts
-    dependsOn: Initialise,Build,BuildImage
+    dependsOn: Initialise,BuildDockerImage,BuildHelmChart
         task: Publish Artifact - code version
         task: Publish Artifact - docker image
         task: Publish Artifact - helm chart

@@ -142,9 +142,55 @@ stages:
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
             
-          
-      - job: BuildImage
-        displayName: 'Build Image'
+      - job: BuildDockerImage
+        displayName: 'Build Docker Image'
+        condition:  |
+          and(
+            succeeded('Initialise'),
+            ${{ eq(parameters.deployConfigOnly, false) }}    
+          )
+        dependsOn: [Initialise]
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+
+          - task: Cache@2
+            displayName: Cache docker
+            inputs:
+              key: $(dockerCacheKey)
+              path: $(Pipeline.Workspace)/docker
+              cacheHitVar: CACHE_RESTORED
+
+          - task: PowerShell@2
+            displayName: 'Docker Build Image'
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
+              arguments: >
+                 -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                 -ImageVersion  $(appVersion) 
+                 -ImageCachePath '$(Pipeline.Workspace)/docker' 
+                 -Command 'build'
+                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'
+          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+            - template: /templates/steps/security-scan-container.yaml
+              parameters:
+                snykConnection: ${{ parameters.snykConfig.snykConnection }}
+                snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
+                acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+                acrRepoTagVersion: $(appVersion)
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
+                
+      - job: BuildHelmChart
+        displayName: 'Build Helm Chart'
         condition:  |
           and(
             succeeded('Initialise'),
@@ -160,13 +206,6 @@ stages:
             path: s/
           - checkout: PipelineCommon
             path: s/PipelineCommon
-
-          - task: Cache@2
-            displayName: Cache docker
-            inputs:
-              key: $(dockerCacheKey)
-              path: $(Pipeline.Workspace)/docker
-              cacheHitVar: CACHE_RESTORED
           
           - task: Cache@2
             displayName: Cache helm chart
@@ -174,25 +213,6 @@ stages:
               key: $(helmCacheKey)
               path: $(Pipeline.Workspace)/helm
               cacheHitVar: CACHE_RESTORED
-
-          - task: AzureCLI@2                   
-            inputs:
-              azureSubscription: ${{ parameters.sharedAcrConfig.serviceConnection }}
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
-              arguments: >
-                -AcrName ${{ parameters.sharedAcrConfig.name }} 
-                -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
-                -ImageVersion  $(appVersion) 
-                -ImageCachePath $(Pipeline.Workspace)/docker 
-                -Command "build" 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-              addSpnToEnvironment: true          
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s'
-            displayName: 'Docker Build Image'
-
 
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
@@ -227,18 +247,9 @@ stages:
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
 
-          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
-            - template: /templates/steps/security-scan-container.yaml
-              parameters:
-                snykConnection: ${{ parameters.snykConfig.snykConnection }}
-                snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
-                acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
-                acrRepoTagVersion: $(appVersion)
-                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
-
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildImage]
+        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
         condition: |
           and(
             succeeded(), 

@@ -4,7 +4,7 @@ Docker build and/or push using Azure Service Connection
 .DESCRIPTION
 Docker build and/or push using Azure Service Connection
 .PARAMETER AcrName
-Optional. Azure Container Registry used to push the container
+Optional. Azure Container Registry used to push the container. If provided for Build command then it will be used to build the container image. If not provided then local docker build will be used.
 .PARAMETER AcrRepoName
 Mandatory. Name of the Repo to push the container in ACR
 .PARAMETER ImageVersion
@@ -37,7 +37,7 @@ param(
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [string]$DockerFilePath = "Dockerfile",
-    [string]$TargetPlatform = "linux/arm64"
+    [string]$TargetPlatform = "linux/amd64"
 )
 
 function Invoke-DockerBuild {
@@ -48,7 +48,7 @@ function Invoke-DockerBuild {
         [string]$TagName,
         [string]$AcrName = "" ,        
         [string]$DockerFileName = "Dockerfile",
-        [string]$TargetPlatform = "linux/arm64"
+        [string]$TargetPlatform = "linux/amd64"
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
@@ -60,6 +60,7 @@ function Invoke-DockerBuild {
         Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
     }
     process {
+        # Build the image using ACR if ACR name is provided, if not use local docker build
         if ("" -ne $AcrName) {
             Invoke-CommandLine -Command "az acr login --name $AcrName"
             Invoke-CommandLine -Command "az acr build -t $TagName -r $AcrName -f $DockerFileName ."
@@ -89,7 +90,7 @@ function Invoke-DockerPush {
         [Parameter(Mandatory)]
         [string]$AcrTagName,
         [string]$DockerFileName = "Dockerfile",
-        [string]$TargetPlatform = "linux/arm64"
+        [string]$TargetPlatform = "linux/amd64"
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
@@ -130,7 +131,7 @@ function Invoke-DockerBuildAndPush {
         [Parameter(Mandatory)]
         [string]$AcrTagName,
         [string]$DockerFileName = "Dockerfile",
-        [string]$TargetPlatform = "linux/arm64"
+        [string]$TargetPlatform = "linux/amd64"
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
