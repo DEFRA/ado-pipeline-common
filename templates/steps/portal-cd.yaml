@@ -1,0 +1,95 @@
+parameters:
+- name: serviceName
+  type: string
+- name: environmentObj
+  displayName: deployment env
+  type: object
+- name: appBuildConfig
+  displayName: Details to build the app
+  type: object
+- name: appDeployConfig
+  displayName: Details to deploy the app
+  type: object
+  default: null
+- name: PSHelperDirectory
+  type: string  
+steps:
+
+  - checkout: Self
+    path: s/
+  - checkout: PipelineCommon
+    path: s/PipelineCommon
+
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download App Version' 
+    inputs:
+      artifactName: 'appversion'
+      targetPath: $(System.ArtifactsDirectory)/version
+
+  - task: PowerShell@2
+    displayName: 'Get App Version' 
+    name: GetAppVersion   
+    inputs:
+      targetType: filePath
+      filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/GetSet-CodeVersion.ps1'
+      arguments: -Command "Get" -ArtifactFilePath  $(System.ArtifactsDirectory)/version
+      failOnStderr: false
+      pwsh: true
+      workingDirectory: '$(Pipeline.Workspace)/s'  
+
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download Docker image' 
+    inputs:
+      artifactName: 'docker'
+      targetPath: '$(Pipeline.Workspace)/docker'
+
+  - task: AzureCLI@2                   
+    inputs:
+      azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
+      arguments: >
+        -AcrName ${{ parameters.environmentObj.acrName }} 
+        -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
+        -ImageVersion  $(GetAppVersion.appVersion) 
+        -ImageCachePath $(Pipeline.Workspace)/docker 
+        -Command "push" 
+        -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
+        -DockerFilePath '${{ parameters.appBuildConfig.dockerfilePath }}'
+        -TargetPlatform 'linux/amd64'
+      addSpnToEnvironment: true          
+      failOnStandardError: false
+      workingDirectory: '$(Pipeline.Workspace)/s'
+    displayName: 'Docker Push Image'
+  - task: replacetokens@5
+    displayName: 'Replace tokens in config'
+    inputs:
+      tokenPattern: doublebraces
+      inlineVariables: |          
+        imageRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+        appVersion: $(GetAppVersion.appVersion)          
+        userAssignedIdentity: '/subscriptions/${{ parameters.environmentObj.subscriptionId }}/resourcegroups/${{ parameters.environmentObj.resourceGroup }}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/${{ parameters.environmentObj.userAssignedIdentity }}' 
+        managedEnvironmentId: '/subscriptions/${{ parameters.environmentObj.subscriptionId }}/resourcegroups/${{ parameters.environmentObj.resourceGroup }}/providers/Microsoft.App/managedEnvironments/${{ parameters.environmentObj.managedEnvironmentId }}'
+        acrName: ${{ parameters.environmentObj.acrName }}  
+        keyvaultName: ${{ parameters.environmentObj.appKeyVault }}
+      targetFiles: |
+        $(Pipeline.Workspace)/s/${{ parameters.appDeployConfig.filepath }}
+  - task: AzureCLI@2
+    displayName: 'Deploy ContainerApp'
+    inputs:
+      azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndDeployBackstageApp.ps1'
+      arguments: >
+        -Command "Deploy" 
+        -AppName ${{ parameters.environmentObj.containerAppName }}
+        -ResourceGroup ${{ parameters.environmentObj.resourceGroup }}
+        -Filepath  ${{ parameters.appDeployConfig.filepath }}        
+        -PSHelperDirectory ${{ parameters.PSHelperDirectory }}        
+      addSpnToEnvironment: true          
+      failOnStandardError: false
+      workingDirectory: '$(Pipeline.Workspace)/s'
+       
+        
