@@ -28,7 +28,7 @@ steps:
   - ${{ if ne(parameters.appDeployConfig, '') }}:          
     - pwsh: |
         $PSVersionTable
-        sudo apt-get install -y powershell
+        sudo apt-get install -y powershell=7.4.0
       errorActionPreference: silentlyContinue
       displayName: 'Upgrade PowerShell Version'  
     - task: PowerShell@2
