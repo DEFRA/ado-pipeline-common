@@ -27,6 +27,7 @@ steps:
     projectName: '${{ parameters.acrRepoName }}'
     organization: '${{ parameters.snykOrganizationName }}'    
     failOnThreshold: '${{ parameters.failOnThreshold }}'
+    additionalArguments: '--exclude-base-image-vulns'
   enabled: true
   continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
     
