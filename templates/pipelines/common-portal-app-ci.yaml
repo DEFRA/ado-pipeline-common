@@ -109,6 +109,7 @@ stages:
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
                 dockerfilePath: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.appBuildConfig.dockerfilePath }}'
+                snykPolicyFilePath: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.appBuildConfig.snykPolicyFilePath }}'
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
