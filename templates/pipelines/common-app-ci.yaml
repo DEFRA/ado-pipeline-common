@@ -106,14 +106,15 @@ stages:
             succeeded('Initialise'),
             ${{ eq(parameters.deployConfigOnly, false) }}
           )
-        dependsOn:  Initialise
+        dependsOn: Initialise
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
           - checkout: self
             path: s/
           - checkout: PipelineCommon
-            path: s/PipelineCommon          
+            path: s/PipelineCommon       
+               
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
               parameters:
