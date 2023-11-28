@@ -73,14 +73,54 @@ stages:
             displayName: GetAppVersion            
             name: GetAppVersion
 
-      - job: Build
-        displayName: 'Build'  
+      - job: Lint
+        displayName: 'Lint' 
         condition: |
           and(
             succeeded('Initialise'),
             ${{ eq(parameters.deployConfigOnly, false) }}
           )
         dependsOn: Initialise
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]     
+        steps:
+          - checkout: self
+            path: s/source
+
+          - checkout: PipelineCommon
+            path: s/PipelineCommon
+
+          - task: AzureCLI@2
+            displayName: 'Helm Lint'
+            inputs:
+              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: > 
+                -Command 'lint' 
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              addSpnToEnvironment: true          
+              failOnStandardError: false
+              workingDirectory: '$(Pipeline.Workspace)/s'
+          - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
+            - task: Npm@1
+              displayName: 'npm lint'
+              inputs:
+                command: custom
+                verbose: false
+                customCommand: 'run --if-present test:lint'
+              continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+
+      - job: Build
+        displayName: 'Build'  
+        condition: |
+          and(
+            succeeded(),
+            ${{ eq(parameters.deployConfigOnly, false) }}
+          )
+        dependsOn:  [Initialise,Lint]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
@@ -127,10 +167,10 @@ stages:
         displayName: 'Build Docker Image'
         condition:  |
           and(
-            succeeded('Initialise'),
+            succeeded(),
             ${{ eq(parameters.deployConfigOnly, false) }}    
           )
-        dependsOn: [Initialise]
+        dependsOn:  [Initialise,Lint]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
@@ -174,10 +214,10 @@ stages:
         displayName: 'Build Helm Chart'
         condition:  |
           and(
-            succeeded('Initialise'),
+            succeeded(),
             ${{ eq(parameters.deployConfigOnly, false) }}    
           )
-        dependsOn: [Initialise]
+        dependsOn:  [Initialise,Lint]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
@@ -194,24 +234,7 @@ stages:
               key: $(helmCacheKey)
               path: $(Pipeline.Workspace)/helm
               cacheHitVar: CACHE_RESTORED
-          - task: AzureCLI@2
-            displayName: 'Helm Lint'
-            inputs:
-              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: > 
-                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
-                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-                -ChartVersion  $(appVersion) 
-                -ChartCachePath '$(Pipeline.Workspace)/helm' 
-                -Command 'lint' 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              addSpnToEnvironment: true          
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s'
+          
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
             inputs:
