@@ -167,17 +167,17 @@ try {
                 New-Item -ItemType Directory -Force -Path $ChartCachePath
                 Write-Host "Created Chart Cache Path: $ChartCachePath"
             }
-        
-            Invoke-CommandLine -Command "az acr login --name $AcrName"
-
+                
             switch ($Command.ToLower()) {
                 'lint' {
                     Invoke-HelmLint -HelmChartName $helmChartName
                 }
                 'publish' {
+                    Invoke-CommandLine -Command "az acr login --name $AcrName"
                     Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
                 }
                 'build' {
+                    Invoke-CommandLine -Command "az acr login --name $AcrName"
                     Invoke-HelmBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
                 }
             }
