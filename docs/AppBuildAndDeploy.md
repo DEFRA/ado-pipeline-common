@@ -23,8 +23,7 @@ stage: Application_CI
         task: GetAppVersion
     job: Build
     dependsOn: Initialise
-      steps: 
-        task: Helm Lint
+      steps:         
         task: Sonar Analysis prepare
         # if .Net App
             task: UseDotNet Version
@@ -46,6 +45,8 @@ stage: Application_CI
         task: Snyk container security scan # Fail pipeline for threashold breach, if PR build
     job: BuildHelmChart
     dependsOn: Initialise
+        task: Helm Lint
+        task: Helm Add KV Roleassignment template to ASO Infra helm chart
         task: Helm Build Chart
     job: Publish Artifacts
     dependsOn: Initialise,BuildDockerImage,BuildHelmChart
