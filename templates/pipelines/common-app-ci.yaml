@@ -88,7 +88,24 @@ stages:
             path: s/
           - checkout: PipelineCommon
             path: s/PipelineCommon
-
+          - task: AzureCLI@2
+            displayName: 'Helm Lint'
+            inputs:
+              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: > 
+                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
+                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                -ChartVersion  $(appVersion) 
+                -ChartCachePath '$(Pipeline.Workspace)/helm' 
+                -Command 'lint' 
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              addSpnToEnvironment: true          
+              failOnStandardError: false
+              workingDirectory: '$(Pipeline.Workspace)/s'
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
               parameters:
@@ -121,26 +138,7 @@ stages:
                 snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
-                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
-          
-          - task: AzureCLI@2
-            displayName: 'Helm Lint'
-            inputs:
-              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: > 
-                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
-                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-                -ChartVersion  $(appVersion) 
-                -ChartCachePath '$(Pipeline.Workspace)/helm' 
-                -Command 'lint' 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              addSpnToEnvironment: true          
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s'
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}                    
             
       - job: BuildDockerImage
         displayName: 'Build Docker Image'

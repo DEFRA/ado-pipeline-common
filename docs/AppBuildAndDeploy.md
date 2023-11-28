@@ -24,6 +24,7 @@ stage: Application_CI
     job: Build
     dependsOn: Initialise
       steps: 
+        task: Helm Lint
         task: Sonar Analysis prepare
         # if .Net App
             task: UseDotNet Version
@@ -38,8 +39,7 @@ stage: Application_CI
             task: Npm build     # if-present
             task: Npm unit test # if-present
         task: Sonar Analysis Publish
-        task: Snyk application security scan # Fail pipeline for threashold breach, if PR build
-        task: Helm Lint
+        task: Snyk application security scan # Fail pipeline for threashold breach, if PR build        
     job: BuildDockerImage
     dependsOn: Initialise
         task: Docker Build Image
