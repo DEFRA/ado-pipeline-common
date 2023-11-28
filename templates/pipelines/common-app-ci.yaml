@@ -315,8 +315,8 @@ stages:
             inputs:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
-  - ${{ if or( eq(variables.IsDefaultBranchBuild, true), eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true), eq(parameters.deployConfigOnly, true) ) }}:              
-    - ${{ each deploymentEnv in parameters.environments }}:      
+  - ${{ each deploymentEnv in parameters.environments }}:  
+    - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq('${{ deploymentEnv.type }}','dev')), eq(parameters.deployConfigOnly, true) ) }}:                  
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD ${{ deploymentEnv.name }}'
