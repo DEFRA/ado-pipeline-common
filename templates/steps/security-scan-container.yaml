@@ -14,6 +14,9 @@ parameters:
   - name: dockerfilePath
     type: string
     default: './Dockerfile'
+  - name: snykPolicyFilePath
+    type: string
+    default: './.snyk'
 steps:   
 - task: SnykSecurityScan@1
   displayName: 'Snyk containter scan'
@@ -27,6 +30,7 @@ steps:
     projectName: '${{ parameters.acrRepoName }}'
     organization: '${{ parameters.snykOrganizationName }}'    
     failOnThreshold: '${{ parameters.failOnThreshold }}'
+    additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }}'
   enabled: true
   continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
     
