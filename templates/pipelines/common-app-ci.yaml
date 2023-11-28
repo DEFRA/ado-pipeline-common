@@ -85,7 +85,7 @@ stages:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]     
         steps:
           - checkout: self
-            path: s/source
+            path: s/
 
           - checkout: PipelineCommon
             path: s/PipelineCommon
