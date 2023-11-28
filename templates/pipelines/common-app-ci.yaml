@@ -220,21 +220,6 @@ stages:
               key: $(helmCacheKey)
               path: $(Pipeline.Workspace)/helm
               cacheHitVar: CACHE_RESTORED
-          
-          - task: AzureCLI@2
-            displayName: 'Helm Lint'
-            inputs:
-              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: > 
-                -Command 'lint' 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              addSpnToEnvironment: true          
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s'
 
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'

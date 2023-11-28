@@ -21,6 +21,9 @@ stage: Application_CI
     job: Initialise
       steps: 
         task: GetAppVersion
+    job: Lint
+      steps: 
+        task: Helm Lint
     job: Build
     dependsOn: Initialise
       steps:         
@@ -44,12 +47,11 @@ stage: Application_CI
         task: Docker Build Image
         task: Snyk container security scan # Fail pipeline for threashold breach, if PR build
     job: BuildHelmChart
-    dependsOn: Initialise
-        task: Helm Lint
+    dependsOn: Initialise,Lint        
         task: Helm Add KV Roleassignment template to ASO Infra helm chart
         task: Helm Build Chart
     job: Publish Artifacts
-    dependsOn: Initialise,BuildDockerImage,BuildHelmChart
+    dependsOn: Initialise,Build,BuildDockerImage,BuildHelmChart
         task: Publish Artifact - code version
         task: Publish Artifact - docker image
         task: Publish Artifact - helm chart
