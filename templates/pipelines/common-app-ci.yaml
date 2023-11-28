@@ -114,7 +114,7 @@ stages:
             path: s/
           - checkout: PipelineCommon
             path: s/PipelineCommon       
-               
+
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
               parameters:
@@ -156,7 +156,7 @@ stages:
             succeeded('Initialise'),
             ${{ eq(parameters.deployConfigOnly, false) }}    
           )
-        dependsOn: Initialise
+        dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
@@ -339,11 +339,11 @@ stages:
             condition:  |
               or(
                 eq( variables.IsDefaultBranchBuild, true),
+                eq(${{ parameters.deployConfigOnly }}, true),
                 and(
                   or(
                     eq(variables.IsPrBuild, true),
-                    eq(${{ parameters.deployFromFeature }},true),
-                    eq(${{ parameters.deployConfigOnly }}, true)
+                    eq(${{ parameters.deployFromFeature }},true)                    
                   ),
                   eq('${{ deploymentEnv.type }}','dev')
                 ) 
