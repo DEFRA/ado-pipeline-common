@@ -76,13 +76,7 @@ stages:
       - job: Lint
         displayName: 'Lint' 
         condition: |
-          and(
-            succeeded('Initialise'),
-            ${{ eq(parameters.deployConfigOnly, false) }}
-          )
-        dependsOn: Initialise
-        variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]     
+          ${{ eq(parameters.deployConfigOnly, false) }}
         steps:
           - checkout: self
             path: s/
@@ -104,14 +98,6 @@ stages:
               addSpnToEnvironment: true          
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
-          - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
-            - task: Npm@1
-              displayName: 'npm lint'
-              inputs:
-                command: custom
-                verbose: false
-                customCommand: 'run --if-present test:lint'
-              continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
       - job: Build
         displayName: 'Build'  
@@ -120,7 +106,7 @@ stages:
             succeeded(),
             ${{ eq(parameters.deployConfigOnly, false) }}
           )
-        dependsOn:  [Initialise,Lint]
+        dependsOn:  [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
@@ -170,7 +156,7 @@ stages:
             succeeded(),
             ${{ eq(parameters.deployConfigOnly, false) }}    
           )
-        dependsOn:  [Initialise,Lint]
+        dependsOn:  [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
@@ -235,6 +221,21 @@ stages:
               path: $(Pipeline.Workspace)/helm
               cacheHitVar: CACHE_RESTORED
           
+          - task: AzureCLI@2
+            displayName: 'Helm Lint'
+            inputs:
+              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: > 
+                -Command 'lint' 
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              addSpnToEnvironment: true          
+              failOnStandardError: false
+              workingDirectory: '$(Pipeline.Workspace)/s'
+
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
             inputs:
