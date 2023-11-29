@@ -64,6 +64,10 @@ try {
     
         Write-Output "${functionName}:Build Complete"    
     }
+    elseif ("Test" -eq $Command) {
+        Invoke-CommandLine -Command "yarn test:all"                
+        Write-Output "${functionName}:Test Complete"    
+    }
     elseif ("Deploy" -eq $Command) {
         $obj = Invoke-CommandLine -Command "az containerapp show -n $AppName -g $ResourceGroup --query id " -IgnoreErrorCode
         if ($null -ne $obj) {
