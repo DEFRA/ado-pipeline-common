@@ -5,29 +5,26 @@ Helm lint and/or publish using Azure Service Connection
 Helm lint and/or publish using Azure Service Connection
 .PARAMETER AcrName
 Optional. Azure Container Registry used to push the helm chart
-.PARAMETER ImageRepoName
-Optional. Name of the Repo to push the chart in ACR
 .PARAMETER ChartVersion
 Optional. Chart Version 
 .PARAMETER ChartCachePath
 Mandatory. Chart Cache Path on the build agent
 .PARAMETER Command
-Optional. Command to run, lint or publish or Default = LintAndPublish 
+Optional. Command to run, lint, lintandbuild, build or publish or Default = lint 
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 .PARAMETER chartHomeDir
 Mandatory. Directory Path of all helm charts
 .EXAMPLE
-.\HelmLintAndPublish.ps1  AcrName <AcrName> ImageRepoName <ImageRepoName> ChartVersion <ChartVersion> ChartCachePath <ChartCachePath> Command <Command>  PSHelperDirectory <PSHelperDirectory> chartHomeDir <chartHomeDir>
+.\HelmLintAndPublish.ps1  AcrName <AcrName> ChartVersion <ChartVersion> ChartCachePath <ChartCachePath> Command <Command>  PSHelperDirectory <PSHelperDirectory> chartHomeDir <chartHomeDir>
 #> 
 
 [CmdletBinding()]
 param(
     [string] $AcrName,
-    [string] $ImageRepoName,
     [string] $ChartVersion,
     [string] $ChartCachePath = ".",
-    [string] $Command = "LintAndPublish",
+    [string] $Command = "lint",
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [Parameter(Mandatory)]
@@ -39,16 +36,54 @@ function Invoke-HelmLint {
         [Parameter(Mandatory)]
         [string]$HelmChartName
     )
-    begin{
+    begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
     }
     process {
         Write-Host "Build Helm dependencies for $HelmChartName"
-        Invoke-CommandLine -Command "helm dependency build"
+        try {
+            Invoke-CommandLine -Command "helm dependency build"
+        }
+        catch {
+            Invoke-CommandLine -Command "helm dependency update"
+        }
 
         Write-Host "Linting Helm chart $HelmChartName"
         Invoke-CommandLine -Command "helm lint"
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
+function Invoke-HelmLintAndBuild {
+    param(
+        [Parameter(Mandatory)]
+        [string]$HelmChartName,
+        [Parameter(Mandatory)]
+        [string]$ChartVersion,
+        [Parameter(Mandatory)]
+        [string]$PathToSaveChart
+    )
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+    }
+    process {
+        try {
+            Invoke-CommandLine -Command "helm dependency build"
+        }
+        catch {
+            Invoke-CommandLine -Command "helm dependency update"
+        }
+        
+        Invoke-CommandLine -Command "helm lint"
+
+        Invoke-CommandLine -Command "helm package . --version $ChartVersion"
+
+        Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $ChartCachePath"
+        Copy-Item "$helmChartName-$ChartVersion.tgz" -Destination $ChartCachePath -Force 
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -64,12 +99,18 @@ function Invoke-HelmBuild {
         [Parameter(Mandatory)]
         [string]$PathToSaveChart
     )
-    begin{
+    begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
     }
     process {
-        Invoke-CommandLine -Command "helm dependency build"
+        try {
+            Invoke-CommandLine -Command "helm dependency build"
+        }
+        catch {
+            Invoke-CommandLine -Command "helm dependency update"
+        }
+        
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
         Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $ChartCachePath"
@@ -89,19 +130,24 @@ function Invoke-Publish {
         [Parameter(Mandatory)]
         [string]$PathToSaveChart
     )
-    begin{
+    begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
     }
     process {
         Write-Host "Publishing Helm chart $HelmChartName"
         $acrHelmPath = "oci://$AcrName.azurecr.io/helm"
-         if (Test-Path $PathToSaveChart -PathType Leaf) { 
+        if (Test-Path $PathToSaveChart -PathType Leaf) { 
             Write-Host "Publising cached chart $acrHelmPath from $PathToSaveChart"
             Invoke-CommandLine -Command "helm push $PathToSaveChart $acrHelmPath"
         }
         else {    
-            Invoke-CommandLine -Command "helm dependency build"
+            try {
+                Invoke-CommandLine -Command "helm dependency build"
+            }
+            catch {
+                Invoke-CommandLine -Command "helm dependency update"
+            }
             Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
             Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $PathToSaveChart"
@@ -135,7 +181,6 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AcrName=$AcrName"
-Write-Debug "${functionName}:ImageRepoName=$ImageRepoName"
 Write-Debug "${functionName}:ChartVersion=$ChartVersion"
 Write-Debug "${functionName}:ChartCachePath=$ChartCachePath"
 Write-Debug "${functionName}:Command=$Command"
@@ -167,19 +212,22 @@ try {
                 New-Item -ItemType Directory -Force -Path $ChartCachePath
                 Write-Host "Created Chart Cache Path: $ChartCachePath"
             }
-        
-            Invoke-CommandLine -Command "az acr login --name $AcrName"
-
+                
             switch ($Command.ToLower()) {
                 'lint' {
                     Invoke-HelmLint -HelmChartName $helmChartName
                 }
-                'publish' {
-                    Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
-                }
-                'build' {
+                'build' {                    
                     Invoke-HelmBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
                 }
+                'lintandbuild' {
+                    Invoke-HelmLintAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
+                }
+                'publish' {
+                    Invoke-CommandLine -Command "az acr login --name $AcrName"
+                    Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
+                }
+                
             }
         }
         else {
