@@ -74,7 +74,19 @@ stages:
               errorActionPreference: silentlyContinue
               warningPreference: silentlyContinue
             displayName: Build App            
-            name: BuildApp            
+            name: BuildApp    
+
+          - task: PowerShell@2
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndDeployBackstageApp.ps1'
+              arguments: -Command "Test" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
+              errorActionPreference: silentlyContinue
+              warningPreference: silentlyContinue
+            displayName: Test App            
+            name: TestApp 
         
           - task: Cache@2
             displayName: Cache docker
