@@ -314,9 +314,10 @@ stages:
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD ${{ deploymentEnv.name }}'
         variables:
-        - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-          - ${{ if contains( varGroup, deploymentEnv.name) }}:
-            - group: '${{ varGroup }}'
+        - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
+          - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
+            - ${{ if contains( varGroup, deploymentEnv.name) }}:
+              - group: '${{ varGroup }}'
         - name: serviceName
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
@@ -351,18 +352,19 @@ stages:
                       - checkout: Self
                         path: s/ 
                       - checkout: PipelineCommon
-                        path: s/PipelineCommon  
-                      - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-                        - ${{ if contains( varGroup, deploymentEnv.name) }}:
-                          - ${{ each secret in parameters.appDeployConfig.variables }} :
-                            - template: /templates/steps/secrets-import-kv.yaml
-                              parameters:
-                                environmentObj: ${{ deploymentEnv }} 
-                                appDeployConfig: ${{ parameters.appDeployConfig }} 
-                                workingDirectory: '$(Pipeline.Workspace)/s'
-                                serviceName: ${{ parameters.serviceName }}
-                                PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                                secretName: ${{ secret }}       
+                        path: s/PipelineCommon 
+                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}: 
+                        - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
+                          - ${{ if contains( varGroup, deploymentEnv.name) }}:
+                            - ${{ each secret in parameters.appDeployConfig.variables }} :
+                              - template: /templates/steps/secrets-import-kv.yaml
+                                parameters:
+                                  environmentObj: ${{ deploymentEnv }} 
+                                  appDeployConfig: ${{ parameters.appDeployConfig }} 
+                                  workingDirectory: '$(Pipeline.Workspace)/s'
+                                  serviceName: ${{ parameters.serviceName }}
+                                  PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                                  secretName: ${{ secret }}       
                       - template: /templates/steps/appconfig-import.yaml
                         parameters:
                           dryRun: false
