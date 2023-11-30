@@ -44,10 +44,10 @@ stage: Application_CI
         task: Docker Build Image
         task: Snyk container security scan # Fail pipeline for threashold breach, if PR build
     job: BuildHelmChart
-    dependsOn: Initialise        
-        task: Helm Add KV Roleassignment template to ASO Infra helm chart
-        task: Helm Lint
-        task: Helm Build Chart
+    dependsOn: Initialise
+        task: Helm Lint        
+        task: Helm Add KV Roleassignment template to ASO Infra helm chart        
+        task: Helm LintAndBuild Chart
     job: Publish Artifacts
     dependsOn: Initialise,Build,BuildDockerImage,BuildHelmChart
         task: Publish Artifact - code version
