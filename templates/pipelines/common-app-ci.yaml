@@ -73,32 +73,6 @@ stages:
             displayName: GetAppVersion            
             name: GetAppVersion
 
-      - job: Lint
-        displayName: 'Lint' 
-        condition: |
-          ${{ eq(parameters.deployConfigOnly, false) }}
-        steps:
-          - checkout: self
-            path: s/
-
-          - checkout: PipelineCommon
-            path: s/PipelineCommon
-
-          - task: AzureCLI@2
-            displayName: 'Helm Lint'
-            inputs:
-              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: > 
-                -Command 'lint' 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              addSpnToEnvironment: true          
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s'
-
       - job: Build
         displayName: 'Build'  
         condition: |
@@ -203,7 +177,7 @@ stages:
             succeeded(),
             ${{ eq(parameters.deployConfigOnly, false) }}    
           )
-        dependsOn:  [Initialise,Lint]
+        dependsOn:  [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
@@ -233,26 +207,35 @@ stages:
                 -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                 -ServiceName ${{ parameters.serviceName }}
-              workingDirectory: $(Pipeline.Workspace)/s      
+              workingDirectory: $(Pipeline.Workspace)/s   
 
-          - task: AzureCLI@2
-            displayName: 'Helm Build' 
+          - task: PowerShell@2
+            displayName: 'Helm Lint'
             inputs:
-              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
               arguments: > 
-                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
-                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-                -ChartVersion  $(appVersion) 
-                -ChartCachePath '$(Pipeline.Workspace)/helm' 
-                -Command 'build'
+                -Command 'lint' 
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                 -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              addSpnToEnvironment: true          
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s'
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'  
+
+          - task: PowerShell@2
+            displayName: 'Helm Build'
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: > 
+                -ChartVersion  $(appVersion) 
+                -ChartCachePath '$(Pipeline.Workspace)/helm' 
+                -Command 'build' 
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'  
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
