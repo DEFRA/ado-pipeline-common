@@ -87,7 +87,7 @@ stages:
           - checkout: self
             path: s/
           - checkout: PipelineCommon
-            path: s/PipelineCommon
+            path: s/PipelineCommon       
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
@@ -121,26 +121,7 @@ stages:
                 snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
-                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
-          
-          - task: AzureCLI@2
-            displayName: 'Helm Lint'
-            inputs:
-              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: > 
-                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
-                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-                -ChartVersion  $(appVersion) 
-                -ChartCachePath '$(Pipeline.Workspace)/helm' 
-                -Command 'lint' 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              addSpnToEnvironment: true          
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s'
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}                    
             
       - job: BuildDockerImage
         displayName: 'Build Docker Image'
@@ -193,10 +174,10 @@ stages:
         displayName: 'Build Helm Chart'
         condition:  |
           and(
-            succeeded('Initialise'),
+            succeeded(),
             ${{ eq(parameters.deployConfigOnly, false) }}    
           )
-        dependsOn: [Initialise]
+        dependsOn:  [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
@@ -215,6 +196,19 @@ stages:
               cacheHitVar: CACHE_RESTORED
 
           - task: PowerShell@2
+            displayName: 'Helm Lint'
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              arguments: > 
+                -Command 'lint' 
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'               
+
+          - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
             inputs:
               pwsh: true
@@ -226,26 +220,22 @@ stages:
                 -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                 -ServiceName ${{ parameters.serviceName }}
-              workingDirectory: $(Pipeline.Workspace)/s      
+              workingDirectory: $(Pipeline.Workspace)/s    
 
-          - task: AzureCLI@2
-            displayName: 'Helm Build' 
+          - task: PowerShell@2
+            displayName: 'Helm Lint & Build'
             inputs:
-              azureSubscription: '${{ parameters.sharedAcrConfig.serviceConnection}}'
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
               arguments: > 
-                -AcrName '${{ parameters.sharedAcrConfig.name }}' 
-                -ImageRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                 -ChartVersion  $(appVersion) 
                 -ChartCachePath '$(Pipeline.Workspace)/helm' 
-                -Command 'build'
+                -Command 'lintandbuild' 
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                 -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              addSpnToEnvironment: true          
-              failOnStandardError: false
-              workingDirectory: '$(Pipeline.Workspace)/s'
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'  
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
@@ -308,8 +298,8 @@ stages:
             inputs:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
-  - ${{ if or( eq(variables.IsDefaultBranchBuild, true), eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true), eq(parameters.deployConfigOnly, true) ) }}:              
-    - ${{ each deploymentEnv in parameters.environments }}:      
+  - ${{ each deploymentEnv in parameters.environments }}:  
+    - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:                  
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD ${{ deploymentEnv.name }}'
@@ -332,11 +322,11 @@ stages:
             condition:  |
               or(
                 eq( variables.IsDefaultBranchBuild, true),
+                eq(${{ parameters.deployConfigOnly }}, true),
                 and(
                   or(
                     eq(variables.IsPrBuild, true),
-                    eq(${{ parameters.deployFromFeature }},true),
-                    eq(${{ parameters.deployConfigOnly }}, true)
+                    eq(${{ parameters.deployFromFeature }},true)                    
                   ),
                   eq('${{ deploymentEnv.type }}','dev')
                 ) 
