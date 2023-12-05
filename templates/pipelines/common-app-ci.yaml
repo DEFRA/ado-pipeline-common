@@ -340,7 +340,7 @@ stages:
                   eq('${{ deploymentEnv.type }}','dev')
                 ) 
               ) 
-            displayName: 'Publish To ${{ deploymentEnv.name }}'
+            displayName: 'Publish To ${{ deploymentEnv.name }} V$(appVersion)'
             environment: ${{ deploymentEnv.name }}
             strategy:
               runOnce:

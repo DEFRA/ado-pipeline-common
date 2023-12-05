@@ -23,7 +23,6 @@ param(
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory
 )
-Write-Output "##vso[task.setprogress value=0;]Code Version"
 
 Set-StrictMode -Version 3.0
 
@@ -65,7 +64,7 @@ try {
     }
     
     Invoke-CommandLine -Command "git fetch origin"        
-    Write-Output "##vso[task.setprogress value=10;]Code Version"
+    
     #If custom VERSION file exists, read version number from file
     if (Test-Path $versionFilePath -PathType Leaf) {
         $appVersion = (Get-Content $versionFilePath).Trim()
@@ -100,7 +99,7 @@ try {
         Write-Debug "${functionName}: Error identifying version"     
         $exitCode = -2
     }
-    Write-Output "##vso[task.setprogress value=90;]Code Version"
+
     if ($IsDefaultBranchBuild -eq "False") {
         #Check if the version is upgraded
         if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
@@ -118,7 +117,6 @@ try {
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
     Write-Output "##vso[task.setvariable variable=IsDefaultBranchBuild;isOutput=true]$IsDefaultBranchBuild"
-    Write-Output "##vso[task.setprogress value=100;]Code Version"
 }
 catch {
     $exitCode = -2
