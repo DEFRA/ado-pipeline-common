@@ -35,7 +35,6 @@ parameters:
   type: object
 variables:
 - group: NodeJSAppBuild
-- group: NodeJSAppBuild
 - name: IsDefaultBranchBuild
   value: ${{ or( in(variables['Build.SourceBranch'], 'refs/heads/main','refs/heads/master'), contains(variables['Build.SourceBranch'],'refs/tags') ) }}
 - name: IsPrBuild
@@ -72,6 +71,13 @@ stages:
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: GetAppVersion            
             name: GetAppVersion
+
+          - task: PowerShell@2
+            displayName: UpdateBuildNumbner
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "##vso[build.updatebuildnumber]$appVersion"
 
       - job: Build
         displayName: 'Build'  
@@ -302,7 +308,7 @@ stages:
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:                  
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
-        displayName: 'Application CD: ${{ deploymentEnv.name }} - V$(appVersion)'
+        displayName: 'Application CD: ${{ deploymentEnv.name }}'
         variables:
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
