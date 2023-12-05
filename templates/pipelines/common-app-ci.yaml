@@ -77,7 +77,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                Write-Host "##vso[build.updatebuildnumber]$appVersion"
+                Write-Host "##vso[build.updatebuildnumber]$(appVersion)"
 
       - job: Build
         displayName: 'Build'  
