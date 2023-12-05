@@ -308,7 +308,7 @@ stages:
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:                  
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
-        displayName: 'Application CD: ${{ deploymentEnv.name }}'
+        displayName: 'Application CD: ${{ deploymentEnv.name }} $(Build.BuildNumber) - $[variables.appVersion]'
         variables:
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
