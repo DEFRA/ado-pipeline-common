@@ -117,6 +117,7 @@ try {
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
     Write-Output "##vso[task.setvariable variable=IsDefaultBranchBuild;isOutput=true]$IsDefaultBranchBuild"
+    Write-Output "##vso[build.updatebuildnumber]$appVersion$(build.buildnumber)"
 }
 catch {
     $exitCode = -2

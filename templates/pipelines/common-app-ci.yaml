@@ -72,13 +72,6 @@ stages:
             displayName: GetAppVersion            
             name: GetAppVersion
 
-          - task: PowerShell@2
-            displayName: UpdateBuildNumbner
-            inputs:
-              targetType: 'inline'
-              script: |
-                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)"
-
       - job: Build
         displayName: 'Build'  
         condition: |
