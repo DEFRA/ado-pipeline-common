@@ -17,7 +17,9 @@ Mandatory. AppVersion to Set
 param(
     [Parameter(Mandatory)]
     [string] $RunDate,
+    [Parameter(Mandatory)]
     [string] $Revision,
+    [Parameter(Mandatory)]
     [string] $AppVersion = ""
 )
 
@@ -46,7 +48,7 @@ Write-Debug "${functionName}:Revision=$Revision"
 try {
     
     $exitCode = 0
-    Write-Host "##vso[build.updatebuildnumber]$(AppVersion)-$(RunDate)-$(Revision)"   
+    Write-Host "##vso[build.updatebuildnumber]$AppVersion-$RunDate-$Revision"   
 }
 catch {
     $exitCode = -2

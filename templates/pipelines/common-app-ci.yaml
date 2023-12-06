@@ -82,9 +82,9 @@ stages:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Set-BuildDetails.ps1'
               arguments: >
-                -appVersion $(GetAppVersion.appVersion) 
-                -rundate $(rundate) 
-                -revision $(revision) 
+                -AppVersion $(GetAppVersion.appVersion) 
+                -RunDate $(rundate) 
+                -Revision $(revision) 
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: SetBuildDetails            
