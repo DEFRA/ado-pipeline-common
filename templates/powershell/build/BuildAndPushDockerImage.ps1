@@ -147,6 +147,7 @@ function Invoke-DockerBuildAndPush {
         Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
         Invoke-CommandLine -Command "az acr login --name $AcrName"
+        Invoke-CommandLine -Command "docker tag $TagName $AcrTagName"  
         Invoke-CommandLine -Command "docker push $AcrTagName"    
     }
     end {
