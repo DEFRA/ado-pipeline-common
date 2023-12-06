@@ -44,7 +44,7 @@ variables:
 - name: AppConfigModuleDirectory
   value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/app-config'
 - name: rundate
-  value: $(Date:yyyyMMdd)
+  value: $[formatDate(variables['Build.StartTime'], 'yyyyMMdd')]
 - name: revision
   value: $[counter(variables['rundate'], 100)]
 
