@@ -329,8 +329,6 @@ stages:
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
-        - name: appVersion
-          value: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
             name: ${{ deploymentEnv.privateAgentName }}
