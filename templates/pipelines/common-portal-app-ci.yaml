@@ -22,7 +22,11 @@ variables:
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
-  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers' 
+  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+- name: rundate
+  value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
+- name: revision
+  value: $[counter(variables['rundate'], 0)]
 stages:         
   - stage: Application_CI
     displayName: 'Application CI'
@@ -51,6 +55,19 @@ stages:
               workingDirectory: '$(Pipeline.Workspace)/s/source${{ parameters.appBuildConfig.appPath }}'
             displayName: GetAppVersion            
             name: GetAppVersion
+
+          - task: PowerShell@2
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Set-BuildDetails.ps1'
+              arguments: >
+                -AppVersion $(GetAppVersion.appVersion) 
+                -RunDate $(rundate) 
+                -Revision $(revision) 
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s/source'
+            displayName: SetBuildDetails            
+            name: SetBuildDetails
 
       - job: Build
         displayName: 'Build'  
