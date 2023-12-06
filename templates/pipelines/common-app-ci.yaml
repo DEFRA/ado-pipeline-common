@@ -78,11 +78,17 @@ stages:
             name: GetAppVersion
 
           - task: PowerShell@2
-            displayName: UpdateBuildNumbner
             inputs:
-              targetType: 'inline'
-              script: |                
-                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(rundate)-$(revision)"
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Set-BuildDetails.ps1'
+              arguments: >
+                -appVersion $(GetAppVersion.appVersion) 
+                -rundate $(rundate) 
+                -revision $(revision) 
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s/source'
+            displayName: SetBuildDetails            
+            name: SetBuildDetails
 
       - job: Build
         displayName: 'Build'  
