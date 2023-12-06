@@ -117,9 +117,6 @@ try {
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
     Write-Output "##vso[task.setvariable variable=IsDefaultBranchBuild;isOutput=true]$IsDefaultBranchBuild"
-    $date= (Get-Date).ToString("yyyyMMdd-HHmm")
-    $buildNumber = "$appVersion-$date"
-    Write-Output "##vso[build.updatebuildnumber]$buildNumber"
 }
 catch {
     $exitCode = -2

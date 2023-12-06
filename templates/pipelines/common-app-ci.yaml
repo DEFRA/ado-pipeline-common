@@ -82,9 +82,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |                
-                $buildNumber = "$(GetAppVersion.appVersion)-$(rundate)-$(revision)"
-                Write-Host $buildNumber
-                Write-Host "##vso[build.updatebuildnumber]$buildNumber"
+                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(rundate)-$(revision)"
 
       - job: Build
         displayName: 'Build'  
