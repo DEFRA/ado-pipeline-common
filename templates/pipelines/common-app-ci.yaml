@@ -82,7 +82,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                Write-Host "##vso[build.updatebuildnumber]$appVersion-$rundate.$revision"
+                Write-Host "##vso[build.updatebuildnumber]$appVersion$rundate$revision"
 
       - job: Build
         displayName: 'Build'  
