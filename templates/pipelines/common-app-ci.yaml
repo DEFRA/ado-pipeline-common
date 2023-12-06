@@ -46,7 +46,7 @@ variables:
 - name: rundate
   value: $[formatDate(variables['Build.StartTime'], 'yyyyMMdd')]
 - name: revision
-  value: $[counter(variables['rundate'], 100)]
+  value: $[counter(variables['rundate'], 0)]
 
 stages:         
   - stage: Application_CI
