@@ -81,8 +81,10 @@ stages:
             displayName: UpdateBuildNumbner
             inputs:
               targetType: 'inline'
-              script: |
-                Write-Host "##vso[build.updatebuildnumber]$appVersion$rundate$revision"
+              script: |                
+                $buildNumber = "$GetAppVersion.appVersion-$rundate-$revision"
+                Write-Host $buildNumber
+                Write-Host "##vso[build.updatebuildnumber]$buildNumber"
 
       - job: Build
         displayName: 'Build'  
