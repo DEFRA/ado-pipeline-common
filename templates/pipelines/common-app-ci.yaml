@@ -42,7 +42,11 @@ variables:
 - name: PSHelperDirectory
   value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
 - name: AppConfigModuleDirectory
-  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/app-config'  
+  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/app-config'
+- name: rundate
+  value: $(Date:yyyyMMdd)
+- name: revision
+  value: $[counter(variables['rundate'], 100)]
 
 stages:         
   - stage: Application_CI
@@ -72,6 +76,13 @@ stages:
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: GetAppVersion            
             name: GetAppVersion
+
+          - task: PowerShell@2
+            displayName: UpdateBuildNumbner
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "##vso[build.updatebuildnumber]$appVersion-$rundate.$revision"
 
       - job: Build
         displayName: 'Build'  
