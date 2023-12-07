@@ -23,10 +23,10 @@ variables:
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
   value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
-- name: rundate
+- name: RunDate
   value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
-- name: revision
-  value: $[counter(variables['rundate'], 0)]
+- name: Revision
+  value: $[counter(variables['RunDate'], 0)]
 stages:         
   - stage: Application_CI
     displayName: 'Application CI'
@@ -57,17 +57,11 @@ stages:
             name: GetAppVersion
 
           - task: PowerShell@2
+            displayName: UpdateBuildNumbner
             inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Set-BuildDetails.ps1'
-              arguments: >
-                -AppVersion $(GetAppVersion.appVersion) 
-                -RunDate $(rundate) 
-                -Revision $(revision) 
-              pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s/source'
-            displayName: SetBuildDetails            
-            name: SetBuildDetails
+              targetType: 'inline'
+              script: |
+                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$RunDate-$Revision"
 
       - job: Build
         displayName: 'Build'  
