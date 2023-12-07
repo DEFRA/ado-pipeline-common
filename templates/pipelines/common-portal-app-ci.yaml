@@ -22,7 +22,11 @@ variables:
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
-  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers' 
+  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+- name: RunDate
+  value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
+- name: Revision
+  value: $[counter(variables['RunDate'], 0)]
 stages:         
   - stage: Application_CI
     displayName: 'Application CI'
@@ -51,6 +55,13 @@ stages:
               workingDirectory: '$(Pipeline.Workspace)/s/source${{ parameters.appBuildConfig.appPath }}'
             displayName: GetAppVersion            
             name: GetAppVersion
+
+          - task: PowerShell@2
+            displayName: UpdateBuildNumbner
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
 
       - job: Build
         displayName: 'Build'  
