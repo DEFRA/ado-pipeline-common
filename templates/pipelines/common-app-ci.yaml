@@ -35,7 +35,6 @@ parameters:
   type: object
 variables:
 - group: NodeJSAppBuild
-- group: NodeJSAppBuild
 - name: IsDefaultBranchBuild
   value: ${{ or( in(variables['Build.SourceBranch'], 'refs/heads/main','refs/heads/master'), contains(variables['Build.SourceBranch'],'refs/tags') ) }}
 - name: IsPrBuild
@@ -43,7 +42,12 @@ variables:
 - name: PSHelperDirectory
   value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
 - name: AppConfigModuleDirectory
-  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/app-config'  
+  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/app-config'
+- name: RunDate
+  value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
+- name: Revision
+  value: $[counter(variables['RunDate'], 0)]
+
 stages:         
   - stage: Application_CI
     displayName: 'Application CI'
@@ -72,6 +76,13 @@ stages:
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: GetAppVersion            
             name: GetAppVersion
+
+          - task: PowerShell@2
+            displayName: UpdateBuildNumbner
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
 
       - job: Build
         displayName: 'Build'  
@@ -302,7 +313,7 @@ stages:
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:                  
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
-        displayName: 'Application CD ${{ deploymentEnv.name }}'
+        displayName: 'Application CD: ${{ deploymentEnv.name }}'
         variables:
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
