@@ -348,4 +348,5 @@ stages:
                                         AzureCLIScriptType: ${{ deployment.azureCLIScriptType }}
                                         azurePowershellUseCore: ${{ deployment.azurePowershellUseCore }}
                                         scriptArguments: ${{ deployment.scriptArguments }}
+                                        useSystemAccessToken: ${{ deployment.useSystemAccessTokeninScript }}
                                     variables: ${{ variables }}
