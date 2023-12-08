@@ -144,7 +144,7 @@ function Invoke-DockerBuildAndPush {
         Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
     }
     process {
-        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
+        Invoke-CommandLine -Command "docker buildx build --file $DockerFileName -t $TagName --platform=$TargetPlatform ."
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
         Invoke-CommandLine -Command "az acr login --name $AcrName"
         Invoke-CommandLine -Command "docker tag $TagName $AcrTagName"  
