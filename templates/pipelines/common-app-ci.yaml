@@ -114,6 +114,7 @@ stages:
                 projectPath: ${{ parameters.appBuildConfig.projectPath }}
                 testProjectPath: ${{ parameters.appBuildConfig.testProjectPath }}
                 packageFeedName: ${{ parameters.packageFeedName }}
+                sonarConfig: ${{ parameters.sonarConfig }}
 
           - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
             - template: /templates/steps/nodejs-build.yaml
