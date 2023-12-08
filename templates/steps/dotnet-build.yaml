@@ -14,9 +14,7 @@ parameters:
   - name: packageFeedName
     type: string
     default: ''     
-  - name: sonarConfig
-    type: object
-    default: ''   
+  
 steps:
   - task: UseDotNet@2
     displayName: UseDotNet
@@ -40,7 +38,11 @@ steps:
     inputs:
         command: test
         projects: ${{ parameters.testProjectPath }}
-        arguments: '-c Release --no-build -l trx -r "$(Build.StagingDirectory)/${{ parameters.sonarConfig.testArtifactsDir }}" --collect "Code coverage"'
+        arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=cobertura --collect "Code Coverage"'
         publishTestResults: true
         testRunTitle: 'Unit Tests'
 
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: 'Cobertura'
+      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.cobertura.xml'
