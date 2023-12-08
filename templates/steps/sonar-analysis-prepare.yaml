@@ -22,6 +22,8 @@ steps:
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+          sonar.cs.vstest.reportsPaths=$(Build.StagingDirectory)/${{ parameters.sonarConfig.testArtifactsDir }}/.trx
+          sonar.cs.vscoveragexml.reportsPaths=$(Build.StagingDirectory)/${{ parameters.sonarConfig.testArtifactsDir }}/*/*.coverage
 
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
       scannerMode: CLI
@@ -30,15 +32,15 @@ steps:
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
-          sonar.javascript.lcov.reportPaths=test-output/lcov.info
-          sonar.coverage.jacoco.xmlReportPaths=test-output/junit.xml
+          sonar.javascript.lcov.reportPaths=${{ parameters.sonarConfig.lcovReportPaths }}
+          sonar.coverage.jacoco.xmlReportPaths=${{ parameters.sonarConfig.xmlReportPaths }}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
-          sonar.javascript.lcov.reportPaths=test-output/lcov.info
-          sonar.coverage.jacoco.xmlReportPaths=test-output/junit.xml
+          sonar.javascript.lcov.reportPaths=${{ parameters.sonarConfig.lcovReportPaths }}
+          sonar.coverage.jacoco.xmlReportPaths=${{ parameters.sonarConfig.xmlReportPaths }}
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)

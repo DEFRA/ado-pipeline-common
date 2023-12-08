@@ -137,8 +137,7 @@ stages:
           - task: PublishCodeCoverageResults@1
             inputs:
               codeCoverageTool: 'Cobertura'
-              summaryFileLocation: 'test-output/cobertura-coverage.xml'
-              reportDirectory: 'test-output/lcov-report'
+              summaryFileLocation: ${{ parameters.sonarConfig.summaryFileLocation }}
 
       - job: BuildDockerImage
         displayName: 'Build Docker Image'

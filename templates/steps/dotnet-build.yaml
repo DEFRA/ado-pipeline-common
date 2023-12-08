@@ -37,6 +37,7 @@ steps:
     inputs:
         command: test
         projects: ${{ parameters.testProjectPath }}
-        arguments: '--collect "Code coverage"'
+        arguments: '-c Release --no-build -l trx -r "$(Build.StagingDirectory)/${{ parameters.sonarConfig.testArtifactsDir }}" --collect "Code coverage"'
         publishTestResults: true
+        testRunTitle: 'Unit Tests'
 
