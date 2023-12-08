@@ -132,7 +132,11 @@ stages:
                 snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
-                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}                    
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}  
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifact: drop'
+            inputs:
+              PathtoPublish: '$(Pipeline.Workspace)/s'
           - task: PublishCodeCoverageResults@1
             inputs:
               codeCoverageTool: 'Cobertura'
