@@ -137,7 +137,7 @@ stages:
           - task: PublishCodeCoverageResults@1
             inputs:
               codeCoverageTool: 'Cobertura'
-              summaryFileLocation: ${{ parameters.sonarConfig.summaryFileLocation }}
+              summaryFileLocation: ${{ parameters.sonarConfig.nodejs.summaryFileLocation }}
 
       - job: BuildDockerImage
         displayName: 'Build Docker Image'
