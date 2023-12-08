@@ -138,7 +138,7 @@ stages:
             inputs:
               codeCoverageTool: 'Cobertura'
               summaryFileLocation: 'test-output/cobertura-coverage.xml'
-              reportDirectory: 'test-output'
+              reportDirectory: 'test-output/lcov-report'
 
       - job: BuildDockerImage
         displayName: 'Build Docker Image'
