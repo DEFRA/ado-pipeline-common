@@ -30,6 +30,8 @@ steps:
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
+          sonar.javascript.lcov.reportPaths=./test-output/lcov.info
+          sonar.coverage.jacoco.xmlReportPaths=./test-output/junit.xml
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}

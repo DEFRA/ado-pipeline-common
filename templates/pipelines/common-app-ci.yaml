@@ -133,7 +133,12 @@ stages:
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}                    
-            
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: './test-output'
+              reportDirectory: './test-output'
+
       - job: BuildDockerImage
         displayName: 'Build Docker Image'
         condition:  |
