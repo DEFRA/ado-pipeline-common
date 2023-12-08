@@ -37,6 +37,8 @@ steps:
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
+          sonar.javascript.lcov.reportPaths=test-output/lcov.info
+          sonar.coverage.jacoco.xmlReportPaths=test-output/junit.xml
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
