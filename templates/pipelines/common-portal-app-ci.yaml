@@ -57,7 +57,7 @@ stages:
             name: GetAppVersion
 
           - task: PowerShell@2
-            displayName: UpdateBuildNumbner
+            displayName: UpdateBuildNumber
             inputs:
               targetType: 'inline'
               script: |
@@ -74,6 +74,13 @@ stages:
             path: s/
           - checkout: PipelineCommon
             path: s/PipelineCommon          
+
+          - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
+            - template: /templates/steps/sonar-analysis-prepare.yaml
+              parameters:
+                sonarConfig: ${{ parameters.sonarConfig }}
+                appBuildConfig: ${{ parameters.appBuildConfig }}
+                appVersion: $(appVersion)
 
           - task: PowerShell@2
             inputs:
@@ -98,6 +105,9 @@ stages:
               warningPreference: silentlyContinue
             displayName: Test App            
             name: TestApp 
+
+          - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
+            - template: /templates/steps/sonar-analysis.yaml
         
           - task: Cache@2
             displayName: Cache docker

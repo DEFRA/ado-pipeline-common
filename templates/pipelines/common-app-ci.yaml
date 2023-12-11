@@ -78,7 +78,7 @@ stages:
             name: GetAppVersion
 
           - task: PowerShell@2
-            displayName: UpdateBuildNumbner
+            displayName: UpdateBuildNumber
             inputs:
               targetType: 'inline'
               script: |
