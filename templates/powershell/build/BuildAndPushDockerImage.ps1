@@ -26,7 +26,7 @@ Optional. Target Flatform for Docker build
 
 [CmdletBinding()]
 param(
-    [string] $AcrName="",
+    [string] $AcrName = "",
     [Parameter(Mandatory)]
     [string] $AcrRepoName,
     [Parameter(Mandatory)]
@@ -147,6 +147,7 @@ function Invoke-DockerBuildAndPush {
         Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
         Invoke-CommandLine -Command "az acr login --name $AcrName"
+        Invoke-CommandLine -Command "docker tag $TagName $AcrTagName"  
         Invoke-CommandLine -Command "docker push $AcrTagName"    
     }
     end {
@@ -184,6 +185,7 @@ try {
     Import-Module $PSHelperDirectory -Force
 
     #Application Image
+    [string]$AcrName = $AcrName.ToLower()
     Write-Host "Processing Application Docker file: Dockerfile"
     [string]$tagName = $AcrRepoName + ":" + $ImageVersion
     [string]$AcrtagName = $AcrName + ".azurecr.io/image/" + $tagName
