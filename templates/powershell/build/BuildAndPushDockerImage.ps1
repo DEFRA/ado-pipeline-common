@@ -26,7 +26,7 @@ Optional. Target Flatform for Docker build
 
 [CmdletBinding()]
 param(
-    [string] $AcrName="",
+    [string] $AcrName = "",
     [Parameter(Mandatory)]
     [string] $AcrRepoName,
     [Parameter(Mandatory)]
@@ -185,6 +185,7 @@ try {
     Import-Module $PSHelperDirectory -Force
 
     #Application Image
+    [string]$AcrName = $AcrName.ToLower()
     Write-Host "Processing Application Docker file: Dockerfile"
     [string]$tagName = $AcrRepoName + ":" + $ImageVersion
     [string]$AcrtagName = $AcrName + ".azurecr.io/image/" + $tagName
