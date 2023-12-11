@@ -106,15 +106,17 @@ stages:
               errorActionPreference: silentlyContinue
               warningPreference: silentlyContinue
             displayName: Test App            
-            name: TestApp 
-
-          - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
-            - template: /templates/steps/sonar-analysis.yaml
+            name: TestApp           
 
           - task: PublishCodeCoverageResults@1
             inputs:
               codeCoverageTool: 'Cobertura'
-              summaryFileLocation: ${{ parameters.sonarConfig.nodejs.summaryFileLocation }}
+              summaryFileLocation: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.sonarConfig.nodejs.summaryFileLocation }}'
+              pathToSources: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
+              reportDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.sonarConfig.nodejs.reportDirectory }}'
+
+          - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
+            - template: /templates/steps/sonar-analysis.yaml
         
           - task: Cache@2
             displayName: Cache docker
