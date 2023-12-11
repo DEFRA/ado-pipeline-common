@@ -22,6 +22,10 @@ steps:
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+          sonar.exclusions=**/obj/**,**/Migrations/*
+          sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
+          sonar.cs.vscoveragexml.reportsPaths=$(Agent.TempDirectory)/**/*.coverage
+          sonar.qualitygate.wait=true
 
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
       scannerMode: CLI
@@ -30,11 +34,15 @@ steps:
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
+          sonar.javascript.lcov.reportPaths=${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
+          sonar.coverage.jacoco.xmlReportPaths=${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
+          sonar.javascript.lcov.reportPaths=${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
+          sonar.coverage.jacoco.xmlReportPaths=${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
