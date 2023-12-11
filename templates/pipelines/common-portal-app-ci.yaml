@@ -9,6 +9,8 @@ parameters:
   default: ''
 - name: environments
   type: object
+- name: sonarConfig
+  type: object
 - name: snykConfig
   type: object
 - name: appBuildConfig
@@ -108,6 +110,11 @@ stages:
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis.yaml
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: ${{ parameters.sonarConfig.nodejs.summaryFileLocation }}
         
           - task: Cache@2
             displayName: Cache docker
