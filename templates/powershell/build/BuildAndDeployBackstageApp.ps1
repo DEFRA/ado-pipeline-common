@@ -65,7 +65,8 @@ try {
         Write-Output "${functionName}:Build Complete"    
     }
     elseif ("Test" -eq $Command) {
-        Invoke-CommandLine -Command "yarn test:all"                
+        Invoke-CommandLine -Command "yarn test:all"   
+        Invoke-CommandLine -Command "yarn test:cobertura"              
         Write-Output "${functionName}:Test Complete"    
     }
     elseif ("Deploy" -eq $Command) {

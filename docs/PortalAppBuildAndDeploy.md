@@ -24,7 +24,10 @@ stage: Application_CI
     job: Build
     dependsOn: Initialise
       steps: 
+        task: Sonar Analysis prepare
         task: Yarn Build
+        task: Sonar Analysis Publish
+        task: Publish Code Coverage Results
         task: Docker Build Image
         task: Snyk container security scan # Fail pipeline for threashold breach, if PR build
     job: Publish Artifacts

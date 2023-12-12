@@ -30,6 +30,7 @@ stage: Application_CI
             task: DotNetCoreCLI Restore
             task: DotNetCoreCLI Build
             task: DotNetCoreCLI test
+            task: Publish Code Coverage Results
         # if Node JS App
             task: NodeTool Version
             task: Npm ci
@@ -37,6 +38,7 @@ stage: Application_CI
             task: Npm lint      # if-present, Fail pipeline for threashold breach, if PR build
             task: Npm build     # if-present
             task: Npm unit test # if-present
+            task: Publish Code Coverage Results
         task: Sonar Analysis Publish
         task: Snyk application security scan # Fail pipeline for threashold breach, if PR build        
     job: BuildDockerImage
