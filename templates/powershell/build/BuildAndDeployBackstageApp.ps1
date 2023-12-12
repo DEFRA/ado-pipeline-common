@@ -58,9 +58,9 @@ try {
     Import-Module $PSHelperDirectory -Force   
 
     if ("Build" -eq $Command) {
-        Invoke-CommandLine -Command "yarn install --frozen-lockfile"        
-        Invoke-CommandLine -Command "yarn tsc"        
-        Invoke-CommandLine -Command "yarn build:backend"        
+        yarn install --frozen-lockfile
+        yarn tsc
+        yarn build:backend
     
         Write-Output "${functionName}:Build Complete"    
     }
