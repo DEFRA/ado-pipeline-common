@@ -63,10 +63,7 @@ try {
     [string]$entity = "default/component/" + $ComponentName
     [string]$siteDir = "site" 
     $storageAccountkey = Invoke-CommandLine -Command "(az storage account keys list -g $ResourceGroup -n $StorageAccountName | ConvertFrom-Json)[0].value"
-    New-Item -Path "." -Name vdir -ItemType "directory"
     npm install -g @techdocs/cli
-    python -m venv vdir
-    source vdir/bin/activate
     pip3 install mkdocs-techdocs-core
     #Following command expects the source to be in docs directory and generates the site folder     
     techdocs-cli generate --no-docker --source-dir . --output-dir $siteDir

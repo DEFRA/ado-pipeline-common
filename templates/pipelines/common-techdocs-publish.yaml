@@ -25,6 +25,8 @@ stages:
         variables:
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+        - name: venv
+          value: $(System.DefaultWorkingDirectory)/venv
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
             name: ${{ deploymentEnv.privateAgentName }}
@@ -39,6 +41,10 @@ stages:
               runOnce:
                 deploy:          
                   steps:
+                    - script: |
+                        mkdir $(venv)
+                        python -m venv $(venv)
+                        set Path=$(venv)/bin;%Path%
                     - checkout: ${{ parameters.repoName }}  
                       path: s/docs 
                     - checkout: PipelineCommon
