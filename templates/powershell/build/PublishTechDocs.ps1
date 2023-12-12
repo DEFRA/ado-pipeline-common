@@ -66,7 +66,7 @@ try {
     npm install -g @techdocs/cli
     pip3 install mkdocs-techdocs-core
     #Following command expects the source to be in docs directory and generates the site folder     
-    techdocs-cli generate --no-docker --source-dir . --output-dir $siteDir
+    techdocs-cli generate --source-dir . --output-dir $siteDir
     Invoke-CommandLine -Command "az storage container create -n $ContainerName --account-name $StorageAccountName"
     techdocs-cli publish --publisher-type azureBlobStorage --azureAccountName $StorageAccountName --storage-name $ContainerName --entity $entity --azureAccountKey $storageAccountkey --directory $siteDir
     
