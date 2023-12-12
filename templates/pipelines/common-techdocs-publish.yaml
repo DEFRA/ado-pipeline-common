@@ -45,15 +45,15 @@ stages:
                       path: s/PipelineCommon
                     - task: AzureCLI@2
                       inputs:
-                        azureSubscription: ${{ parameters.deploymentEnv.serviceConnection }}
+                        azureSubscription: ${{ deploymentEnv.serviceConnection }}
                         scriptType: pscore
                         scriptLocation: scriptPath
                         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/PublishTechDocs.ps1'
                         arguments: > 
-                          -StorageAccountName ${{ parameters.deploymentEnv.StorageAccountName }}  
+                          -StorageAccountName ${{ deploymentEnv.StorageAccountName }}  
                           -ContainerName ${{ parameters.serviceName }}  
-                          -ComponentName ${{ parameters.deploymentEnv.ContainerName }}
-                          -ResourceGroup ${{ parameters.deploymentEnv.resourceGroup }}
+                          -ComponentName ${{ deploymentEnv.ContainerName }}
+                          -ResourceGroup ${{ deploymentEnv.resourceGroup }}
                           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
                         addSpnToEnvironment: true          
                         failOnStandardError: false
