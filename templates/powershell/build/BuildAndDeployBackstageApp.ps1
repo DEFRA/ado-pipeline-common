@@ -60,13 +60,12 @@ try {
     if ("Build" -eq $Command) {
         yarn install --frozen-lockfile
         yarn tsc
-        yarn build:backend
-    
+        yarn build:backend    
         Write-Output "${functionName}:Build Complete"    
     }
     elseif ("Test" -eq $Command) {
-        Invoke-CommandLine -Command "yarn test:all"   
-        Invoke-CommandLine -Command "yarn test:cobertura"              
+        yarn test:all
+        yarn test:cobertura 
         Write-Output "${functionName}:Test Complete"    
     }
     elseif ("Deploy" -eq $Command) {
