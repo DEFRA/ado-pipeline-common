@@ -9,6 +9,8 @@ parameters:
   default: ''
 - name: environments
   type: object
+- name: sonarConfig
+  type: object
 - name: snykConfig
   type: object
 - name: appBuildConfig
@@ -104,7 +106,14 @@ stages:
               errorActionPreference: silentlyContinue
               warningPreference: silentlyContinue
             displayName: Test App            
-            name: TestApp 
+            name: TestApp           
+
+          - task: PublishCodeCoverageResults@1
+            inputs:
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.sonarConfig.nodejs.summaryFileLocation }}'
+              pathToSources: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
+              reportDirectory: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.sonarConfig.nodejs.reportDirectory }}'
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis.yaml
