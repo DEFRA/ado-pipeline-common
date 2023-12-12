@@ -61,14 +61,15 @@ try {
     Import-Module $PSHelperDirectory -Force   
 
     [string]$entity = "default/component/" + $ComponentName
-
+    [string]$siteDir = "site" 
     $storageAccountkey = Invoke-CommandLine -Command "(az storage account keys list -g $ResourceGroup -n $StorageAccountName | ConvertFrom-Json)[0].value"
 
     Invoke-CommandLine -Command "npm install -g @techdocs/cli"        
-    Invoke-CommandLine -Command "pip install 'mkdocs-techdocs-core==1.*'"        
+    Invoke-CommandLine -Command "pip install 'mkdocs-techdocs-core'" 
+    #Following command expects the source to be in docs directory and generates the site folder     
     Invoke-CommandLine -Command "techdocs-cli generate --no-docker"        
-        
-    Invoke-CommandLine -Command "techdocs-cli publish --publisher-type azureBlobStorage --azureAccountName $StorageAccountName --storage-name $ContainerName --entity $entity --azureAccountKey $storageAccountkey"    
+    Invoke-CommandLine -Command "az storage container create -n $ContainerName --account-name $StorageAccountName"
+    Invoke-CommandLine -Command "techdocs-cli publish --publisher-type azureBlobStorage --azureAccountName $StorageAccountName --storage-name $ContainerName --entity $entity --azureAccountKey $storageAccountkey --directory $siteDir"    
     
     Write-Output "${functionName}:Publish Complete" 
        
