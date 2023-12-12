@@ -53,7 +53,7 @@ stages:
                           arguments: > 
                             -StorageAccountName ${{ parameters.environmentObj.StorageAccountName }}  
                             -ContainerName ${{ parameters.serviceName }}  
-                            -ComponentName ${{ parameters.serviceName }}
+                            -ComponentName ${{ parameters.environmentObj.ContainerName }}
                             -ResourceGroup ${{ parameters.environmentObj.resourceGroup }}
                             -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
                           addSpnToEnvironment: true          
