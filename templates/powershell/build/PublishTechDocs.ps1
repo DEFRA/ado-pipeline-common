@@ -64,7 +64,8 @@ try {
     [string]$siteDir = "site" 
     $storageAccountkey = Invoke-CommandLine -Command "(az storage account keys list -g $ResourceGroup -n $StorageAccountName | ConvertFrom-Json)[0].value"
 
-    Invoke-CommandLine -Command "npm install -g @techdocs/cli"        
+    Invoke-CommandLine -Command "npm install -g @techdocs/cli"      
+    Invoke-CommandLine -Command "pip install 'mkdocs'"   
     Invoke-CommandLine -Command "pip install 'mkdocs-techdocs-core'" 
     #Following command expects the source to be in docs directory and generates the site folder     
     techdocs-cli generate --no-docker
