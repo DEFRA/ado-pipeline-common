@@ -51,8 +51,8 @@ stages:
                         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/PublishTechDocs.ps1'
                         arguments: > 
                           -StorageAccountName ${{ deploymentEnv.StorageAccountName }}  
-                          -ContainerName ${{ parameters.serviceName }}  
-                          -ComponentName ${{ deploymentEnv.ContainerName }}
+                          -ContainerName ${{ deploymentEnv.ContainerName }}  
+                          -ComponentName ${{ parameters.serviceName }}
                           -ResourceGroup ${{ deploymentEnv.resourceGroup }}
                           -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                         addSpnToEnvironment: true          
