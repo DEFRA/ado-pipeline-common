@@ -67,7 +67,7 @@ try {
     Invoke-CommandLine -Command "npm install -g @techdocs/cli"        
     Invoke-CommandLine -Command "pip install 'mkdocs-techdocs-core'" 
     #Following command expects the source to be in docs directory and generates the site folder     
-    Invoke-CommandLine -Command "techdocs-cli generate --no-docker"        
+    techdocs-cli generate --no-docker
     Invoke-CommandLine -Command "az storage container create -n $ContainerName --account-name $StorageAccountName"
     Invoke-CommandLine -Command "techdocs-cli publish --publisher-type azureBlobStorage --azureAccountName $StorageAccountName --storage-name $ContainerName --entity $entity --azureAccountKey $storageAccountkey --directory $siteDir"    
     
