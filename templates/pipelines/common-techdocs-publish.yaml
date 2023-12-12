@@ -1,12 +1,11 @@
 parameters:
 - name: serviceName
   type: string
+- name: repoName
+  type: string
 - name: deployFromFeature
   type: boolean
   default: false  
-- name: privateAgentName
-  type: string
-  default: ''
 - name: environments
   type: object
 
@@ -40,7 +39,7 @@ stages:
               runOnce:
                 deploy:          
                   steps:
-                      - checkout: WiKi
+                      - checkout: ${{ parameters.repoName }}  
                         path: s/docs 
                       - checkout: PipelineCommon
                         path: s/PipelineCommon
