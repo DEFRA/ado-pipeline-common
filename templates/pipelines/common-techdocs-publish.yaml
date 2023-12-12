@@ -43,7 +43,7 @@ stages:
                   steps:
                     - script: |
                         mkdir $(venv)
-                        $(buildPython.pythonLocation)\python -m virtualenv $(venv)
+                        $(buildPython.pythonLocation)\python3 -m venv $(venv)
                         set Path=$(venv)/bin;%Path%
                     - checkout: ${{ parameters.repoName }}  
                       path: s/docs 
