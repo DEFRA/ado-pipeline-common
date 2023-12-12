@@ -54,7 +54,7 @@ stages:
                           -ContainerName ${{ parameters.serviceName }}  
                           -ComponentName ${{ deploymentEnv.ContainerName }}
                           -ResourceGroup ${{ deploymentEnv.resourceGroup }}
-                          -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
+                          -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                         addSpnToEnvironment: true          
                         failOnStandardError: false
                         workingDirectory: '$(Pipeline.Workspace)/s'
