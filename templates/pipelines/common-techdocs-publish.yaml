@@ -22,7 +22,7 @@ stages:
     - ${{ each deploymentEnv in parameters.environments }}:      
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
-        displayName: 'Application CD ${{ deploymentEnv.name }}'
+        displayName: '${{ deploymentEnv.name }}'
         variables:
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
@@ -46,15 +46,15 @@ stages:
                         path: s/PipelineCommon
                       - task: AzureCLI@2
                         inputs:
-                          azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+                          azureSubscription: ${{ parameters.deploymentEnv.serviceConnection }}
                           scriptType: pscore
                           scriptLocation: scriptPath
                           scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/PublishTechDocs.ps1'
                           arguments: > 
-                            -StorageAccountName ${{ parameters.environmentObj.StorageAccountName }}  
+                            -StorageAccountName ${{ parameters.deploymentEnv.StorageAccountName }}  
                             -ContainerName ${{ parameters.serviceName }}  
-                            -ComponentName ${{ parameters.environmentObj.ContainerName }}
-                            -ResourceGroup ${{ parameters.environmentObj.resourceGroup }}
+                            -ComponentName ${{ parameters.deploymentEnv.ContainerName }}
+                            -ResourceGroup ${{ parameters.deploymentEnv.resourceGroup }}
                             -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
                           addSpnToEnvironment: true          
                           failOnStandardError: false
