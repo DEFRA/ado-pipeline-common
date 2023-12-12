@@ -63,13 +63,15 @@ try {
     [string]$entity = "default/component/" + $ComponentName
     [string]$siteDir = "site" 
     $storageAccountkey = Invoke-CommandLine -Command "(az storage account keys list -g $ResourceGroup -n $StorageAccountName | ConvertFrom-Json)[0].value"
-    #New-Item -Path "." -Name $siteDir -ItemType "directory"
-    Invoke-CommandLine -Command "npm install -g @techdocs/cli" 
-    Invoke-CommandLine -Command "pip3 install mkdocs-techdocs-core" 
+    New-Item -Path "." -Name vdir -ItemType "directory"
+    npm install -g @techdocs/cli
+    python3 -m venv vdir
+    source vdir/bin/activate
+    pip3 install mkdocs-techdocs-core
     #Following command expects the source to be in docs directory and generates the site folder     
-    Invoke-CommandLine -Command "techdocs-cli generate --no-docker --source-dir . --output-dir $siteDir"
+    techdocs-cli generate --no-docker --source-dir . --output-dir $siteDir
     Invoke-CommandLine -Command "az storage container create -n $ContainerName --account-name $StorageAccountName"
-    Invoke-CommandLine -Command "techdocs-cli publish --publisher-type azureBlobStorage --azureAccountName $StorageAccountName --storage-name $ContainerName --entity $entity --azureAccountKey $storageAccountkey --directory $siteDir"    
+    techdocs-cli publish --publisher-type azureBlobStorage --azureAccountName $StorageAccountName --storage-name $ContainerName --entity $entity --azureAccountKey $storageAccountkey --directory $siteDir
     
     Write-Output "${functionName}:Publish Complete" 
        
