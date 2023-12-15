@@ -29,6 +29,7 @@ steps:
 
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
       scannerMode: CLI
+      configFile: 'sonar-project.properties'
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
