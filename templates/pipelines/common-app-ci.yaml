@@ -106,6 +106,7 @@ stages:
                 sonarConfig: ${{ parameters.sonarConfig }}
                 appBuildConfig: ${{ parameters.appBuildConfig }}
                 appVersion: $(appVersion)
+                sonarPropertiesFileDir: '$(Pipeline.Workspace)/s'
 
           - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
             - template: /templates/steps/dotnet-build.yaml
