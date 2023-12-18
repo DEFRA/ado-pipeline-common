@@ -26,9 +26,12 @@ stages:
         - job: Generate
           displayName: 'Generate'     
           steps:
-            - checkout: self
-              path: s/source
-
+            - ${{ if eq(parameters.config.WikiRepoName, '') }}:
+              - checkout: self
+                path: s/source
+            - ${{ if ne(parameters.config.WikiRepoName, '') }}:
+              - checkout: ${{ parameters.config.WikiRepoName }}
+                path: s/source
             - checkout: PipelineCommon
               path: s/PipelineCommon
   
