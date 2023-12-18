@@ -124,12 +124,6 @@ stages:
                 packageFeedName: ${{ parameters.packageFeedName }}  
                 sonarConfig: ${{ parameters.sonarConfig }}  
 
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish Details'
-            inputs:
-              targetPath: '$(Pipeline.Workspace)/s/test-output'
-              artifact: test
-
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis.yaml
 
