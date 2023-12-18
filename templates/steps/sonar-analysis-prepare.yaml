@@ -5,7 +5,7 @@ parameters:
     type: object
   - name: appVersion
     type: string
-  - name: sonarPropertiesFileDir
+  - name: appRootDir
     type: string
 
 steps:   
@@ -31,21 +31,21 @@ steps:
 
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
       scannerMode: CLI
-      configFile: '${{ parameters.sonarPropertiesFileDir}}/sonar-project.properties'
+      configFile: '${{ parameters.appRootDir}}/sonar-project.properties'
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
-          sonar.javascript.lcov.reportPaths=${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
-          sonar.coverage.jacoco.xmlReportPaths=${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
+          sonar.javascript.lcov.reportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
+          sonar.coverage.jacoco.xmlReportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
-          sonar.javascript.lcov.reportPaths=${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
-          sonar.coverage.jacoco.xmlReportPaths=${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
+          sonar.javascript.lcov.reportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
+          sonar.coverage.jacoco.xmlReportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
