@@ -5,6 +5,8 @@ parameters:
     type: object
   - name: appVersion
     type: string
+  - name: sonarPropertiesFileDir
+    type: string
 
 steps:   
 - task: SonarCloudPrepare@1
@@ -29,6 +31,7 @@ steps:
 
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
       scannerMode: CLI
+      configFile: '${{ parameters.sonarPropertiesFileDir}}/sonar-project.properties'
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
