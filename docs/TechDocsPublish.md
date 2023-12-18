@@ -28,7 +28,7 @@ dependsOn: Build
   jobs: 
     deployment: PublishTo<Env>
       steps:
-        task: Download artificats (site)
+        task: Download Artifact (site)
         task: Push site html to storage account      
 
 ```
