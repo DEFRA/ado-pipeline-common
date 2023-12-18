@@ -3,32 +3,34 @@
 Generate and Publish techdocs for backstage app
 .DESCRIPTION
 Generate and Publish techdocs for backstage app
+.PARAMETER Command
+Optional. Build or Publish
 .PARAMETER StorageAccountName
-Mandatory. Storage account to publish the tech docs
+Optional. Storage account to publish the tech docs
 .PARAMETER ContainerName
 Optional. Name of the storage container
-.PARAMETER ComponentName
-Optional. Name of the comnponent
+.PARAMETER EntityName
+Optional. Name of the entity default/component/adp
 .PARAMETER ResourceGroup
 Optional. Resource Group
+.PARAMETER SitePath
+Mandatory. Generated Site Path
 .PARAMETER PSHelperDirectory
-Mandatory. Directory Path of PSHelper module
+Optional. Directory Path of PSHelper module
 
 .EXAMPLE
-.\PublishTechDocs.ps1 -StorageAccountName <StorageAccountName> -ContainerName <ContainerName> -ComponentName <ComponentName> -ResourceGroup <ResourceGroup> -PSHelperDirectory <PSHelperDirectory>
+.\PublishTechDocs.ps1 -Command <Command> -StorageAccountName <StorageAccountName> -ContainerName <ContainerName> -EntityName <EntityName> -ResourceGroup <ResourceGroup> -SitePath <SitePath> -PSHelperDirectory <PSHelperDirectory>
 #> 
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
+    [string]$Command = "Build",
     [string]$StorageAccountName,
-    [Parameter(Mandatory)]
     [string]$ContainerName = "techdocs",
-    [Parameter(Mandatory)]
-    [string]$ComponentName,
-    [Parameter(Mandatory)]
+    [string]$EntityName,
     [string]$ResourceGroup,
     [Parameter(Mandatory)]
+    [string]$SitePath,
     [string]$PSHelperDirectory
 )
 
@@ -50,26 +52,28 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Output "${functionName}:Command=$StorageAccountName"
+Write-Output "${functionName}:Command=$Command"
+Write-Output "${functionName}:StorageAccountName=$StorageAccountName"
 Write-Output "${functionName}:ContainerName=$ContainerName"
-Write-Output "${functionName}:ComponentName=$ComponentName"
+Write-Output "${functionName}:EntityName=$EntityName"
 Write-Output "${functionName}:ResourceGroup=$ResourceGroup"
+Write-Output "${functionName}:SitePath=$SitePath"
 Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
-     
-    Import-Module $PSHelperDirectory -Force   
-
-    [string]$entity = "default/component/" + $ComponentName
-    [string]$siteDir = "site" 
-    $storageAccountkey = Invoke-CommandLine -Command "(az storage account keys list -g $ResourceGroup -n $StorageAccountName | ConvertFrom-Json)[0].value"
+  
     npm install -g @techdocs/cli
     pip3 install mkdocs-techdocs-core
-    #Following command expects the source to be in docs directory and generates the site folder     
-    techdocs-cli generate --source-dir . --output-dir $siteDir
-    Invoke-CommandLine -Command "az storage container create -n $ContainerName --account-name $StorageAccountName"
-    techdocs-cli publish --publisher-type azureBlobStorage --azureAccountName $StorageAccountName --storage-name $ContainerName --entity $entity --azureAccountKey $storageAccountkey --directory $siteDir
-    
+    if ("Build" -eq $Command) {
+        #Following command expects the mkdocs.yml to be in current directory and generates the site folder             
+        techdocs-cli generate --source-dir . --output-dir $SitePath
+    }
+    elseif ("Publish" -eq $Command) {
+        Import-Module $PSHelperDirectory -Force  
+        Invoke-CommandLine -Command "az storage container create -n $ContainerName --account-name $StorageAccountName"
+        $storageAccountkey = Invoke-CommandLine -Command "(az storage account keys list -g $ResourceGroup -n $StorageAccountName | ConvertFrom-Json)[0].value"
+        techdocs-cli publish --publisher-type azureBlobStorage --azureAccountName $StorageAccountName --storage-name $ContainerName --entity $EntityName --azureAccountKey $storageAccountkey --directory $SitePath
+    }            
     Write-Output "${functionName}:Publish Complete" 
        
     $exitCode = 0

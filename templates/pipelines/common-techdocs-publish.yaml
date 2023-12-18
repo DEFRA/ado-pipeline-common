@@ -1,13 +1,10 @@
 parameters:
-- name: serviceName
-  type: string
-- name: repoName
-  type: string
-- name: deployFromFeature
-  type: boolean
-  default: false  
+- name: config
+  type: object
 - name: environments
   type: object
+- name: privateAgentName
+  type: string
 
 variables:
 - name: IsDefaultBranchBuild
@@ -16,15 +13,51 @@ variables:
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
   value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+stages:
+    - stage: Build
+      displayName: 'Build'
+      ${{ if ne(parameters.privateAgentName, '') }}:
+        pool:
+          name: ${{ parameters.privateAgentName }}
+      ${{ if eq(parameters.privateAgentName, '') }}:
+        pool:
+          vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
+      jobs:
+        - job: Generate
+          displayName: 'Generate'     
+          steps:
+            - ${{ if eq(parameters.config.WikiRepoName, '') }}:
+              - checkout: self
+                path: s/source
+            - ${{ if ne(parameters.config.WikiRepoName, '') }}:
+              - checkout: ${{ parameters.config.WikiRepoName }}
+                path: s/source
+            - checkout: PipelineCommon
+              path: s/PipelineCommon
+  
+            - task: PowerShell@2
+              inputs:
+                targetType: filePath
+                filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/PublishTechDocs.ps1'
+                arguments: >
+                 -Command 'Build' 
+                 -SitePath $(System.ArtifactsDirectory)/site
+                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                pwsh: true
+                failOnStderr: true
+                workingDirectory: '$(Pipeline.Workspace)/s/source${{ parameters.config.DocsPath }}'
+              displayName: 'Generate Docs'            
+              name: Generate 
+            - task: PublishPipelineArtifact@1
+              displayName: 'Publish Artifacts'
+              inputs:
+                targetPath: '$(System.ArtifactsDirectory)/site'
+                artifact: site      
 
-stages:                    
     - ${{ each deploymentEnv in parameters.environments }}:      
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: '${{ deploymentEnv.name }}'
-        variables:
-        - name: PSHelperDirectory
-          value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
             name: ${{ deploymentEnv.privateAgentName }}
@@ -39,8 +72,11 @@ stages:
               runOnce:
                 deploy:          
                   steps:
-                    - checkout: ${{ parameters.repoName }}  
-                      path: s/docs 
+                    - task: DownloadPipelineArtifact@2
+                      displayName: 'Download Docs' 
+                      inputs:
+                        artifactName: 'site'
+                        targetPath: $(System.ArtifactsDirectory)/site
                     - checkout: PipelineCommon
                       path: s/PipelineCommon
                     - task: AzureCLI@2
@@ -50,12 +86,14 @@ stages:
                         scriptLocation: scriptPath
                         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/PublishTechDocs.ps1'
                         arguments: > 
+                          -Command 'Publish' 
                           -StorageAccountName ${{ deploymentEnv.StorageAccountName }}  
                           -ContainerName ${{ deploymentEnv.ContainerName }}  
-                          -ComponentName ${{ parameters.serviceName }}
+                          -EntityName ${{ parameters.config.EntityName }}
                           -ResourceGroup ${{ deploymentEnv.resourceGroup }}
+                          -SitePath $(System.ArtifactsDirectory)/site
                           -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                         addSpnToEnvironment: true          
                         failOnStandardError: false
                         workingDirectory: '$(Pipeline.Workspace)/s'
-                      displayName: 'Publish Docs'                         
+                      displayName: 'Publish Docs to Storage'                         
