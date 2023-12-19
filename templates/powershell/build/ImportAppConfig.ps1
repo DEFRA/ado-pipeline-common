@@ -69,12 +69,17 @@ try {
 
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
-
-    if ($ConfigFilePath.EndsWith(".json")) {
-        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -BuildId $BuildId
+    if (Test-Path $ConfigFilePath -PathType Leaf) {
+        if ($ConfigFilePath.EndsWith(".json")) {        
+            Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -BuildId $BuildId        
+        }
+        else {
+            Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -KeyVaultName $KeyVault -BuildId $BuildId        
+        }
+        Write-Host "${functionName} : App config file import completed successfully"
     }
     else {
-        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -KeyVaultName $KeyVault -BuildId $BuildId
+        Write-Host "${functionName} : No app config file found to import"
     }
    
     $exitCode = 0
