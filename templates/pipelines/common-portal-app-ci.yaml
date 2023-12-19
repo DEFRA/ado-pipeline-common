@@ -83,7 +83,7 @@ stages:
                 sonarConfig: ${{ parameters.sonarConfig }}
                 appBuildConfig: ${{ parameters.appBuildConfig }}
                 appVersion: $(appVersion)
-                sonarPropertiesFileDir: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
+                appRootDir: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}'
 
           - task: PowerShell@2
             inputs:
