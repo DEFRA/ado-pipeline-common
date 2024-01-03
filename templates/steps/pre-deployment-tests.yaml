@@ -3,6 +3,9 @@ parameters:
     displayName: Is PR Build
     type: boolean
     default: false   
+  - name: appTestConfig
+    displayName: AppTestConfig
+    type: object
   
 steps:
   - task: PowerShell@2
