@@ -3,7 +3,6 @@ parameters:
     displayName: Is PR Build
     type: boolean
     default: false   
-  - name:    
   
 steps:
   - task: PowerShell@2
@@ -11,30 +10,30 @@ steps:
     inputs:
         targetType: 'inline'
         script: |
-        Write-Host "In Progress: Provision any required resources......."
-        Write-Host "read ./provision.azure.yaml file and create service bus resources like queue and topic using az cli"
-        Write-Host "read ./docker-compose.migrate.yaml file and create pr database using docke compose"
+          Write-Host "In Progress: Provision any required resources......."
+          Write-Host "read ./provision.azure.yaml file and create service bus resources like queue and topic using az cli"
+          Write-Host "read ./docker-compose.migrate.yaml file and create pr database using docke compose"
 
   - task: PowerShell@2
     displayName: Build test image
     inputs:
         targetType: 'inline'
         script: |
-        Write-Host "In Progress: Build test image if ./docker-compose.test.yaml file exist"    
-        Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
+          Write-Host "In Progress: Build test image if ./docker-compose.test.yaml file exist"    
+          Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
 
   - task: PowerShell@2
     displayName: Run tests
     inputs:
         targetType: 'inline'
         script: |
-        Write-Host "In Progress: Run tests if ./docker-compose.test.yaml file exist"     
-        Write-Host "Create powershell module for `Test` related task like 'runTests'"
+          Write-Host "In Progress: Run tests if ./docker-compose.test.yaml file exist"     
+          Write-Host "Create powershell module for `Test` related task like 'runTests'"
 
   - task: PowerShell@2
     displayName: Run Service Acceptance Tests
     inputs:
         targetType: 'inline'
         script: |
-        Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
-        Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
+          Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
+          Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
