@@ -136,7 +136,7 @@ stages:
           #       manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
           #       failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}  
 
-      - job: Pre-Deployment Tests
+      - job: Pre_Deployment_Tests
         displayName: 'Pre-Deployment Tests'  
         condition: |
           and(
