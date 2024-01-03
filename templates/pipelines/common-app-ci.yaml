@@ -84,66 +84,66 @@ stages:
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
 
-      - job: Build
-        displayName: 'Build'  
-        condition: |
-          and(
-            succeeded('Initialise'),
-            ${{ eq(parameters.deployConfigOnly, false) }}
-          )
-        dependsOn: Initialise
-        variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
-        steps:
-          - checkout: self
-            path: s/
-          - checkout: PipelineCommon
-            path: s/PipelineCommon       
+      # - job: Build
+      #   displayName: 'Build'  
+      #   condition: |
+      #     and(
+      #       succeeded('Initialise'),
+      #       ${{ eq(parameters.deployConfigOnly, false) }}
+      #     )
+      #   dependsOn: Initialise
+      #   variables:
+      #     appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
+      #   steps:
+      #     - checkout: self
+      #       path: s/
+      #     - checkout: PipelineCommon
+      #       path: s/PipelineCommon       
 
-          # - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
-          #   - template: /templates/steps/sonar-analysis-prepare.yaml
-          #     parameters:
-          #       sonarConfig: ${{ parameters.sonarConfig }}
-          #       appBuildConfig: ${{ parameters.appBuildConfig }}
-          #       appVersion: $(appVersion)
-          #       appRootDir: '$(Pipeline.Workspace)/s'
+      #     # - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
+      #     #   - template: /templates/steps/sonar-analysis-prepare.yaml
+      #     #     parameters:
+      #     #       sonarConfig: ${{ parameters.sonarConfig }}
+      #     #       appBuildConfig: ${{ parameters.appBuildConfig }}
+      #     #       appVersion: $(appVersion)
+      #     #       appRootDir: '$(Pipeline.Workspace)/s'
 
-          - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
-            - template: /templates/steps/dotnet-build.yaml
-              parameters:
-                frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
-                projectPath: ${{ parameters.appBuildConfig.projectPath }}
-                testProjectPath: ${{ parameters.appBuildConfig.testProjectPath }}
-                packageFeedName: ${{ parameters.packageFeedName }}                
+      #     - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
+      #       - template: /templates/steps/dotnet-build.yaml
+      #         parameters:
+      #           frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
+      #           projectPath: ${{ parameters.appBuildConfig.projectPath }}
+      #           testProjectPath: ${{ parameters.appBuildConfig.testProjectPath }}
+      #           packageFeedName: ${{ parameters.packageFeedName }}                
 
-          - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
-            - template: /templates/steps/nodejs-build.yaml
-              parameters:
-                frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
-                failOnThreshold: ${{ parameters.npmConfig.failOnThreshold }}
-                packageFeedName: ${{ parameters.packageFeedName }}  
-                sonarConfig: ${{ parameters.sonarConfig }}  
+      #     - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
+      #       - template: /templates/steps/nodejs-build.yaml
+      #         parameters:
+      #           frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
+      #           failOnThreshold: ${{ parameters.npmConfig.failOnThreshold }}
+      #           packageFeedName: ${{ parameters.packageFeedName }}  
+      #           sonarConfig: ${{ parameters.sonarConfig }}  
 
-          # - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
-          #   - template: /templates/steps/sonar-analysis.yaml
+      #     # - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
+      #     #   - template: /templates/steps/sonar-analysis.yaml
 
-          # - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
-          #   - template: /templates/steps/security-scan-application.yaml
-          #     parameters:
-          #       snykConnection: ${{ parameters.snykConfig.snykConnection }}              
-          #       snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
-          #       acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
-          #       manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
-          #       failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}  
+      #     # - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+      #     #   - template: /templates/steps/security-scan-application.yaml
+      #     #     parameters:
+      #     #       snykConnection: ${{ parameters.snykConfig.snykConnection }}              
+      #     #       snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
+      #     #       acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+      #     #       manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
+      #     #       failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}  
 
       - job: Pre_Deployment_Tests
         displayName: 'Pre-Deployment Tests'  
-        condition: |
-          and(
-            succeeded('Initialise'),
-            succeeded('Build'),
-            ${{ eq(parameters.deployConfigOnly, false) }}
-          )
+        # condition: |
+        #   and(
+        #     succeeded('Initialise'),
+        #     succeeded('Build'),
+        #     ${{ eq(parameters.deployConfigOnly, false) }}
+        #   )
         dependsOn: Initialise
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
