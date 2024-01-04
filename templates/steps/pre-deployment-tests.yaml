@@ -26,7 +26,7 @@ steps:
       arguments: > 
         -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
         -ServiceName '${{ parameters.serviceName }}'
-        -WorkingDirectory '$(Pipeline.Workspace)/s'
+        -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
       failOnStderr: false
       pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'   

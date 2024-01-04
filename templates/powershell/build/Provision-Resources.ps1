@@ -7,7 +7,7 @@
 Mandatory. Directory Path of Infra Chart HomeDirectory
 .PARAMETER ServiceName
 Mandatory. Service Name
-.PARAMETER WorkingDirectory
+.PARAMETER PipelineCommonDirectory
 Mandatory. Directory Path of PSHelper module
 .EXAMPLE
 
@@ -20,11 +20,11 @@ param(
     # [Parameter(Mandatory)]
     [string]$ServiceName,
     # [Parameter(Mandatory)]
-    [string]$WorkingDirectory
+    [string]$PipelineCommonDirectory
 )
 
 # $InfraChartHomeDir = 'C:\ganesh\projects\defra\repo\github\Defra\ffc-demo-web\helm\ffc-demo-web-infra'
-# $WorkingDirectory = 'C:\ganesh\projects\defra\repo\github\Defra\ado-pipeline-common'
+# $PipelineCommonDirectory = 'C:\ganesh\projects\defra\repo\github\Defra\ado-pipeline-common'
 
 Set-StrictMode -Version 3.0
 
@@ -46,17 +46,17 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:InfraChartHomeDir=$InfraChartHomeDir"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
-Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
+Write-Debug "${functionName}:PipelineCommonDirectory=$PipelineCommonDirectory"
 
 try {
 
     $Global:InfraChartHomeDir = $InfraChartHomeDir
 
-    [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $WorkingDirectory -ChildPath "templates/powershell/modules/ps-helpers"
+    [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $PipelineCommonDirectory -ChildPath "templates/powershell/modules/ps-helpers"
     Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
     Import-Module $moduleDir.FullName -Force
 
-    [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $WorkingDirectory -ChildPath "templates/powershell/modules/resource-provision"
+    [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $PipelineCommonDirectory -ChildPath "templates/powershell/modules/resource-provision"
     Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
     Import-Module $moduleDir.FullName -Force
 
