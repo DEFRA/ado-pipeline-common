@@ -69,10 +69,11 @@ try {
     Write-Host "Build Id = $ENV:BUILD_BUILDID"    
     Write-Host "Build Number = $ENV:BUILD_BUILDNUMBER"  
     
-    if(IsPrBuild -eq "true"){
+    if($IsPrBuild -eq "true"){
         Write-Host "PR Number = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTID"
     }
     else{
+        Write-Host "it is not pr build"
         Write-Host "PR Number 2 = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTID"
     }
 
