@@ -82,8 +82,10 @@ try {
 
     Create-Resources -Environment "Snd1" -RepoName $ServiceName -Pr $PrNumber
 
-    Write-Output "vso[task.setvariable variable=CLAIM3_QUEUE_ADDRESS]ffc-demo-web-pr305-claim3"
-    
+    Write-Output "##vso[task.setvariable variable=CLAIM3_QUEUE_ADDRESS]ffc-demo-web-pr305-claim3"
+    Write-Output "##vso[task.setvariable variable=CLAIM2_QUEUE_ADDRESS;isOutput=true]ffc-demo-web-pr305-claim2"
+    Write-Output "##vso[task.setvariable variable=CLAIM4_QUEUE_ADDRESS;]ffc-demo-web-pr305-claim4"
+    [Environment]::SetEnvironmentVariable("SAUCE_USERNAME", "Ganesh", "User")
     $exitCode = 0
 }
 catch {
