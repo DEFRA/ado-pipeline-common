@@ -33,6 +33,8 @@ steps:
       pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'   
 
+  - bash: 'env | sort'    
+
   - task: PowerShell@2
     displayName: Display System details
     inputs:

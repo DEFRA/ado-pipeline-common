@@ -29,6 +29,11 @@ param(
 
 # $InfraChartHomeDir = 'C:\ganesh\projects\defra\repo\github\Defra\ffc-demo-web\helm\ffc-demo-web-infra'
 # $PipelineCommonDirectory = 'C:\ganesh\projects\defra\repo\github\Defra\ado-pipeline-common'
+# $ServiceName = 'ffc-demo-web'
+# $IsPrBuild = 'true'
+# $BuildId = 438708
+# $ENV:BUILD_BUILDID = 438708
+# $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = 305
 
 Set-StrictMode -Version 3.0
 
@@ -69,15 +74,15 @@ try {
     Write-Host "Build Id = $ENV:BUILD_BUILDID"    
     Write-Host "Build Number = $ENV:BUILD_BUILDNUMBER"  
     
-    if($IsPrBuild -eq "true"){
-        Write-Host "PR Number = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTID"
-    }
-    else{
-        Write-Host "it is not pr build"
-        Write-Host "PR Number 2 = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTID"
+    $PrNumber = ""
+    if($IsPrBuild -eq "true") {
+        Write-Host "PR Number = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER"
+        $PrNumber = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
     }
 
-    # Create-Resources -Environment "Snd1" -RepoName "dummyRepoName" -Pr "dummyPr" 
+    Create-Resources -Environment "Snd1" -RepoName $ServiceName -Pr $PrNumber
+
+    Write-Output "vso[task.setvariable variable=CLAIM3_QUEUE_ADDRESS]ffc-demo-web-pr305-claim3"
     
     $exitCode = 0
 }

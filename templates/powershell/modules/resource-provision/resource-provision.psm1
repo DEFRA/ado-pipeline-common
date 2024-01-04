@@ -5,8 +5,7 @@ function Create-Resources {
 		[string]$Environment,
 		[Parameter(Mandatory)]
 		[string]$RepoName,
-		[Parameter(Mandatory)]
-		[string]$Pr
+		[string]$Pr = ""
 	)
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
@@ -34,7 +33,6 @@ function Delete-Resources {
 		[string]$Environment,
 		[Parameter(Mandatory)]
 		[string]$RepoName,
-		[Parameter(Mandatory)]
 		[string]$Pr
 	)
 	begin {
@@ -58,7 +56,6 @@ function Create-ServiceBusEntities {
 		[string]$Environment,
 		[Parameter(Mandatory)]
 		[string]$RepoName,
-		[Parameter(Mandatory)]
 		[string]$Pr
 	)
 	begin {
@@ -120,7 +117,6 @@ function Create-AllServiceBusEntities {
 		[string]$Environment,
 		[Parameter(Mandatory)]
 		[string]$RepoName,
-		[Parameter(Mandatory)]
 		[string]$Pr
 	)
 	begin {
@@ -182,13 +178,29 @@ function Create-Queues {
 		[Object[]]$Queues,
 		[Parameter(Mandatory)]
 		[string]$RepoName,
-		[Parameter(Mandatory)]
 		[string]$Pr
 	)
-	Create-BuildQueues -Queues $Queues -RepoName $RepoName -Pr $Pr
-	if($Pr){
 
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:Queues=$Queues"
+		Write-Debug "${functionName}:RepoName=$RepoName"
+		Write-Debug "${functionName}:Pr=$Pr"
 	}
+	process {
+		if ($Pr) {
+			Create-PRQueues -Queues $Queues -RepoName $RepoName -Pr $Pr
+		}
+		else{
+			Create-BuildQueues -Queues $Queues -RepoName $RepoName -Pr $Pr
+		}
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
+
+
 }
 
 function Create-BuildQueues {
@@ -197,23 +209,118 @@ function Create-BuildQueues {
 		[Object[]]$Queues,
 		[Parameter(Mandatory)]
 		[string]$RepoName,
-		[Parameter(Mandatory)]
 		[string]$Pr
 	)
-	
-	foreach ($queue in $Queues) {
-		Write-Host "Creating queue $queue"
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:Queues=$Queues"
+		Write-Debug "${functionName}:RepoName=$RepoName"
+		Write-Debug "${functionName}:Pr=$Pr"
+	}
+	process {
+		foreach ($queue in $Queues) {
+			Write-Host "Creating build queue $queue"
+			[string]$buildQueuePrefix = Get-BuildQueuePrefix -RepoName $RepoName -Pr $Pr
+			Write-Debug "${functionName}:buildQueuePrefix=$buildQueuePrefix"
+			Create-Queue -QueueName "$buildQueuePrefix$queue"
+		}
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
 	}
 }
 
-function Get-BuildQueuePrefix {
+function Create-PRQueues {
 	param (
 		[Parameter(Mandatory)]
 		[Object[]]$Queues,
 		[Parameter(Mandatory)]
 		[string]$RepoName,
-		[Parameter(Mandatory)]
 		[string]$Pr
 	)
-	
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:Queues=$Queues"
+		Write-Debug "${functionName}:RepoName=$RepoName"
+		Write-Debug "${functionName}:Pr=$Pr"
+	}
+	process {
+		foreach ($queue in $Queues) {
+			Write-Host "Creating PR queue $queue"
+			[string]$prQueuePrefix = Get-PRQueuePrefix -RepoName $RepoName -Pr $Pr
+			Write-Debug "${functionName}:prQueuePrefix=$prQueuePrefix"
+			Create-Queue -QueueName "$prQueuePrefix$queue"
+		}
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
+}
+
+
+function Get-BuildQueuePrefix {
+	param (
+		[Parameter(Mandatory)]
+		[string]$RepoName,
+		[string]$Pr
+	)
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:RepoName=$RepoName"
+		Write-Debug "${functionName}:Pr=$Pr"
+	}
+	process {
+		if ($Pr) {
+			return "$RepoName-b$ENV:BUILD_BUILDID-$Pr-"
+		}
+		else {
+			return "$RepoName-b$ENV:BUILD_BUILDID-"
+		}
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}	
+}
+
+function Get-PRQueuePrefix {
+	param (
+		[Parameter(Mandatory)]
+		[string]$RepoName,
+		[string]$Pr
+	)
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:RepoName=$RepoName"
+		Write-Debug "${functionName}:Pr=$Pr"
+	}
+	process {
+		return "$RepoName-pr$Pr-"
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}	
+}
+
+function Create-Queue {
+	param (
+		[Parameter(Mandatory)]
+		[string]$QueueName,
+		[string]$SessionOption = ""
+	)
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:QueueName=$QueueName"
+		Write-Debug "${functionName}:SessionOption=$SessionOption"
+	}
+	process {
+		Write-Host "Created Queue = $QueueName"
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
 }
