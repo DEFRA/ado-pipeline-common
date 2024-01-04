@@ -318,7 +318,22 @@ function Create-Queue {
 		Write-Debug "${functionName}:SessionOption=$SessionOption"
 	}
 	process {
+		[string]$serviceBusNameAndRg = Get-ServiceBusResGroupAndNamespace
+        Invoke-CommandLine -Command "az servicebus queue create $serviceBusNameAndRg --name $QueueName --max-size 1024"
 		Write-Host "Created Queue = $QueueName"
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
+}
+
+function Get-ServiceBusResGroupAndNamespace {
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+	}
+	process {
+		return "--resource-group $Global:AzureServiceBusResourceGroup --namespace-name $Global:AzureServiceBusNamespace"
 	}
 	end {
 		Write-Debug "${functionName}:Exited"

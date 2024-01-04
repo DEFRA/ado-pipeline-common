@@ -24,7 +24,12 @@ param(
     # [Parameter(Mandatory)]
     [string]$IsPrBuild,
     # [Parameter(Mandatory)]
-    [string]$BuildId
+    [string]$BuildId,
+    # [Parameter(Mandatory)]
+    [string]$AzureServiceBusResourceGroup,
+    # [Parameter(Mandatory)]
+    [string]$AzureServiceBusNamespace
+
 )
 
 # $InfraChartHomeDir = 'C:\ganesh\projects\defra\repo\github\Defra\ffc-demo-web\helm\ffc-demo-web-infra'
@@ -58,10 +63,14 @@ Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:PipelineCommonDirectory=$PipelineCommonDirectory"
 Write-Debug "${functionName}:IsPrBuild=$IsPrBuild"
 Write-Debug "${functionName}:BuildId=$BuildId"
+Write-Debug "${functionName}:AzureServiceBusResourceGroup=$AzureServiceBusResourceGroup"
+Write-Debug "${functionName}:AzureServiceBusNamespace=$AzureServiceBusNamespace"
 
 try {
 
     $Global:InfraChartHomeDir = $InfraChartHomeDir
+    $Global:AzureServiceBusResourceGroup = $AzureServiceBusResourceGroup
+    $Global:AzureServiceBusNamespace = $AzureServiceBusNamespace
 
     [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $PipelineCommonDirectory -ChildPath "templates/powershell/modules/ps-helpers"
     Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
@@ -83,9 +92,6 @@ try {
     Create-Resources -Environment "Snd1" -RepoName $ServiceName -Pr $PrNumber
 
     Write-Output "##vso[task.setvariable variable=CLAIM3_QUEUE_ADDRESS]ffc-demo-web-pr305-claim3"
-    Write-Output "##vso[task.setvariable variable=CLAIM2_QUEUE_ADDRESS;isOutput=true]ffc-demo-web-pr305-claim2"
-    Write-Output "##vso[task.setvariable variable=CLAIM4_QUEUE_ADDRESS;]ffc-demo-web-pr305-claim4"
-    [Environment]::SetEnvironmentVariable("SAUCE_USERNAME", "Ganesh", "User")
     $exitCode = 0
 }
 catch {
