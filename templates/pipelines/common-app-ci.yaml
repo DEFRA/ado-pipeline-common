@@ -84,6 +84,19 @@ stages:
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
 
+          - task: PowerShell@2
+            displayName: Display Build details
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "Build Id = $(Build.BuildId)"    
+                Write-Host "Build Number = $(Build.BuildNumber)"      
+                Write-Host "Build Reason = $(Build.Reason)"  
+                Write-Host "Build SourceBranch = $(Build.SourceBranch)"  
+                Write-Host "Build SourceBranchName = $(Build.SourceBranchName)"  
+                Write-Host "System PullRequest PullRequestId = $(System.PullRequest.PullRequestId)"  
+                Write-Host "System PullRequest PullRequestNumber = $(System.PullRequest.PullRequestNumber)"  
+
       # - job: Build
       #   displayName: 'Build'  
       #   condition: |
