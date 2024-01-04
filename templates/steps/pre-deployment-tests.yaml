@@ -27,6 +27,8 @@ steps:
         -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
         -ServiceName '${{ parameters.serviceName }}'
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
+        -IsPrBuild ${{ parameters.IsPrBuild }}
+        -BuildId $(Build.BuildId)
       failOnStderr: false
       pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'   

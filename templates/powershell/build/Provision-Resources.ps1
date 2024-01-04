@@ -20,7 +20,11 @@ param(
     # [Parameter(Mandatory)]
     [string]$ServiceName,
     # [Parameter(Mandatory)]
-    [string]$PipelineCommonDirectory
+    [string]$PipelineCommonDirectory,
+    # [Parameter(Mandatory)]
+    [System.Boolean]$IsPrBuild,
+    # [Parameter(Mandatory)]
+    [string]$BuildId
 )
 
 # $InfraChartHomeDir = 'C:\ganesh\projects\defra\repo\github\Defra\ffc-demo-web\helm\ffc-demo-web-infra'
@@ -47,6 +51,8 @@ Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:InfraChartHomeDir=$InfraChartHomeDir"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:PipelineCommonDirectory=$PipelineCommonDirectory"
+Write-Debug "${functionName}:IsPrBuild=$IsPrBuild"
+Write-Debug "${functionName}:BuildId=$BuildId"
 
 try {
 
@@ -60,11 +66,15 @@ try {
     Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
     Import-Module $moduleDir.FullName -Force
 
-    Write-Host "Build Id = $(Build.BuildId)"    
-    Write-Host "Build Number = $(Build.BuildNumber)"      
-    Write-Host "Build Reason = $(Build.Reason)"  
-    Write-Host "Build SourceBranch = $(Build.SourceBranch)"  
-    Write-Host "Build SourceBranchName = $(Build.SourceBranchName)"  
+    Write-Host "Build Id = $ENV:BUILD_BUILDID"    
+    Write-Host "Build Number = $ENV:BUILD_BUILDNUMBER"  
+    
+    if(IsPrBuild -eq $true){
+        Write-Host "PR Number = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTID"
+    }
+    else{
+        Write-Host "PR Number 2 = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTID"
+    }
 
     # Create-Resources -Environment "Snd1" -RepoName "dummyRepoName" -Pr "dummyPr" 
     
