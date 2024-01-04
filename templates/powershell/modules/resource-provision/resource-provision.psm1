@@ -223,7 +223,7 @@ function Create-BuildQueues {
 			Write-Host "Creating build queue $queue"
 			[string]$buildQueuePrefix = Get-BuildQueuePrefix -RepoName $RepoName -Pr $Pr
 			Write-Debug "${functionName}:buildQueuePrefix=$buildQueuePrefix"
-			Create-Queue -QueueName "$buildQueuePrefix$queue"
+			Create-Queue -RandomQueueName "$buildQueuePrefix$queue" -QueueName $queue
 		}
 	}
 	end {
@@ -251,7 +251,7 @@ function Create-PRQueues {
 			Write-Host "Creating PR queue $queue"
 			[string]$prQueuePrefix = Get-PRQueuePrefix -RepoName $RepoName -Pr $Pr
 			Write-Debug "${functionName}:prQueuePrefix=$prQueuePrefix"
-			Create-Queue -QueueName "$prQueuePrefix$queue"
+			Create-Queue -RandomQueueName "$prQueuePrefix$queue" -QueueName $queue
 		}
 	}
 	end {
@@ -308,19 +308,23 @@ function Get-PRQueuePrefix {
 function Create-Queue {
 	param (
 		[Parameter(Mandatory)]
+		[string]$RandomQueueName,
+		[Parameter(Mandatory)]
 		[string]$QueueName,
 		[string]$SessionOption = ""
 	)
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
 		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:RandomQueueName=$RandomQueueName"
 		Write-Debug "${functionName}:QueueName=$QueueName"
 		Write-Debug "${functionName}:SessionOption=$SessionOption"
 	}
 	process {
 		[string]$serviceBusNameAndRg = Get-ServiceBusResGroupAndNamespace
-        Invoke-CommandLine -Command "az servicebus queue create $serviceBusNameAndRg --name $QueueName --max-size 1024"
-		Write-Host "Created Queue = $QueueName"
+        Invoke-CommandLine -Command "az servicebus queue create $serviceBusNameAndRg --name $RandomQueueName --max-size 1024" > $null
+		Write-Host "Created Queue = $RandomQueueName"
+		Write-Output "##vso[task.setvariable variable=$($QueueName)_QUEUE_ADDRESS]$RandomQueueName"
 	}
 	end {
 		Write-Debug "${functionName}:Exited"

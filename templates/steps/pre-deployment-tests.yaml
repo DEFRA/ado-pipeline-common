@@ -53,20 +53,7 @@ steps:
       workingDirectory: '$(Pipeline.Workspace)/s'    
 
   - bash: 'env | sort'    
-
-  - task: PowerShell@2
-    displayName: Display System details
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "Build Id = $(Build.BuildId)"    
-        Write-Host "Build Number = $(Build.BuildNumber)"      
-        Write-Host "Build Reason = $(Build.Reason)"  
-        Write-Host "Build SourceBranch = $(Build.SourceBranch)"  
-        Write-Host "Build SourceBranchName = $(Build.SourceBranchName)"  
-        Write-Host "System PullRequest PullRequestId = $(System.PullRequest.PullRequestId)"  
-        Write-Host "System PullRequest PullRequestNumber = $(System.PullRequest.PullRequestNumber)"             
-
+      
   - task: PowerShell@2
     displayName: Build test image
     inputs:

@@ -91,7 +91,6 @@ try {
 
     Create-Resources -Environment "Snd1" -RepoName $ServiceName -Pr $PrNumber
 
-    Write-Output "##vso[task.setvariable variable=CLAIM3_QUEUE_ADDRESS]ffc-demo-web-pr305-claim3"
     $exitCode = 0
 }
 catch {
