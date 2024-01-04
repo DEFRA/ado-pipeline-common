@@ -22,7 +22,7 @@ param(
     # [Parameter(Mandatory)]
     [string]$PipelineCommonDirectory,
     # [Parameter(Mandatory)]
-    [System.Boolean]$IsPrBuild,
+    [string]$IsPrBuild,
     # [Parameter(Mandatory)]
     [string]$BuildId
 )
@@ -69,7 +69,7 @@ try {
     Write-Host "Build Id = $ENV:BUILD_BUILDID"    
     Write-Host "Build Number = $ENV:BUILD_BUILDNUMBER"  
     
-    if(IsPrBuild -eq $true){
+    if(IsPrBuild -eq "true"){
         Write-Host "PR Number = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTID"
     }
     else{
