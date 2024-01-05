@@ -10,7 +10,7 @@ parameters:
   
 steps:
   - task: PowerShell@2
-    displayName: 'Set Test file variable flags'
+    displayName: 'Set Docker compose test file variable flags'
     inputs:
       targetType: filePath
       filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Set-TestFileVariables.ps1'
@@ -27,10 +27,10 @@ steps:
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Provision-Resources.ps1'
       arguments: > 
         -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
-        -ServiceName '${{ parameters.serviceName }}'
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
+        -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
-        -BuildId $(Build.BuildId)
+        -Environment '${{ parameters.appTestConfig.testEnvironment }}'
         -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.azureServiceBusResourceGroup }}'
         -AzureServiceBusNamespace '${{ parameters.appTestConfig.azureServiceBusNamespace }}'
       addSpnToEnvironment: true
@@ -38,7 +38,8 @@ steps:
       workingDirectory: '$(Pipeline.Workspace)/s'    
 
   - bash: 'env | sort'    
-      
+
+  # Run this task if './docker-compose.test.yaml' file present    
   - task: PowerShell@2
     displayName: Build test image
     condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
@@ -48,6 +49,7 @@ steps:
           Write-Host "In Progress: Build test image if ./docker-compose.test.yaml file exist"    
           Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
 
+  # Run this task if './docker-compose.test.yaml' file present    
   - task: PowerShell@2
     displayName: Run tests
     condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
@@ -57,6 +59,7 @@ steps:
           Write-Host "In Progress: Run tests if ./docker-compose.test.yaml file exist"     
           Write-Host "Create powershell module for `Test` related task like 'runTests'"
 
+  # Run this task if './docker-compose.acceptance.yaml' file present    
   - task: PowerShell@2
     displayName: Run Service Acceptance Tests
     condition: eq(variables['docker_compose_dot_acceptance_yaml'], 'true')
@@ -65,3 +68,22 @@ steps:
         script: |
           Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
           Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
+
+  # Need to verify when to delete resources? After Pre deployment or post deployment test?
+  - task: AzureCLI@2
+    displayName: 'Delete Dynamically provisioned resources'
+    inputs:
+      azureSubscription: ${{ parameters.appTestConfig.serviceConnection }}
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Delete-Resources.ps1'
+      arguments: > 
+        -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
+        -ServiceName '${{ parameters.serviceName }}'
+        -IsPrBuild '${{ parameters.IsPrBuild }}'
+        -Environment '${{ parameters.appTestConfig.testEnvironment }}'
+        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.azureServiceBusResourceGroup }}'
+        -AzureServiceBusNamespace '${{ parameters.appTestConfig.azureServiceBusNamespace }}'
+      addSpnToEnvironment: true
+      failOnStandardError: false
+      workingDirectory: '$(Pipeline.Workspace)/s'           
