@@ -9,37 +9,22 @@ parameters:
     type: object
   
 steps:
-  # - task: PowerShell@2
-  #   displayName: Provision any required resources
-  #   inputs:
-  #       targetType: 'inline'
-  #       script: |
-  #         Write-Host "In Progress: Provision any required resources......."
-  #         Write-Host "read ./provision.azure.yaml file and create service bus resources like queue and topic using az cli"
-  #         Write-Host "read ./docker-compose.migrate.yaml file and create pr database using docke compose"
-
-  # - task: PowerShell@2
-  #   displayName: 'Provision Resources'
-  #   inputs:
-  #     targetType: filePath
-  #     filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Provision-Resources.ps1'
-  #     arguments: > 
-  #       -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
-  #       -ServiceName '${{ parameters.serviceName }}'
-  #       -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
-  #       -IsPrBuild '${{ parameters.IsPrBuild }}'
-  #       -BuildId $(Build.BuildId)
-  #     failOnStderr: false
-  #     pwsh: true
-  #     workingDirectory: '$(Pipeline.Workspace)/s'   
+  - task: PowerShell@2
+    displayName: 'Set Test file variable flags'
+    inputs:
+      targetType: filePath
+      filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Set-TestFileVariables.ps1'
+      failOnStderr: false
+      pwsh: true
+      workingDirectory: '$(Pipeline.Workspace)/s'   
 
   - task: AzureCLI@2
-    displayName: 'Provision Resources'
+    displayName: 'Provision Resources for Tests'
     inputs:
       azureSubscription: ${{ parameters.appTestConfig.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
-      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Provision-Resources.ps1'
+      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Provision-Resources.ps1'
       arguments: > 
         -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
         -ServiceName '${{ parameters.serviceName }}'
@@ -56,6 +41,7 @@ steps:
       
   - task: PowerShell@2
     displayName: Build test image
+    condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
     inputs:
         targetType: 'inline'
         script: |
@@ -64,6 +50,7 @@ steps:
 
   - task: PowerShell@2
     displayName: Run tests
+    condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
     inputs:
         targetType: 'inline'
         script: |
@@ -72,6 +59,7 @@ steps:
 
   - task: PowerShell@2
     displayName: Run Service Acceptance Tests
+    condition: eq(variables['docker_compose_dot_acceptance_yaml'], 'true')
     inputs:
         targetType: 'inline'
         script: |
