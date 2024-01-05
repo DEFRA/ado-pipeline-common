@@ -131,6 +131,7 @@ function Create-AllServiceBusEntities {
 		Create-Queues -Queues $queues -RepoName $RepoName -Pr $Pr
 
 		[Object[]]$topics = Read-ValuesFile -Resource 'topics'
+		Create-Topics -Topics $topics -RepoName $RepoName -Pr $Pr
 
 	}
 	end {
@@ -221,9 +222,9 @@ function Create-BuildQueues {
 	process {
 		foreach ($queue in $Queues) {
 			Write-Host "Creating build queue $queue"
-			[string]$buildQueuePrefix = Get-BuildQueuePrefix -RepoName $RepoName -Pr $Pr
+			[string]$buildQueuePrefix = Get-BuildPrefix -RepoName $RepoName -Pr $Pr
 			Write-Debug "${functionName}:buildQueuePrefix=$buildQueuePrefix"
-			Create-Queue -RandomQueueName "$buildQueuePrefix$queue" -QueueName $queue
+			Create-Queue -QueueName "$buildQueuePrefix$queue" -QueueNameWithoutPrefix $queue
 		}
 	}
 	end {
@@ -249,9 +250,9 @@ function Create-PRQueues {
 	process {
 		foreach ($queue in $Queues) {
 			Write-Host "Creating PR queue $queue"
-			[string]$prQueuePrefix = Get-PRQueuePrefix -RepoName $RepoName -Pr $Pr
+			[string]$prQueuePrefix = Get-PRPrefix -RepoName $RepoName -Pr $Pr
 			Write-Debug "${functionName}:prQueuePrefix=$prQueuePrefix"
-			Create-Queue -RandomQueueName "$prQueuePrefix$queue" -QueueName $queue
+			Create-Queue -QueueName "$prQueuePrefix$queue" -QueueNameWithoutPrefix $queue
 		}
 	}
 	end {
@@ -259,8 +260,7 @@ function Create-PRQueues {
 	}
 }
 
-
-function Get-BuildQueuePrefix {
+function Get-BuildPrefix {
 	param (
 		[Parameter(Mandatory)]
 		[string]$RepoName,
@@ -285,7 +285,7 @@ function Get-BuildQueuePrefix {
 	}	
 }
 
-function Get-PRQueuePrefix {
+function Get-PRPrefix {
 	param (
 		[Parameter(Mandatory)]
 		[string]$RepoName,
@@ -308,23 +308,137 @@ function Get-PRQueuePrefix {
 function Create-Queue {
 	param (
 		[Parameter(Mandatory)]
-		[string]$RandomQueueName,
-		[Parameter(Mandatory)]
 		[string]$QueueName,
+		[Parameter(Mandatory)]
+		[string]$QueueNameWithoutPrefix,
 		[string]$SessionOption = ""
 	)
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
 		Write-Debug "${functionName}:Entered"
-		Write-Debug "${functionName}:RandomQueueName=$RandomQueueName"
 		Write-Debug "${functionName}:QueueName=$QueueName"
+		Write-Debug "${functionName}:QueueNameWithoutPrefix=$QueueNameWithoutPrefix"
 		Write-Debug "${functionName}:SessionOption=$SessionOption"
 	}
 	process {
 		[string]$serviceBusNameAndRg = Get-ServiceBusResGroupAndNamespace
-        Invoke-CommandLine -Command "az servicebus queue create $serviceBusNameAndRg --name $RandomQueueName --max-size 1024" > $null
-		Write-Host "Created Queue = $RandomQueueName"
-		Write-Output "##vso[task.setvariable variable=$($QueueName)_QUEUE_ADDRESS]$RandomQueueName"
+        Invoke-CommandLine -Command "az servicebus queue create $serviceBusNameAndRg --name $QueueName --max-size 1024" > $null
+		Write-Host "Created Queue = $QueueName"
+		Write-Output "##vso[task.setvariable variable=$($QueueNameWithoutPrefix)_QUEUE_ADDRESS]$QueueName"
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
+}
+
+function Create-Topics {
+	param (
+		[Parameter(Mandatory)]
+		[Object[]]$Topics,
+		[Parameter(Mandatory)]
+		[string]$RepoName,
+		[string]$Pr
+	)
+
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:Topics=$Topics"
+		Write-Debug "${functionName}:RepoName=$RepoName"
+		Write-Debug "${functionName}:Pr=$Pr"
+	}
+	process {
+		if ($Pr) {
+			Create-PRTopics -Topics $Topics -RepoName $RepoName -Pr $Pr
+		}
+		else{
+			Create-BuildTopics -Topics $Topics -RepoName $RepoName -Pr $Pr
+		}
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
+}
+
+function Create-BuildTopics {
+	param (
+		[Parameter(Mandatory)]
+		[Object[]]$Topics,
+		[Parameter(Mandatory)]
+		[string]$RepoName,
+		[string]$Pr
+	)
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:Topics=$Topics"
+		Write-Debug "${functionName}:RepoName=$RepoName"
+		Write-Debug "${functionName}:Pr=$Pr"
+	}
+	process {
+		foreach ($topic in $Topics) {
+			Write-Host "Creating build topic $topic"
+			[string]$buildTopicPrefix = Get-BuildPrefix -RepoName $RepoName -Pr $Pr
+			Write-Debug "${functionName}:buildTopicPrefix=$buildTopicPrefix"
+			Create-Topic -TopicName "$buildTopicPrefix$topic" -TopicNameWithoutPrefix $topic
+		}
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
+}
+
+function Create-PRTopics {
+	param (
+		[Parameter(Mandatory)]
+		[Object[]]$Topics,
+		[Parameter(Mandatory)]
+		[string]$RepoName,
+		[string]$Pr
+	)
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:Topics=$Topics"
+		Write-Debug "${functionName}:RepoName=$RepoName"
+		Write-Debug "${functionName}:Pr=$Pr"
+	}
+	process {
+		foreach ($topic in $Topics) {
+			Write-Host "Creating PR topic $topic"
+			[string]$prTopicPrefix = Get-PRPrefix -RepoName $RepoName -Pr $Pr
+			Write-Debug "${functionName}:prTopicPrefix=$prTopicPrefix"
+			Create-Topic -TopicName "$prTopicPrefix$topic" -TopicNameWithoutPrefix $topic
+		}
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
+}
+
+function Create-Topic {
+	param (
+		[Parameter(Mandatory)]
+		[string]$TopicName,
+		[Parameter(Mandatory)]
+		[string]$TopicNameWithoutPrefix,
+		[string]$SessionOption = ""
+	)
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:TopicName=$TopicName"
+		Write-Debug "${functionName}:TopicNameWithoutPrefix=$TopicNameWithoutPrefix"
+		Write-Debug "${functionName}:SessionOption=$SessionOption"
+	}
+	process {
+		[string]$serviceBusNameAndRg = Get-ServiceBusResGroupAndNamespace
+        Invoke-CommandLine -Command "az servicebus topic create $serviceBusNameAndRg --name $TopicName --max-size 1024" > $null
+		Write-Host "Created Topic = $TopicName"
+		Invoke-CommandLine -Command "az servicebus topic subscription create $serviceBusNameAndRg --name $TopicName --topic-name $topicName" > $null
+		Write-Host "Created Topic Subscription = $TopicName"
+		Write-Output "##vso[task.setvariable variable=$($TopicNameWithoutPrefix)_TOPIC_ADDRESS]$TopicName"
+		Write-Output "##vso[task.setvariable variable=$($TopicNameWithoutPrefix)_SUBSCRIPTION_ADDRESS]$TopicName"
 	}
 	end {
 		Write-Debug "${functionName}:Exited"
