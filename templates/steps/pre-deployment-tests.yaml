@@ -91,7 +91,7 @@ steps:
   - ${{ if eq(variables.testVar, 'true') }}:
     - script: "echo '5!'"
 
-    
+
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:
       testDir : '$(Pipeline.Workspace)/s'
