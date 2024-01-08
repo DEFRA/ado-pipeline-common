@@ -198,30 +198,25 @@ stages:
         displayName: 'Pre-Deployment Tests'  
         dependsOn: [Initialise]
         variables:
-          docker_compose_dot_test_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_test_yaml'] ] 
-          docker_compose_dot_acceptance_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_acceptance_yaml'] ]  
+          docker_compose_dot_test_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_test_yaml'],'true') ] 
+          docker_compose_dot_acceptance_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_acceptance_yaml'],'true') ]  
           docker_compose_dot_zap_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'],'true') ]    
-          docker_compose_dot_pa11y_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'] ]    
-          docker_compose_dot_axe_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'] ]    
-          test_acceptance_docker_compose_dot_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'] ]   
-          testvar: 'true'               
+          docker_compose_dot_pa11y_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'],'true') ]    
+          docker_compose_dot_axe_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'],'true') ]    
+          test_acceptance_docker_compose_dot_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'],'true') ]                
         steps:
           - checkout: self
             path: s/
           - checkout: PipelineCommon
             path: s/PipelineCommon       
 
-          - ${{ if variables.docker_compose_dot_zap_yaml }}:
-            - script: "echo '1!'"
-          - ${{ else }}:
-            - script: "echo '$(variables.docker_compose_dot_zap_yaml)'"
-
           - ${{ if ne(parameters.appTestConfig, '') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
               parameters:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
-                appTestConfig: ${{ parameters.appTestConfig }}  
+                appTestConfig: ${{ parameters.appTestConfig }}
+                iszap:   ${{ variables.docker_compose_dot_zap_yaml }}
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
