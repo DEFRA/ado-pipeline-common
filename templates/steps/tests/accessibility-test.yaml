@@ -1,0 +1,25 @@
+parameters:
+  - name: testDir
+    type: string
+  - name: testOuputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+  - name: url
+    type: string
+steps:  
+
+  - pwsh: |
+      sudo mkdir -p -m 777 ${{ parameters.testOuputDir }}
+      sudo mkdir -R 777 ${{ parameters.testOuputDir }}/axe
+      docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p axe down
+      docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
+    displayName: AXE - Run Tests
+
+  - task: PublishPipelineArtifact@1
+    displayName: AXE - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOuputDir }}/axe
+      artifact: $(build.buildid)-axe-results
+    condition: always()

@@ -218,7 +218,7 @@ stages:
                 appTestConfig: ${{ parameters.appTestConfig }}
                 ${{ if variables.docker_compose_dot_zap_yaml }}:
                   isZap: true
-                $[ if eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'],'true') ]:
+                ${{ if variables.docker_compose_dot_axe_yaml }}:
                   isAxe: true
 
       - job: BuildHelmChart

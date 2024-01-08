@@ -80,6 +80,13 @@ steps:
         testOuputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PreDeploy'
         url: ''              
+  - ${{ if parameters.isAxe }}:
+    - template: /templates/steps/tests/accessibility-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'
+        url: ''          
 
   # Need to verify when to delete resources? After Pre deployment or post deployment test?
   - task: AzureCLI@2
