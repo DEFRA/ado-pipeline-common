@@ -186,10 +186,6 @@ stages:
 
       - job: Pre_Deployment_Tests
         displayName: 'Pre-Deployment Tests'  
-        condition: |
-          and(
-            ${{ eq(parameters.deployConfigOnly, false) }}
-          )
         dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ] 
