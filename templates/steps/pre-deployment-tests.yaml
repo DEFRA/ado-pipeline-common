@@ -93,7 +93,7 @@ steps:
   - ${{ if eq(variables.testVar, true) }}:
     - script: "echo '5!'"
   - ${{ else }}:
-    - script: "echo '5!'"
+    - script: "echo '5 else'"
   - ${{ if eq(parameters.DummyParam, true) }}:
     - script: "echo '5!'"  
 
