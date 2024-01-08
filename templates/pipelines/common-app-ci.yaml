@@ -218,7 +218,6 @@ stages:
                 appTestConfig: ${{ parameters.appTestConfig }}
                 ${{ if variables.docker_compose_dot_zap_yaml }}:
                   iszap: true
-                iszap2: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'],'true') ]
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'

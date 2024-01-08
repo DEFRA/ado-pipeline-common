@@ -10,9 +10,6 @@ parameters:
   - name: iszap
     type: boolean 
     default: false
-  - name: iszap2
-    type: boolean 
-    default: false
 
 steps:
   - script: | 
@@ -40,10 +37,8 @@ steps:
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'    
       
-  - ${{ if parameters.iszap }}:
-    - bash: 'env | sort'    
-  - ${{ if parameters.iszap2 }}:
-    - script: 'echo test'   
+
+  - bash: 'env | sort'    
 
   # Run this task if './docker-compose.test.yaml' file present    
   - task: PowerShell@2
