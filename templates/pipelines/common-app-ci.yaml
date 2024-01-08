@@ -198,12 +198,12 @@ stages:
         displayName: 'Pre-Deployment Tests'  
         dependsOn: [Initialise]
         variables:
-          docker_compose_dot_test_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_test_yaml'] ] 
-          docker_compose_dot_acceptance_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_acceptance_yaml'] ]  
-          docker_compose_dot_zap_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_zap_yaml'] ]    
-          docker_compose_dot_pa11y_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_pa11y_yaml'] ]    
-          docker_compose_dot_axe_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_axe_yaml'] ]    
-          test_acceptance_docker_compose_dot_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.test_acceptance_docker_compose_dot_yaml'] ]                  
+          docker_compose_dot_test_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_test_yaml'] ] 
+          docker_compose_dot_acceptance_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_acceptance_yaml'] ]  
+          docker_compose_dot_zap_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'] ]    
+          docker_compose_dot_pa11y_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'] ]    
+          docker_compose_dot_axe_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'] ]    
+          test_acceptance_docker_compose_dot_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'] ]                  
         steps:
           - checkout: self
             path: s/
