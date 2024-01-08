@@ -14,7 +14,7 @@ steps:
       wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
       sudo dpkg -i pandoc-3.1.11-1-amd64.deb
     displayName: 'Pandoc tool'
-    
+
   - task: PowerShell@2
     displayName: 'Set Docker compose test file variable flags'
     inputs:
@@ -74,15 +74,14 @@ steps:
         script: |
           Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
           Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
-
-  - template: /templates/steps/tests/owasp-test.yaml
-    displayName: Run OWASP test
-    condition: eq(variables['docker_compose_dot_zap_yaml'], 'true')  
-    parameters:
-      testDir : '$(Pipeline.Workspace)/s'
-      testOuputDir: '$(Pipeline.Workspace)/s/test-output'
-      typeOfTest: 'PreDeploy'
-      url: ''              
+          
+  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'true') }}:
+    - template: /templates/steps/tests/owasp-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'
+        url: ''              
 
   # Need to verify when to delete resources? After Pre deployment or post deployment test?
   - task: AzureCLI@2
