@@ -6,7 +6,8 @@ parameters:
   - name: typeOfTest
     type: string    
     default: 'PreDeploy'
-    
+  - name: url
+    type: string
 steps:  
 
   - script: |
@@ -22,7 +23,7 @@ steps:
       pandoc $htmlfile -o $mdfile 
       echo "##vso[task.addattachment type=Distributedtask.Core.Summary;name=ZapReport;]$mdfile" 
     displayName: Attach Summary
-    
+
   - task: PublishPipelineArtifact@1
     displayName: Publish Zap Test Report
     inputs:
