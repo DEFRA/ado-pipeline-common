@@ -1,0 +1,31 @@
+parameters:
+  - name: testDir
+    type: string
+  - name: testOuputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+    
+steps:  
+
+  - script: |
+      sudo mkdir -p -m 777 $(testOuputDir)
+      sudo chmod -R 777 $(testDir)/zap
+      docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
+      docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
+    displayName: Run Zap Tests
+
+  - script: | 
+      htmlfile="$(testOuputDir)/zap-report.html" 
+      mdfile="$(System.ArtifactsDirectory)/zap-report.md" 
+      pandoc $htmlfile -o $mdfile 
+      echo "##vso[task.addattachment type=Distributedtask.Core.Summary;name=ZapReport;]$mdfile" 
+    displayName: Attach Summary
+    
+  - task: PublishPipelineArtifact@1
+    displayName: Publish Zap Test Report
+    inputs:
+      targetPath: $(testOuputDir)/zap-report.html
+      artifact: $(build.buildid)-zap-results
+    condition: always() 
