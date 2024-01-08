@@ -37,7 +37,7 @@ steps:
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'    
 
-  - bash: 'env | sort'    
+  # - bash: 'env | sort'    
 
   # Run this task if './docker-compose.test.yaml' file present    
   - task: PowerShell@2

@@ -40,8 +40,8 @@ param(
 
 #------------------------------START : LOCAL TESTING VARIABLES----------------------------------#
 # $Environment = 'snd1'
-# $InfraChartHomeDir = 'C:\ganesh\projects\defra\repo\github\Defra\ffc-demo-web\helm\ffc-demo-web-infra'
-# $PipelineCommonDirectory = 'C:\ganesh\projects\defra\repo\github\Defra\ado-pipeline-common'
+# $InfraChartHomeDir = '.\ffc-demo-web\helm\ffc-demo-web-infra'
+# $PipelineCommonDirectory = '.\ado-pipeline-common'
 # $ServiceName = 'ffc-demo-web'
 # $ENV:BUILD_BUILDID = 438708
 # $IsPrBuild = 'true'

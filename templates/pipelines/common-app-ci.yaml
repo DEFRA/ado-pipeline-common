@@ -136,30 +136,7 @@ stages:
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}  
 
-      - job: Pre_Deployment_Tests
-        displayName: 'Pre-Deployment Tests'  
-        condition: |
-          and(
-            succeeded('Initialise'),
-            succeeded('Build'),
-            ${{ eq(parameters.deployConfigOnly, false) }}
-          )
-        dependsOn: [Initialise,Build]
-        variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
-        steps:
-          - checkout: self
-            path: s/
-          - checkout: PipelineCommon
-            path: s/PipelineCommon       
-
-          - ${{ if ne(parameters.appTestConfig, '') }}:
-            - template: /templates/steps/pre-deployment-tests.yaml
-              parameters:
-                serviceName: ${{ parameters.serviceName }}
-                IsPrBuild: ${{ variables.IsPrBuild }}
-                appTestConfig: ${{ parameters.appTestConfig }}   
-
+       
       - job: BuildDockerImage
         displayName: 'Build Docker Image'
         condition:  |
@@ -206,7 +183,30 @@ stages:
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
-                
+
+      - job: Pre_Deployment_Tests
+        displayName: 'Pre-Deployment Tests'  
+        condition: |
+          and(
+            succeeded('BuildDockerImage'),
+            ${{ eq(parameters.deployConfigOnly, false) }}
+          )
+        dependsOn: [Initialise, BuildDockerImage]
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/PipelineCommon       
+
+          - ${{ if ne(parameters.appTestConfig, '') }}:
+            - template: /templates/steps/pre-deployment-tests.yaml
+              parameters:
+                serviceName: ${{ parameters.serviceName }}
+                IsPrBuild: ${{ variables.IsPrBuild }}
+                appTestConfig: ${{ parameters.appTestConfig }}  
+
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
         condition:  |
@@ -276,7 +276,7 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart,Pre_Deployment_Tests]
         condition: |
           and(
             succeeded(), 

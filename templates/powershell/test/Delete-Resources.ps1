@@ -38,7 +38,7 @@ param(
 
 #------------------------------START : LOCAL TESTING VARIABLES----------------------------------#
 # $Environment = 'snd1'
-# $PipelineCommonDirectory = 'C:\ganesh\projects\defra\repo\github\Defra\ado-pipeline-common'
+# $PipelineCommonDirectory = '.\ado-pipeline-common'
 # $ServiceName = 'ffc-demo-web'
 # $ENV:BUILD_BUILDID = 439548
 # $IsPrBuild = 'false'
