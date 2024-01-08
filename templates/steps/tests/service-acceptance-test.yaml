@@ -1,0 +1,31 @@
+parameters:
+  - name: service
+    type: string
+  - name: testDir
+    type: string
+  - name: testOuputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+  - name: url
+    type: string
+    default: ''
+steps:  
+
+  - pwsh: |
+      sudo mkdir -p -m 777 ${{ parameters.testOuputDir }}
+      sudo chmod -R 777 ${{ parameters.testDir }}/app
+      service="ffc-pay-processing"
+      docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" build
+      docker-compose -f docker-compose.yaml -f docker-compose.migrate.yaml -p "${{ parameters.service }}-acceptance-test" run --rm database-up
+      docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" run --rm "${{ parameters.service }}-test-runner"
+    displayName: Service Acceptance - Run Tests
+    enabled: false
+
+  - task: PublishPipelineArtifact@1
+    displayName: Service Acceptance - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOuputDir }}
+      artifact: $(build.buildid)-acceptance-results
+    condition: always()

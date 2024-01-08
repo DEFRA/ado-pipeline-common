@@ -1,0 +1,28 @@
+parameters:
+  - name: service
+    type: string
+  - name: testDir
+    type: string
+  - name: testOuputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+  - name: url
+    type: string
+    default: ''
+steps:  
+
+  - pwsh: |
+      sudo mkdir -p -m 777 ${{ parameters.testOuputDir }}
+
+      docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" 
+    displayName: Integrtaion - Run Tests
+    enabled: false
+
+  - task: PublishPipelineArtifact@1
+    displayName: Integrtaion - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOuputDir }}
+      artifact: $(build.buildid)-int-results
+    condition: always()

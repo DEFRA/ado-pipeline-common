@@ -3,10 +3,16 @@ parameters:
   - name: IsPrBuild
     displayName: Is PR Build
     type: boolean
-    default: false   
+    default: false       
   - name: appTestConfig
     displayName: AppTestConfig
-    type: object 
+    type: object
+  - name: isIntegration     
+    type: boolean 
+    default: false      
+  - name: isServiceAcceptance     
+    type: boolean 
+    default: false  
   - name: isZap
     type: boolean 
     default: false
@@ -59,25 +65,22 @@ steps:
         Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
 
   # Run this task if './docker-compose.test.yaml' file present    
-  - task: PowerShell@2
-    displayName: Run tests
-    condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "In Progress: Run tests if ./docker-compose.test.yaml file exist"     
-        Write-Host "Create powershell module for `Test` related task like 'runTests'"
+  - ${{ if parameters.isIntegration }}:
+    - template: /templates/steps/tests/service-acceptance-test.yaml
+      parameters:
+        service : '${{ parameters.serviceName }}'
+        testDir : '$(Pipeline.Workspace)/s'
+        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'  
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
-  - task: PowerShell@2
-    displayName: Run Service Acceptance Tests
-    condition: eq(variables['docker_compose_dot_zap_yaml'], 'true')
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
-        Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'" 
-
+  - ${{ if parameters.isServiceAcceptance }}:
+    - template: /templates/steps/tests/service-acceptance-test.yaml
+      parameters:
+        service : '${{ parameters.serviceName }}'
+        testDir : '$(Pipeline.Workspace)/s'
+        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'   
   - ${{ if parameters.isZap }}:
     - template: /templates/steps/tests/owasp-test.yaml
       parameters:
