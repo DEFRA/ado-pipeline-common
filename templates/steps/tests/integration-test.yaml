@@ -25,4 +25,3 @@ steps:
     inputs:
       targetPath: ${{ parameters.testOuputDir }}
       artifact: $(build.buildid)-int-results
-    condition: always()

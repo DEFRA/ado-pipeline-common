@@ -28,4 +28,3 @@ steps:
     inputs:
       targetPath: ${{ parameters.testOuputDir }}
       artifact: $(build.buildid)-acceptance-results
-    condition: always()

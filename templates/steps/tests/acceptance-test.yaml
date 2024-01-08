@@ -41,11 +41,10 @@ steps:
       $mdfile="$(System.ArtifactsDirectory)/acceptance-test-suite-report.md" 
       pandoc $htmlfile -o $mdfile 
       Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=AcceptanceTestReport;]$mdfile" 
-    displayName: ZAP - Attach Summary
+    displayName: Acceptance - Attach Summary
 
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOuputDir }}
       artifact: $(build.buildid)-acceptance-results
-    condition: always()

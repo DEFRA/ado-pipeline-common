@@ -24,7 +24,6 @@ steps:
     inputs:
       targetPath: ${{ parameters.testOuputDir }}
       artifact: $(build.buildid)-jmeter-results
-    condition: always()
 
   - script: |
       JMETER_RESULTS=${{ parameters.testOuputDir }}/testresults.jtl
