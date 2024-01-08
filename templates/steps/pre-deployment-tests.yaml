@@ -72,6 +72,7 @@ steps:
   # Need to verify when to delete resources? After Pre deployment or post deployment test?
   - task: AzureCLI@2
     displayName: 'Delete Dynamically provisioned resources'
+    condition: always()
     inputs:
       azureSubscription: ${{ parameters.appTestConfig.serviceConnection }}
       scriptType: pscore
