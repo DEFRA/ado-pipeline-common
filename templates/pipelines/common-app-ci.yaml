@@ -144,7 +144,7 @@ stages:
             succeeded('Build'),
             ${{ eq(parameters.deployConfigOnly, false) }}
           )
-        dependsOn: Initialise
+        dependsOn: [Initialise,Build]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
