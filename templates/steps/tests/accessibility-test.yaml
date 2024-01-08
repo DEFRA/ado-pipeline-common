@@ -8,6 +8,7 @@ parameters:
     default: 'PreDeploy'
   - name: url
     type: string
+    default: ''
 steps:  
 
   - pwsh: |

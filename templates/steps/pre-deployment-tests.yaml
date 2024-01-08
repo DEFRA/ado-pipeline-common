@@ -13,7 +13,12 @@ parameters:
   - name: isAxe
     type: boolean 
     default: false
-
+  - name: isJmeter
+    type: boolean 
+    default: false
+  - name: isAcceptance
+    type: boolean 
+    default: false
 steps:
   - script: | 
       cd $(System.DefaultWorkingDirectory)
@@ -78,16 +83,26 @@ steps:
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         testOuputDir: '$(Pipeline.Workspace)/s/test-output'
-        typeOfTest: 'PreDeploy'
-        url: ''              
+        typeOfTest: 'PreDeploy' 
   - ${{ if parameters.isAxe }}:
     - template: /templates/steps/tests/accessibility-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'   
+  - ${{ if parameters.isJmeter }}:
+    - template: /templates/steps/tests/performance-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s/test-output/performance'
+        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PreDeploy'
-        url: ''          
-
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
+  - ${{ if parameters.isAcceptance }}:
+    - template: /templates/steps/tests/acceptance-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOuputDir: '$(Pipeline.Workspace)/s/test/acceptance/html-reports'
+        typeOfTest: 'PreDeploy'   
   # Need to verify when to delete resources? After Pre deployment or post deployment test?
   - task: AzureCLI@2
     displayName: 'Delete Dynamically provisioned resources'

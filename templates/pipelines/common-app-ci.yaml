@@ -204,6 +204,7 @@ stages:
           docker_compose_dot_pa11y_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'],'true') ]    
           docker_compose_dot_axe_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'],'true') ]    
           test_acceptance_docker_compose_dot_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'],'true') ]                
+          test_performance_docker_compose_dot_jmeter_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.test_performance_docker_compose_dot_jmeter_yaml'],'true') ] 
         steps:
           - checkout: self
             path: s/
@@ -220,6 +221,10 @@ stages:
                   isZap: true
                 ${{ if variables.docker_compose_dot_axe_yaml }}:
                   isAxe: true
+                ${{ if variables.test_performance_docker_compose_dot_jmeter_yaml }}:
+                  isJmeter: true
+                ${{ if variables.test_acceptance_docker_compose_dot_yaml }}:
+                  isAcceptance: true
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'

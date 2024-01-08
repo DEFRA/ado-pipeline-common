@@ -1,0 +1,51 @@
+parameters:
+  - name: testDir
+    type: string
+  - name: testOuputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+  - name: url
+    type: string
+    default: ''
+steps:  
+
+  - bash: |
+      docker-compose --version
+      sudo apt-get remove docker-compose
+      VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')
+      DESTINATION=/usr/local/bin/docker-compose
+      sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
+      sudo chmod 755 $DESTINATION    
+      docker-compose --version
+    displayName: 'Update docker compose'
+    enabled: true
+
+  - script: |
+      sudo mkdir -p -m 777 ${{ parameters.testOuputDir }}
+      sudo chmod -R 777 ${{ parameters.testDir }}/app
+    
+      docker-compose -f docker-compose.yaml -f docker-compose.override.yaml run --service-ports --build -d --rm ffc-demo-web 
+
+      echo '127.0.0.1 host.docker.internal' | sudo tee -a /etc/hosts
+      IP_ADDRESS=$(ip addr show | grep "\binet\b.*\bdocker0\b" | awk '{print $2}' | cut -d '/' -f 1)
+      echo ${IP_ADDRESS}
+      export TEST_ENVIRONMENT_ROOT_URL=http://${IP_ADDRESS}:3000
+      cd test/acceptance
+      docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --build --abort-on-container-exit
+    displayName: Acceptance - Run Tests
+
+  - pwsh: | 
+      $htmlfile="${{ parameters.testOuputDir }}/acceptance-test-suite-report.html" 
+      $mdfile="$(System.ArtifactsDirectory)/acceptance-test-suite-report.md" 
+      pandoc $htmlfile -o $mdfile 
+      Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=AcceptanceTestReport;]$mdfile" 
+    displayName: ZAP - Attach Summary
+
+  - task: PublishPipelineArtifact@1
+    displayName: Acceptance - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOuputDir }}
+      artifact: $(build.buildid)-acceptance-results
+    condition: always()

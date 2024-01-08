@@ -1,0 +1,48 @@
+parameters:
+  - name: testDir
+    type: string
+  - name: testOuputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+  - name: url
+    type: string
+    default: ''
+  - name: scriptPath
+    type: string
+steps:  
+
+  - pwsh: |
+      sudo mkdir -p -m 777 ${{ parameters.testOuputDir }}
+      cd ${{ parameters.testDir }} 
+      docker-compose -f ../../docker-compose.yaml -f docker-compose.jmeter.yaml run jmeter-test
+    displayName: JMeter - Run Tests
+
+  - task: PublishPipelineArtifact@1
+    displayName: ZAP - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOuputDir }}
+      artifact: $(build.buildid)-jmeter-results
+    condition: always()
+
+  - script: |
+      JMETER_RESULTS=${{ parameters.testOuputDir }}/testresults.jtl
+      JUNIT_RESULTS=${{ parameters.testOuputDir }}/testresults.xml
+      python3 ${{ parameters.scriptPath }} $JMETER_RESULTS $JUNIT_RESULTS
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    displayName: 'Convert JMeter Results to JUnit Format'
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      testRunTitle: 'Performance Test Result'
+      testResultsFiles: '${{ parameters.testOuputDir }}/testresults.xml'
+      failTaskOnFailedTests: true
+    displayName: 'Publish Performance Test Results'
+
+  # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
+  #   displayName: Publish Html Report
+  #   inputs:
+  #     htmlType: Jmeter
+  #     JmeterReportsPath: '/test-output/htmlreport'    
