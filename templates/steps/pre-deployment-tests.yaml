@@ -6,11 +6,7 @@ parameters:
     default: false   
   - name: appTestConfig
     displayName: AppTestConfig
-    type: object
-  - name: DummyParam
-    displayName: Is PR Build
-    type: boolean
-    default: true    
+    type: object 
 
 steps:
   - script: | 
@@ -19,15 +15,6 @@ steps:
       sudo dpkg -i pandoc-3.1.11-1-amd64.deb
     displayName: 'Pandoc tool'
 
-  - task: PowerShell@2
-    name: SetTestVariableFlags
-    displayName: 'Set Docker compose test file variable flags'
-    inputs:
-      targetType: filePath
-      filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Set-TestFileVariables.ps1'
-      failOnStderr: false
-      pwsh: true
-      workingDirectory: '$(Pipeline.Workspace)/s'   
 
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
@@ -84,21 +71,12 @@ steps:
     - script: "echo '1!'"
   - ${{ if eq(variables.docker_compose_dot_zap_yaml, true) }}:
     - script: "echo '2!'"
-  - ${{ if eq(variables['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'], false) }}:
+  - ${{ if eq(variables['docker_compose_dot_pa11y_yaml'], false) }}:
     - script: "echo '3!'"
   - ${{ if eq(variables.DOCKER_COMPOSE_DOT_ZAP_YAML, 'true') }}:
     - script: "echo '4!'"
   - ${{ if eq(variables.testVar, true) }}:
     - script: "echo '5!'"
-  - ${{ else }}:
-    - script: |
-       "echo $(testVar)"
-       "echo ${{ variables.testVar }}"
-       "echo $(TESTVAR)"
-       "echo ${{ variables.TESTVAR }}"
-  - ${{ if eq(parameters.DummyParam, true) }}:
-    - script: "echo '6!'"  
-
 
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:

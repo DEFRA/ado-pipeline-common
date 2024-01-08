@@ -51,34 +51,34 @@ try {
 
     #'./helm/'
     if(Test-Path -Path "$WorkingDirectory/helm/"){
-        Write-Output "##vso[task.setvariable variable=hasHelmChart]true"
+        Write-Output "##vso[task.setvariable variable=hasHelmChart;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=hasHelmChart]false"
+        Write-Output "##vso[task.setvariable variable=hasHelmChart;isOutput=true]false"
     }
 
     #'./docker-compose.test.yaml'
     if(Test-Path -Path "$WorkingDirectory/docker-compose.test.yaml"){
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_test_yaml]true"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_test_yaml;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_test_yaml]false"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_test_yaml;isOutput=true]false"
     }
 
     #'./docker-compose.acceptance.yaml'
     if(Test-Path -Path "$WorkingDirectory/docker-compose.acceptance.yaml"){
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_acceptance_yaml]true"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_acceptance_yaml;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_acceptance_yaml]false"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_acceptance_yaml;isOutput=true]false"
     }
 
     #'./docker-compose.zap.yaml'
     if(Test-Path -Path "$WorkingDirectory/docker-compose.zap.yaml"){
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml]true"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml]false"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml;isOutput=true]false"
     }
 
     #'./docker-compose.pa11y.yaml'
@@ -91,34 +91,34 @@ try {
 
     #'./docker-compose.axe.yaml'
     if(Test-Path -Path "$WorkingDirectory/docker-compose.axe.yaml"){
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_axe_yaml]true"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_axe_yaml;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_axe_yaml]false"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_axe_yaml;isOutput=true]false"
     }
 
     #'./test/acceptance/docker-compose.yaml'
     if(Test-Path -Path "$WorkingDirectory/test/acceptance/docker-compose.yaml"){
-        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]true"
+        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]false"
+        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml;isOutput=true]false"
     }
 
     #'./test/performance/docker-compose.jmeter.yaml'
     if(Test-Path -Path "$WorkingDirectory/test/performance/docker-compose.jmeter.yaml"){
-        Write-Output "##vso[task.setvariable variable=test_performance_docker_compose_dot_jmeter_yaml]true"
+        Write-Output "##vso[task.setvariable variable=test_performance_docker_compose_dot_jmeter_yaml;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=test_performance_docker_compose_dot_jmeter_yaml]false"
+        Write-Output "##vso[task.setvariable variable=test_performance_docker_compose_dot_jmeter_yaml;isOutput=true]false"
     }
 
     #'./test/performance/jmeterConfig.csv'
     if(Test-Path -Path "$WorkingDirectory/test/performance/jmeterConfig.csv"){
-        Write-Output "##vso[task.setvariable variable=test_performance_jmeterConfig_dot_csv]true"
+        Write-Output "##vso[task.setvariable variable=test_performance_jmeterConfig_dot_csv;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=test_performance_jmeterConfig_dot_csv]false"
+        Write-Output "##vso[task.setvariable variable=test_performance_jmeterConfig_dot_csv;isOutput=true]false"
     }
 
     $exitCode = 0

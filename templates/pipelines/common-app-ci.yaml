@@ -83,6 +83,16 @@ stages:
               targetType: 'inline'
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
+          
+          - task: PowerShell@2
+            name: SetTestVariableFlags
+            displayName: 'Set Docker compose test file variable flags'
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Set-TestFileVariables.ps1'
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s/source'   
 
       - job: Build
         displayName: 'Build'  
@@ -188,8 +198,12 @@ stages:
         displayName: 'Pre-Deployment Tests'  
         dependsOn: [Initialise]
         variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ] 
-          testVar: true                   
+          docker_compose_dot_test_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_test_yaml'] ] 
+          docker_compose_dot_acceptance_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_acceptance_yaml'] ]  
+          docker_compose_dot_zap_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_zap_yaml'] ]    
+          docker_compose_dot_pa11y_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_pa11y_yaml'] ]    
+          docker_compose_dot_axe_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.docker_compose_dot_axe_yaml'] ]    
+          test_acceptance_docker_compose_dot_yaml: $[ dependencies.Initialise.outputs['GetAppVersion.test_acceptance_docker_compose_dot_yaml'] ]                  
         steps:
           - checkout: self
             path: s/
