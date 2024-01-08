@@ -8,17 +8,12 @@ parameters:
     displayName: AppTestConfig
     type: object 
 
-variables:
-  - name: foo
-    value: test    
-
 steps:
   - script: | 
       cd $(System.DefaultWorkingDirectory)
       wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
       sudo dpkg -i pandoc-3.1.11-1-amd64.deb
     displayName: 'Pandoc tool'
-
 
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
@@ -71,18 +66,15 @@ steps:
         Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
         Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
 
-  - ${{ if eq(variables.docker_compose_dot_zap_yaml, true) }}:
+  - ${{ if eq(variables.docker_compose_dot_zap_yaml, 'true') }}:
     - script: "echo '1!'"
-  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], true) }}:
+  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'true') }}:
     - script: "echo '2!'"
   - ${{ if eq(variables.docker_compose_dot_zap_yaml, 'false') }}:
     - script: "echo '3!'"
   - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'false') }}:
     - script: "echo '4!'"    
-
-  - ${{ if eq(variables.foo, 'test') }}:
-    - script: echo "this is a test" # runs when foo=test  
-
+    
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:
       testDir : '$(Pipeline.Workspace)/s'
