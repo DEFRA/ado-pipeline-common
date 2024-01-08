@@ -216,7 +216,6 @@ stages:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
-                iszap:   ${{ variables.docker_compose_dot_zap_yaml }}
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'

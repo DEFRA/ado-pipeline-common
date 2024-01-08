@@ -7,8 +7,6 @@ parameters:
   - name: appTestConfig
     displayName: AppTestConfig
     type: object 
-  - name: iszap
-    type: boolean 
 
 steps:
   - script: | 
@@ -35,9 +33,8 @@ steps:
       addSpnToEnvironment: true
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'    
-      
-  - ${{ if parameters.iszap }}:
-    - bash: 'env | sort'    
+
+  - bash: 'env | sort'    
 
   # Run this task if './docker-compose.test.yaml' file present    
   - task: PowerShell@2
