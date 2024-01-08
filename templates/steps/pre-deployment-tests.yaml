@@ -64,17 +64,8 @@ steps:
       targetType: 'inline'
       script: |
         Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
-        Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
+        Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'" 
 
-  - ${{ if eq(variables.docker_compose_dot_zap_yaml, 'true') }}:
-    - script: "echo '1!'"
-  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'true') }}:
-    - script: "echo '2!'"
-  - ${{ if eq(variables.docker_compose_dot_zap_yaml, 'false') }}:
-    - script: "echo '3!'"
-  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'false') }}:
-    - script: "echo '4!'"    
-    
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:
       testDir : '$(Pipeline.Workspace)/s'
