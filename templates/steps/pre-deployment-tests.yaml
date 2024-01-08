@@ -16,6 +16,7 @@ steps:
     displayName: 'Pandoc tool'
 
   - task: PowerShell@2
+    name: SetTestVariableFlags
     displayName: 'Set Docker compose test file variable flags'
     inputs:
       targetType: filePath
@@ -75,16 +76,7 @@ steps:
           Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
           Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
 
-  - task: PowerShell@2
-    displayName: Run ZAP Tests 1
-    condition: eq(variables['docker_compose_dot_zap_yaml'], 'true')
-    inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
-          Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
-
-  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'true') }}:
+  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], true) }}:
     - task: PowerShell@2
       displayName:  Run ZAP Tests 2
       inputs:
@@ -92,13 +84,13 @@ steps:
           script: |
             Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
             Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
-
-  - template: /templates/steps/tests/owasp-test.yaml
-    parameters:
-      testDir : '$(Pipeline.Workspace)/s'
-      testOuputDir: '$(Pipeline.Workspace)/s/test-output'
-      typeOfTest: 'PreDeploy'
-      url: ''              
+  - ${{ if eq(variables['SetTestVariableFlags.docker_compose_dot_zap_yaml'], true) }}:
+    - template: /templates/steps/tests/owasp-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'
+        url: ''              
 
   # Need to verify when to delete resources? After Pre deployment or post deployment test?
   - task: AzureCLI@2
