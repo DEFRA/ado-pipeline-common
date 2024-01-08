@@ -188,10 +188,10 @@ stages:
         displayName: 'Pre-Deployment Tests'  
         condition: |
           and(
-            succeeded('BuildDockerImage'),
+            
             ${{ eq(parameters.deployConfigOnly, false) }}
           )
-        dependsOn: [Initialise, BuildDockerImage]
+        dependsOn: [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
