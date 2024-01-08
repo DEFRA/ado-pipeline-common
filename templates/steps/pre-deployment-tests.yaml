@@ -93,9 +93,13 @@ steps:
   - ${{ if eq(variables.testVar, true) }}:
     - script: "echo '5!'"
   - ${{ else }}:
-    - script: "echo '5 else'"
+    - script: |
+       "echo $(testVar)"
+       "echo ${{ variables.testVar }}"
+       "echo $(TESTVAR)"
+       "echo ${{ variables.TESTVAR }}"
   - ${{ if eq(parameters.DummyParam, true) }}:
-    - script: "echo '5!'"  
+    - script: "echo '6!'"  
 
 
   - template: /templates/steps/tests/owasp-test.yaml
