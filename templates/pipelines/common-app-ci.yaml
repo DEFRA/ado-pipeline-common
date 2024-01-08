@@ -211,8 +211,10 @@ stages:
           - checkout: PipelineCommon
             path: s/PipelineCommon       
 
-          - ${{ if docker_compose_dot_zap_yaml }}:
+          - ${{ if variables.docker_compose_dot_zap_yaml }}:
             - script: "echo '1!'"
+          - ${{ else }}:
+            - script: "echo '$(variables.docker_compose_dot_zap_yaml)'"
 
           - ${{ if ne(parameters.appTestConfig, '') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
