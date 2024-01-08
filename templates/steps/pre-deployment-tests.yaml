@@ -96,7 +96,7 @@ steps:
   - ${{ if parameters.isJmeter }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
-        testDir : '$(Pipeline.Workspace)/s/test-output/performance'
+        testDir : '$(Pipeline.Workspace)/s/test/performance'
         testOuputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PreDeploy'
         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
