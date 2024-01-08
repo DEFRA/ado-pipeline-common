@@ -8,6 +8,10 @@ parameters:
     displayName: AppTestConfig
     type: object 
 
+variables:
+  - name: foo
+    value: test    
+
 steps:
   - script: | 
       cd $(System.DefaultWorkingDirectory)
@@ -75,6 +79,9 @@ steps:
     - script: "echo '3!'"
   - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'false') }}:
     - script: "echo '4!'"    
+
+  - ${{ if eq(variables.foo, 'test') }}:
+    - script: echo "this is a test" # runs when foo=test  
 
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:
