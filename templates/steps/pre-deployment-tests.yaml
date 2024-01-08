@@ -8,10 +8,6 @@ parameters:
     displayName: AppTestConfig
     type: object
 
-variables:
-  - name: testVar
-    value: true
-
 steps:
   - script: | 
       cd $(System.DefaultWorkingDirectory)

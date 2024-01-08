@@ -193,7 +193,8 @@ stages:
           )
         dependsOn: [Initialise]
         variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ] 
+          testVar: true                   
         steps:
           - checkout: self
             path: s/
