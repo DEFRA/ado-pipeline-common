@@ -211,14 +211,14 @@ stages:
           - checkout: PipelineCommon
             path: s/PipelineCommon       
 
-          - ${{ if eq(variables.docker_compose_dot_zap_yaml, 'true') }}:
-            - script: "echo '1!'"
-          - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'true') }}:
-            - script: "echo '2!'"
-          - ${{ if eq(variables.docker_compose_dot_zap_yaml, true) }}:
-            - script: "echo '3!'"
-          - ${{ if eq(variables['docker_compose_dot_zap_yaml'], true) }}:
-            - script: "echo '4!'"   
+          - ? ${{ if eq(variables.docker_compose_dot_zap_yaml, 'true') }}
+            : - script: "echo '1!'"
+          - ? ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'true') }}
+            : - script: "echo '2!'"
+          - ? ${{ if eq(variables.docker_compose_dot_zap_yaml, true) }}
+            : - script: "echo '3!'"
+          - ? ${{ if eq(variables['docker_compose_dot_zap_yaml'], true) }}
+            : - script: "echo '4!'"   
           - ${{ if eq(variables['testvar'], 'true') }}:
             - script: "echo '5!'"  
 
