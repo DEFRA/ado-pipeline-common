@@ -83,10 +83,10 @@ try {
 
     #'./docker-compose.pa11y.yaml'
     if(Test-Path -Path "$WorkingDirectory/docker-compose.pa11y.yaml"){
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_pa11y_yaml]true"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_pa11y_yaml;isOutput=true]true"
     }
     else{
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_pa11y_yaml]false"
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_pa11y_yaml;isOutput=true]false"
     }
 
     #'./docker-compose.axe.yaml'
