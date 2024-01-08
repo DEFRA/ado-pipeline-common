@@ -82,13 +82,13 @@ steps:
 
   - ${{ if eq(variables['docker_compose_dot_zap_yaml'], true) }}:
     - script: "echo '1!'"
-  - ${{ if eq(docker_compose_dot_zap_yaml, true) }}:
+  - ${{ if eq(variables.docker_compose_dot_zap_yaml, true) }}:
     - script: "echo '2!'"
   - ${{ if eq(variables['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'], false) }}:
     - script: "echo '3!'"
   - ${{ if eq(variables.DOCKER_COMPOSE_DOT_ZAP_YAML, 'true') }}:
     - script: "echo '4!'"
-  - ${{ if eq(testVar, true) }}:
+  - ${{ if eq(variables.testVar, true) }}:
     - script: "echo '5!'"
   - ${{ else }}:
     - script: |
