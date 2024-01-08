@@ -67,12 +67,10 @@ steps:
         Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
         Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
 
-  - ${{ if eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'], true) }}:
-    - script: "echo '1!'"
   - ${{ if eq(variables.docker_compose_dot_zap_yaml, true) }}:
-    - script: "echo '2!'"
+    - script: "echo '1!'"
   - ${{ if eq(variables['docker_compose_dot_pa11y_yaml'], false) }}:
-    - script: "echo '3!'"
+    - script: "echo '2!'"
 
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:
