@@ -7,13 +7,7 @@ parameters:
   - name: appTestConfig
     displayName: AppTestConfig
     type: object 
-variables:
-  docker_compose_dot_test_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_test_yaml'] ] 
-  docker_compose_dot_acceptance_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_acceptance_yaml'] ]  
-  docker_compose_dot_zap_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'] ]    
-  docker_compose_dot_pa11y_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'] ]    
-  docker_compose_dot_axe_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'] ]    
-  test_acceptance_docker_compose_dot_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'] ]  
+
 steps:
   - script: | 
       cd $(System.DefaultWorkingDirectory)
@@ -66,7 +60,7 @@ steps:
   # Run this task if './docker-compose.acceptance.yaml' file present    
   - task: PowerShell@2
     displayName: Run Service Acceptance Tests
-    condition: eq(variables['docker_compose_dot_acceptance_yaml'], 'true')
+    condition: eq(variables['docker_compose_dot_zap_yaml'], 'true')
     inputs:
       targetType: 'inline'
       script: |
@@ -75,8 +69,12 @@ steps:
 
   - ${{ if eq(variables.docker_compose_dot_zap_yaml, true) }}:
     - script: "echo '1!'"
-  - ${{ if eq(variables['docker_compose_dot_pa11y_yaml'], false) }}:
+  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], true) }}:
     - script: "echo '2!'"
+  - ${{ if eq(variables.docker_compose_dot_zap_yaml, 'false') }}:
+    - script: "echo '3!'"
+  - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'false') }}:
+    - script: "echo '4!'"    
 
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:
