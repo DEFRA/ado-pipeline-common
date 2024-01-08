@@ -7,6 +7,10 @@ parameters:
   - name: appTestConfig
     displayName: AppTestConfig
     type: object
+  - name: DummyParam
+    displayName: Is PR Build
+    type: boolean
+    default: true    
 
 steps:
   - script: | 
@@ -84,8 +88,14 @@ steps:
     - script: "echo '3!'"
   - ${{ if eq(variables.DOCKER_COMPOSE_DOT_ZAP_YAML, true) }}:
     - script: "echo '4!'"
+  - ${{ if eq(variables['DOCKER_COMPOSE_DOT_ZAP_YAML'], true) }}:
+    - script: "echo '4!'"  
   - ${{ if eq(variables.testVar, true) }}:
     - script: "echo '5!'"
+  - ${{ else }}:
+    - script: "echo '5!'"
+  - ${{ if eq(parameters.DummyParam, true) }}:
+    - script: "echo '5!'"  
 
 
   - template: /templates/steps/tests/owasp-test.yaml
