@@ -200,7 +200,7 @@ stages:
         variables:
           docker_compose_dot_test_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_test_yaml'] ] 
           docker_compose_dot_acceptance_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_acceptance_yaml'] ]  
-          docker_compose_dot_zap_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'] ]    
+          docker_compose_dot_zap_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'],'true') ]    
           docker_compose_dot_pa11y_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'] ]    
           docker_compose_dot_axe_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'] ]    
           test_acceptance_docker_compose_dot_yaml: $[ dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'] ]   
@@ -211,16 +211,8 @@ stages:
           - checkout: PipelineCommon
             path: s/PipelineCommon       
 
-          - ? ${{ if eq(variables.docker_compose_dot_zap_yaml, 'true') }}
-            : - script: "echo '1!'"
-          - ? ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'true') }}
-            : - script: "echo '2!'"
-          - ? ${{ if eq(variables.docker_compose_dot_zap_yaml, true) }}
-            : - script: "echo '3!'"
-          - ? ${{ if eq(variables['docker_compose_dot_zap_yaml'], true) }}
-            : - script: "echo '4!'"   
-          - ${{ if eq(variables['testvar'], 'true') }}:
-            - script: "echo '5!'"  
+          - ${{ if docker_compose_dot_zap_yaml }}:
+            - script: "echo '1!'"
 
           - ${{ if ne(parameters.appTestConfig, '') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
