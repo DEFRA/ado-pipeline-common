@@ -51,40 +51,47 @@ steps:
     displayName: Build test image
     condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
     inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Build test image if ./docker-compose.test.yaml file exist"    
-          Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
+      targetType: 'inline'
+      script: |
+        Write-Host "In Progress: Build test image if ./docker-compose.test.yaml file exist"    
+        Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
 
   # Run this task if './docker-compose.test.yaml' file present    
   - task: PowerShell@2
     displayName: Run tests
     condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
     inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Run tests if ./docker-compose.test.yaml file exist"     
-          Write-Host "Create powershell module for `Test` related task like 'runTests'"
+      targetType: 'inline'
+      script: |
+        Write-Host "In Progress: Run tests if ./docker-compose.test.yaml file exist"     
+        Write-Host "Create powershell module for `Test` related task like 'runTests'"
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
   - task: PowerShell@2
     displayName: Run Service Acceptance Tests
     condition: eq(variables['docker_compose_dot_acceptance_yaml'], 'true')
     inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
-          Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
+      targetType: 'inline'
+      script: |
+        Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
+        Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
 
   - ${{ if eq(variables['docker_compose_dot_zap_yaml'], 'true') }}:
     - task: PowerShell@2
       displayName:  Run ZAP Tests 1
       inputs:
-          targetType: 'inline'
-          script: |
-            Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
-            Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
-  
+        targetType: 'inline'
+        script: |
+          Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
+          Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
+  - ${{ if eq(variables.docker_compose_dot_zap_yaml, 'true') }}:
+    - task: PowerShell@2
+      displayName:  Run ZAP Tests 2
+      inputs:
+        targetType: 'inline'
+        script: |
+          Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
+          Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:
       testDir : '$(Pipeline.Workspace)/s'

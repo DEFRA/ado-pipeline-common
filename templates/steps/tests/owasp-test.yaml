@@ -18,8 +18,8 @@ steps:
     displayName: ZAP - Run Tests
 
   - script: | 
-      htmlfile="$(parameters.testOuputDir)/zap-report.html" 
-      mdfile="$(System.ArtifactsDirectory)/zap-report.md" 
+      htmlfile=$(parameters.testOuputDir)/zap-report.html
+      mdfile=$(System.ArtifactsDirectory)/zap-report.md
       pandoc $htmlfile -o $mdfile 
       echo "##vso[task.addattachment type=Distributedtask.Core.Summary;name=ZapReport;]$mdfile" 
     displayName: ZAP - Attach Summary
