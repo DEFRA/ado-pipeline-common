@@ -12,14 +12,14 @@ steps:
 
   - script: |
       sudo mkdir -p -m 777 $(parameters.testOuputDir)
-      sudo chmod -R 777 $(testDir)/zap
+      sudo chmod -R 777 $(parameters.testDir)/zap
       docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
       docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
     displayName: ZAP - Run Tests
 
   - script: | 
-      htmlfile=$(parameters.testOuputDir)/zap-report.html
-      mdfile=$(System.ArtifactsDirectory)/zap-report.md
+      htmlfile="$(parameters.testOuputDir)/zap-report.html" 
+      mdfile="$(System.ArtifactsDirectory)/zap-report.md" 
       pandoc $htmlfile -o $mdfile 
       echo "##vso[task.addattachment type=Distributedtask.Core.Summary;name=ZapReport;]$mdfile" 
     displayName: ZAP - Attach Summary
