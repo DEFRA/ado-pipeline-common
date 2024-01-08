@@ -1,7 +1,18 @@
 <#
 .SYNOPSIS
+Set flags for docker test files.
 
 .DESCRIPTION
+Set flags for docker test files if it exists in the service repository.
+Below variables are set to true if file exists,
+
+docker_compose_dot_test_yaml = "./docker-compose.test.yaml"
+docker_compose_dot_acceptance_yaml = "./docker-compose.acceptance.yaml"
+docker_compose_dot_zap_yaml = "./docker-compose.zap.yaml"
+docker_compose_dot_pa11y_yaml = "./docker-compose.pa11y.yaml"
+docker_compose_dot_axe_yaml = "./docker-compose.axe.yaml"
+test_acceptance_docker_compose_dot_yaml = "./test/acceptance/docker-compose.yaml"
+test_performance_jmeterConfig_dot_csv = "./test/performance/jmeterConfig.csv"
 
 .PARAMETER WorkingDirectory
 Mandatory. Directory Path of Service
@@ -15,8 +26,6 @@ param(
     [Parameter()]
     [string]$WorkingDirectory = $PWD
 )
-
-# $WorkingDirectory = 'C:\ganesh\projects\defra\repo\github\Defra\ffc-demo-web'
 
 Set-StrictMode -Version 3.0
 

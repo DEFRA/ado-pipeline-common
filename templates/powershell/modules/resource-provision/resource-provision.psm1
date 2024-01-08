@@ -15,13 +15,8 @@ function New-Resources {
 		Write-Debug "${functionName}:Pr=$Pr"
 	}
 	process {
-		#Step 1 : Delete PR Resources ?? Need to verify during end to end testing
-              
-		#Step 2 : Create ServiceBus Entities Queues and Topics
+		#Create ServiceBus Entities Queues and Topics
 		New-ServiceBusEntities -Environment $Environment -RepoName $RepoName -Pr $Pr
-
-		#Step 3 : Create PR databases
-
 	}
 	end {
 		Write-Debug "${functionName}:Exited"
@@ -50,7 +45,6 @@ function New-ServiceBusEntities {
 		else {
 			Write-Host "There are No resources to provision."
 		}
-
 	}
 	end {
 		Write-Debug "${functionName}:Exited"
@@ -110,7 +104,6 @@ function New-AllServiceBusEntities {
 
 		[Object[]]$topics = Read-ValuesFile -Resource 'topic'
 		New-Topics -Topics $topics -RepoName $RepoName -Pr $Pr
-
 	}
 	end {
 		Write-Debug "${functionName}:Exited"
