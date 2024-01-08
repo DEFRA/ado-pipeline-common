@@ -29,4 +29,4 @@ steps:
     inputs:
       targetPath: ${{ parameters.testOuputDir }}/zap-report.html
       artifact: $(build.buildid)-zap-results
-    condition: always() 
+    condition: always()

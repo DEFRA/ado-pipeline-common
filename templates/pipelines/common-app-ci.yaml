@@ -217,7 +217,9 @@ stages:
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
                 ${{ if variables.docker_compose_dot_zap_yaml }}:
-                  iszap: true
+                  isZap: true
+                ${{ if variables.docker_compose_dot_axe_yaml }}:
+                  isAxe: $(variables.docker_compose_dot_axe_yaml)
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'

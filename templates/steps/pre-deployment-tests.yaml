@@ -7,7 +7,10 @@ parameters:
   - name: appTestConfig
     displayName: AppTestConfig
     type: object 
-  - name: iszap
+  - name: isZap
+    type: boolean 
+    default: false
+  - name: isAxe
     type: boolean 
     default: false
 
@@ -70,7 +73,7 @@ steps:
         Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
         Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'" 
 
-  - ${{ if parameters.iszap }}:
+  - ${{ if parameters.isZap }}:
     - template: /templates/steps/tests/owasp-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
