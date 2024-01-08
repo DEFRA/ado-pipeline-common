@@ -188,7 +188,6 @@ stages:
         displayName: 'Pre-Deployment Tests'  
         condition: |
           and(
-            
             ${{ eq(parameters.deployConfigOnly, false) }}
           )
         dependsOn: [Initialise]
