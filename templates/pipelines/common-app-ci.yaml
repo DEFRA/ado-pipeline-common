@@ -210,18 +210,15 @@ stages:
           - checkout: PipelineCommon
             path: s/PipelineCommon       
 
-          - ${{ if variables.docker_compose_dot_zap_yaml }}:
-            - script: "echo '1!'"
-          - ${{ else }}:
-            - script: "echo '$(variables.docker_compose_dot_zap_yaml)'"
-
           - ${{ if ne(parameters.appTestConfig, '') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
               parameters:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
-                iszap: ${{ variables.docker_compose_dot_zap_yaml }}
+                ${{ if variables.docker_compose_dot_zap_yaml }}:
+                  iszap: true
+                iszap2: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'],'true') ]
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'

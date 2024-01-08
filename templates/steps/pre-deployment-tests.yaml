@@ -9,6 +9,10 @@ parameters:
     type: object 
   - name: iszap
     type: boolean 
+    default: false
+  - name: iszap2
+    type: boolean 
+    default: false
 
 steps:
   - script: | 
@@ -38,6 +42,8 @@ steps:
       
   - ${{ if parameters.iszap }}:
     - bash: 'env | sort'    
+  - ${{ if parameters.iszap2 }}:
+    - script: 'echo test'   
 
   # Run this task if './docker-compose.test.yaml' file present    
   - task: PowerShell@2
@@ -69,7 +75,7 @@ steps:
         Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
         Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'" 
 
-  - ${{ if variables.docker_compose_dot_zap_yaml }}:
+  - ${{ if parameters.iszap }}:
     - template: /templates/steps/tests/owasp-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
