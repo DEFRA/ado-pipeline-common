@@ -219,7 +219,7 @@ stages:
                 ${{ if variables.docker_compose_dot_zap_yaml }}:
                   isZap: true
                 ${{ if variables.docker_compose_dot_axe_yaml }}:
-                  isAxe: $(variables.docker_compose_dot_axe_yaml)
+                  isAxe: $(docker_compose_dot_axe_yaml)
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
