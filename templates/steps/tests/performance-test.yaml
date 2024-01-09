@@ -12,6 +12,11 @@ parameters:
   - name: scriptPath
     type: string
 steps:  
+  - script: |
+      echo "https;${{ parameters.url }};443" >> jmeterConfig.csv
+    workingDirectory: ${{ parameters.testDir }}
+    displayName: Update jmeterConfig      
+    condition: ${{ eq(parameters.typeOfTest,'PostDeploy') }}
 
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/performance/htmlreport
