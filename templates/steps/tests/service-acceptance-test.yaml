@@ -3,7 +3,7 @@ parameters:
     type: string
   - name: testDir
     type: string
-  - name: testOuputDir
+  - name: testOutputDir
     type: string
   - name: typeOfTest
     type: string    
@@ -14,7 +14,7 @@ parameters:
 steps:  
 
   - pwsh: |
-      sudo mkdir -p -m 777 ${{ parameters.testOuputDir }}
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
       sudo chmod -R 777 ${{ parameters.testDir }}/app
       service="ffc-pay-processing"
       docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" build
@@ -26,5 +26,6 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: Service Acceptance - Publish Test Report
     inputs:
-      targetPath: ${{ parameters.testOuputDir }}
+      targetPath: ${{ parameters.testOutputDir }}
       artifact: $(build.buildid)-acceptance-results
+    enabled: false

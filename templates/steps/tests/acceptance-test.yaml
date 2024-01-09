@@ -1,7 +1,7 @@
 parameters:
   - name: testDir
     type: string
-  - name: testOuputDir
+  - name: testOutputDir
     type: string
   - name: typeOfTest
     type: string    
@@ -23,7 +23,7 @@ steps:
     enabled: true
 
   - script: |
-      sudo mkdir -p -m 777 ${{ parameters.testOuputDir }}
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
       sudo chmod -R 777 ${{ parameters.testDir }}/app
     
       docker-compose -f docker-compose.yaml -f docker-compose.override.yaml run --service-ports --build -d --rm ffc-demo-web 
@@ -37,7 +37,7 @@ steps:
     displayName: Acceptance - Run Tests
 
   - pwsh: | 
-      $htmlfile="${{ parameters.testOuputDir }}/acceptance-test-suite-report.html" 
+      $htmlfile="${{ parameters.testOutputDir }}/acceptance-test-suite-report.html" 
       $mdfile="$(System.ArtifactsDirectory)/acceptance-test-suite-report.md" 
       pandoc $htmlfile -o $mdfile 
       Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=AcceptanceTestReport;]$mdfile" 
@@ -46,5 +46,6 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report
     inputs:
-      targetPath: ${{ parameters.testOuputDir }}
+      targetPath: ${{ parameters.testOutputDir }}
       artifact: $(build.buildid)-acceptance-results
+    

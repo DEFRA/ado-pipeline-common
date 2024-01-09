@@ -3,7 +3,7 @@ parameters:
     type: string
   - name: testDir
     type: string
-  - name: testOuputDir
+  - name: testOutputDir
     type: string
   - name: typeOfTest
     type: string    
@@ -14,7 +14,7 @@ parameters:
 steps:  
 
   - pwsh: |
-      sudo mkdir -p -m 777 ${{ parameters.testOuputDir }}
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
 
       docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" 
     displayName: Integrtaion - Run Tests
@@ -23,5 +23,5 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: Integrtaion - Publish Test Report
     inputs:
-      targetPath: ${{ parameters.testOuputDir }}
+      targetPath: ${{ parameters.testOutputDir }}
       artifact: $(build.buildid)-int-results

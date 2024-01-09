@@ -70,7 +70,7 @@ steps:
       parameters:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
-        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PreDeploy'  
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
@@ -79,32 +79,32 @@ steps:
       parameters:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
-        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PreDeploy'   
   - ${{ if parameters.isZap }}:
     - template: /templates/steps/tests/owasp-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
-        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PreDeploy' 
   - ${{ if parameters.isAxe }}:
     - template: /templates/steps/tests/accessibility-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
-        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PreDeploy'   
   - ${{ if parameters.isJmeter }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s/test/performance'
-        testOuputDir: '$(Pipeline.Workspace)/s/test-output'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PreDeploy'
         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
   - ${{ if parameters.isAcceptance }}:
     - template: /templates/steps/tests/acceptance-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
-        testOuputDir: '$(Pipeline.Workspace)/s/test/acceptance/html-reports'
+        testOutputDir: '$(Pipeline.Workspace)/s/test/acceptance/html-reports'
         typeOfTest: 'PreDeploy'   
   # Need to verify when to delete resources? After Pre deployment or post deployment test?
   - task: AzureCLI@2
