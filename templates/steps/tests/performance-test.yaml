@@ -14,7 +14,7 @@ parameters:
 steps:  
 
   - pwsh: |
-      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/performance/htmlreport
       cd ${{ parameters.testDir }} 
       docker-compose -f ../../docker-compose.yaml -f docker-compose.jmeter.yaml run jmeter-test
     displayName: JMeter - Run Tests
@@ -22,12 +22,12 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: ZAP - Publish Test Report
     inputs:
-      targetPath: ${{ parameters.testOutputDir }}
+      targetPath: ${{ parameters.testOutputDir }}/performance
       artifact: $(build.buildid)-jmeter-results
 
   - script: |
-      JMETER_RESULTS=${{ parameters.testOutputDir }}/testresults.jtl
-      JUNIT_RESULTS=${{ parameters.testOutputDir }}/testresults.xml
+      JMETER_RESULTS=${{ parameters.testOutputDir }}/performance/testresults.jtl
+      JUNIT_RESULTS=${{ parameters.testOutputDir }}/performance/testresults.xml
       python3 ${{ parameters.scriptPath }} $JMETER_RESULTS $JUNIT_RESULTS
     workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: 'Convert JMeter Results to JUnit Format'
@@ -36,7 +36,7 @@ steps:
     inputs:
       testResultsFormat: 'JUnit'
       testRunTitle: 'Performance Test Result'
-      testResultsFiles: '${{ parameters.testOutputDir }}/testresults.xml'
+      testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
       failTaskOnFailedTests: true
     displayName: 'Publish Performance Test Results'
 
@@ -44,4 +44,4 @@ steps:
   #   displayName: Publish Html Report
   #   inputs:
   #     htmlType: Jmeter
-  #     JmeterReportsPath: '/test-output/htmlreport'    
+  #     JmeterReportsPath: '${{ parameters.testOutputDir }}/performance/htmlreport'    
