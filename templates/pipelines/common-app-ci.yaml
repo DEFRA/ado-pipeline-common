@@ -223,6 +223,8 @@ stages:
                   isServiceAcceptance: true
                 ${{ if variables.docker_compose_dot_zap_yaml }}:
                   isZap: true
+                ${{ if variables.docker_compose_dot_pa11y_yaml }}:
+                  isPa11y: true
                 ${{ if variables.docker_compose_dot_axe_yaml }}:
                   isAxe: true
                 ${{ if variables.test_performance_docker_compose_dot_jmeter_yaml }}:

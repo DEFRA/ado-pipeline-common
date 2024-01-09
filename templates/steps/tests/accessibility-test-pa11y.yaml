@@ -1,0 +1,25 @@
+parameters:
+  - name: testDir
+    type: string
+  - name: testOutputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+  - name: url
+    type: string
+    default: ''
+steps:  
+
+  - pwsh: |
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+      sudo mkdir -R 777 ${{ parameters.testOutputDir }}/pa11y
+      docker-compose -f docker-compose.yaml -f docker-compose.pa11y.yaml -p pa11y down
+      docker-compose -f docker-compose.yaml -f docker-compose.pa11y.yaml run --rm pa11y
+    displayName: PA11Y - Run Tests
+
+  - task: PublishPipelineArtifact@1
+    displayName: PA11Y - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOutputDir }}/pa11y
+      artifact: $(build.buildid)-pa11y-results

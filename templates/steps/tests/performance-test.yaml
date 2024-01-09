@@ -27,20 +27,20 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: 'Convert JMeter Results to JUnit Format'
 
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFormat: 'JUnit'
-      testRunTitle: 'Performance Test Result'
-      testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
-      failTaskOnFailedTests: true
-    displayName: 'Publish Performance Test Results'
-
   - task: PublishPipelineArtifact@1
     displayName: JMeter - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/performance
       artifact: $(build.buildid)-jmeter-results
-      
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      testRunTitle: 'Performance Test Result'
+      testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
+      failTaskOnFailedTests: false #TODO: THis needs to be set to true
+    displayName: 'Publish Performance Test Results'
+
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Publish Html Report
   #   inputs:

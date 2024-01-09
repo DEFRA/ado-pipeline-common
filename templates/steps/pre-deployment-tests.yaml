@@ -16,6 +16,9 @@ parameters:
   - name: isZap
     type: boolean 
     default: false
+  - name: isPa11y
+    type: boolean 
+    default: false
   - name: isAxe
     type: boolean 
     default: false
@@ -66,7 +69,7 @@ steps:
 
   # Run this task if './docker-compose.test.yaml' file present    
   - ${{ if parameters.isIntegration }}:
-    - template: /templates/steps/tests/service-acceptance-test.yaml
+    - template: /templates/steps/tests/integration-test.yaml
       parameters:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
@@ -74,25 +77,31 @@ steps:
         typeOfTest: 'PreDeploy'  
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
-  # - ${{ if parameters.isServiceAcceptance }}:
-  #   - template: /templates/steps/tests/service-acceptance-test.yaml
-  #     parameters:
-  #       service : '${{ parameters.serviceName }}'
-  #       testDir : '$(Pipeline.Workspace)/s'
-  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-  #       typeOfTest: 'PreDeploy'   
-  # - ${{ if parameters.isZap }}:
-  #   - template: /templates/steps/tests/owasp-test.yaml
-  #     parameters:
-  #       testDir : '$(Pipeline.Workspace)/s'
-  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-  #       typeOfTest: 'PreDeploy' 
-  # - ${{ if parameters.isAxe }}:
-  #   - template: /templates/steps/tests/accessibility-test.yaml
-  #     parameters:
-  #       testDir : '$(Pipeline.Workspace)/s'
-  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-  #       typeOfTest: 'PreDeploy'   
+  - ${{ if parameters.isServiceAcceptance }}:
+    - template: /templates/steps/tests/service-acceptance-test.yaml
+      parameters:
+        service : '${{ parameters.serviceName }}'
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'   
+  - ${{ if parameters.isZap }}:
+    - template: /templates/steps/tests/owasp-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy' 
+  - ${{ if parameters.isPa11y }}:
+    - template: /templates/steps/tests/accessibility-test-pa11y.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'           
+  - ${{ if parameters.isAxe }}:
+    - template: /templates/steps/tests/accessibility-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PreDeploy'   
   - ${{ if parameters.isJmeter }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
