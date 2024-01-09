@@ -68,12 +68,12 @@ steps:
         Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
 
   # Run this task if './docker-compose.test.yaml' file present    
-  - ${{ if parameters.isIntegration }}:
-    - template: /templates/steps/tests/integration-test.yaml
-      parameters:
-        service : '${{ parameters.serviceName }}'
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  # - ${{ if parameters.isIntegration }}:
+  #   - template: /templates/steps/tests/integration-test.yaml
+  #     parameters:
+  #       service : '${{ parameters.serviceName }}'
+  #       testDir : '$(Pipeline.Workspace)/s'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
   - ${{ if parameters.isServiceAcceptance }}:

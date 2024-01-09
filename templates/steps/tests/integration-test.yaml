@@ -17,7 +17,6 @@ steps:
       sudo mkdir -R 777 ${{ parameters.testOutputDir }}
       docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" 
     displayName: Integration - Run Tests
-    enabled: false
 
   - task: PublishPipelineArtifact@1
     displayName: Integration - Publish Test Report
