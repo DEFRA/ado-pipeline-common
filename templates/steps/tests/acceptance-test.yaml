@@ -20,7 +20,7 @@ steps:
       sudo chmod 755 $DESTINATION    
       docker-compose --version
     displayName: 'Update docker compose'
-    enabled: false
+    enabled: true
 
   - script: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}

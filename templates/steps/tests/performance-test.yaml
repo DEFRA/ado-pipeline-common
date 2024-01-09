@@ -13,7 +13,7 @@ parameters:
     type: string
 steps:  
   - script: |
-      echo "https;${{ parameters.url }};443" >> jmeterConfig.csv
+      echo "https;${{ parameters.url }};443" > jmeterConfig.csv
       cat jmeterConfig.csv
     workingDirectory: ${{ parameters.testDir }}
     displayName: Update jmeterConfig      
@@ -45,7 +45,7 @@ steps:
       testResultsFormat: 'JUnit'
       testRunTitle: 'Performance Test Result- -${{ parameters.typeOfTest }}'
       testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
-      failTaskOnFailedTests: false #TODO: THis needs to be set to true
+      failTaskOnFailedTests: true
     displayName: 'Publish Performance Test Results'
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
