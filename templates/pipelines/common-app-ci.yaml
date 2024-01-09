@@ -34,7 +34,6 @@ parameters:
 - name: sharedAcrConfig
   type: object
 variables:
-- group: NodeJSAppBuild
 - name: IsDefaultBranchBuild
   value: ${{ or( in(variables['Build.SourceBranch'], 'refs/heads/main','refs/heads/master'), contains(variables['Build.SourceBranch'],'refs/tags') ) }}
 - name: IsPrBuild
