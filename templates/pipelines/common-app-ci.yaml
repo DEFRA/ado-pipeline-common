@@ -211,26 +211,26 @@ stages:
           - checkout: PipelineCommon
             path: s/PipelineCommon       
 
-          # - ${{ if ne(parameters.appTestConfig, '') }}:
-          #   - template: /templates/steps/pre-deployment-tests.yaml
-          #     parameters:
-          #       serviceName: ${{ parameters.serviceName }}
-          #       IsPrBuild: ${{ variables.IsPrBuild }}
-          #       appTestConfig: ${{ parameters.appTestConfig }}
-          #       ${{ if variables.docker_compose_dot_test_yaml }}:
-          #         isIntegration: true
-          #       ${{ if variables.docker_compose_dot_acceptance_yaml }}:
-          #         isServiceAcceptance: true
-          #       ${{ if variables.docker_compose_dot_zap_yaml }}:
-          #         isZap: true
-          #       ${{ if variables.docker_compose_dot_pa11y_yaml }}:
-          #         isPa11y: true
-          #       ${{ if variables.docker_compose_dot_axe_yaml }}:
-          #         isAxe: true
-          #       ${{ if variables.test_performance_docker_compose_dot_jmeter_yaml }}:
-          #         isJmeter: true
-          #       ${{ if variables.test_acceptance_docker_compose_dot_yaml }}:
-          #         isAcceptance: true
+          - ${{ if ne(parameters.appTestConfig, '') }}:
+            - template: /templates/steps/pre-deployment-tests.yaml
+              parameters:
+                serviceName: ${{ parameters.serviceName }}
+                IsPrBuild: ${{ variables.IsPrBuild }}
+                appTestConfig: ${{ parameters.appTestConfig }}
+                ${{ if variables.docker_compose_dot_test_yaml }}:
+                  isIntegration: true
+                ${{ if variables.docker_compose_dot_acceptance_yaml }}:
+                  isServiceAcceptance: true
+                ${{ if variables.docker_compose_dot_zap_yaml }}:
+                  isZap: true
+                ${{ if variables.docker_compose_dot_pa11y_yaml }}:
+                  isPa11y: true
+                ${{ if variables.docker_compose_dot_axe_yaml }}:
+                  isAxe: true
+                ${{ if variables.test_performance_docker_compose_dot_jmeter_yaml }}:
+                  isJmeter: true
+                ${{ if variables.test_acceptance_docker_compose_dot_yaml }}:
+                  isAcceptance: true
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'

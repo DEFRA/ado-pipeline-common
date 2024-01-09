@@ -8,11 +8,6 @@ parameters:
     type: boolean 
     default: false
 steps:
-  - script: | 
-      cd $(System.DefaultWorkingDirectory)
-      wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
-      sudo dpkg -i pandoc-3.1.11-1-amd64.deb
-    displayName: 'Pandoc tool'
 
   - ${{ if parameters.isJmeter }}:
     - template: /templates/steps/tests/performance-test.yaml
@@ -22,10 +17,10 @@ steps:
         typeOfTest: 'PostDeploy'
         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
         url: ${{ parameters.url }}
-  - ${{ if parameters.isAcceptance }}:
-    - template: /templates/steps/tests/acceptance-test.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test/acceptance/html-reports'
-        typeOfTest: 'PostDeploy'  
-        url: ${{ parameters.url }}
+  # - ${{ if parameters.isAcceptance }}:
+  #   - template: /templates/steps/tests/acceptance-test.yaml
+  #     parameters:
+  #       testDir : '$(Pipeline.Workspace)/s'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test/acceptance/html-reports'
+  #       typeOfTest: 'PostDeploy'  
+  #       url: ${{ parameters.url }}

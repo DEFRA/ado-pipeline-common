@@ -54,18 +54,7 @@ steps:
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'    
       
-
   - bash: 'env | sort'    
-
-  # Run this task if './docker-compose.test.yaml' file present    
-  - task: PowerShell@2
-    displayName: Build test image
-    condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
-    inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "In Progress: Build test image if ./docker-compose.test.yaml file exist"    
-        Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
 
   # Run this task if './docker-compose.test.yaml' file present    
   # - ${{ if parameters.isIntegration }}:
