@@ -19,6 +19,10 @@ steps:
       versionSpec: ${{ parameters.frameworkVersion }}
       checkLatest: true 
     enabled: true #this step takes long time to download nodejs file  
+- bash: |
+    echo "##vso[task.setvariable variable=COOKIE_PASSWORD;]$RANDOM"
+  displayName: 'Generate Random COOKIE_PASSWORD for test'
+
 - task: Npm@1
   displayName: 'npm ci'
   inputs:
