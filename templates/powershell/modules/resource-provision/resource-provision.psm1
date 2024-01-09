@@ -100,10 +100,20 @@ function New-AllServiceBusEntities {
 	}
 	process {
 		[Object[]]$queues = Read-ValuesFile -Resource 'queue'
-		New-Queues -Queues $queues -RepoName $RepoName -Pr $Pr
-
-		[Object[]]$topics = Read-ValuesFile -Resource 'topic'
-		New-Topics -Topics $topics -RepoName $RepoName -Pr $Pr
+		if ($queues) {
+            New-Queues -Queues $queues -RepoName $RepoName -Pr $Pr
+        }
+        else {
+            Write-Host "There are no queues to provision."
+        }
+       
+        [Object[]]$topics = Read-ValuesFile -Resource 'topic'
+        if ($topics) {
+            New-Topics -Topics $topics -RepoName $RepoName -Pr $Pr
+        }
+        else {
+            Write-Host "There are no topics to provision."
+        }
 	}
 	end {
 		Write-Debug "${functionName}:Exited"
