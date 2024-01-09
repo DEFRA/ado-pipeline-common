@@ -14,14 +14,13 @@ parameters:
 steps:  
 
   - pwsh: |
-      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
-
+      sudo mkdir -R 777 ${{ parameters.testOutputDir }}
       docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" 
-    displayName: Integrtaion - Run Tests
+    displayName: Integration - Run Tests
     enabled: false
 
   - task: PublishPipelineArtifact@1
-    displayName: Integrtaion - Publish Test Report
+    displayName: Integration - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}
       artifact: $(build.buildid)-int-results

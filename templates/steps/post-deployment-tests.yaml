@@ -1,0 +1,37 @@
+parameters:
+  - name: serviceName
+  - name: IsPrBuild
+    displayName: Is PR Build
+    type: boolean
+    default: false       
+  - name: appTestConfig
+    displayName: AppTestConfig
+    type: object
+  - name: isJmeter
+    type: boolean 
+    default: false
+  - name: isAcceptance
+    type: boolean 
+    default: false
+steps:
+  - script: | 
+      cd $(System.DefaultWorkingDirectory)
+      wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
+      sudo dpkg -i pandoc-3.1.11-1-amd64.deb
+    displayName: 'Pandoc tool'
+
+  - ${{ if parameters.isJmeter }}:
+    - template: /templates/steps/tests/performance-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s/test/performance'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PostDeploy'
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
+        url: ''
+  - ${{ if parameters.isAcceptance }}:
+    - template: /templates/steps/tests/acceptance-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test/acceptance/html-reports'
+        typeOfTest: 'PostDeploy'  
+        url: '' 
