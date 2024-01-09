@@ -15,15 +15,10 @@ steps:
 
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/performance/htmlreport
+      sudo chmod -R 777 ${{ parameters.testOutputDir }}/performance
       cd ${{ parameters.testDir }} 
       docker-compose -f ../../docker-compose.yaml -f docker-compose.jmeter.yaml run jmeter-test
     displayName: JMeter - Run Tests
-
-  - task: PublishPipelineArtifact@1
-    displayName: ZAP - Publish Test Report
-    inputs:
-      targetPath: ${{ parameters.testOutputDir }}/performance
-      artifact: $(build.buildid)-jmeter-results
 
   - script: |
       JMETER_RESULTS=${{ parameters.testOutputDir }}/performance/testresults.jtl
@@ -40,6 +35,12 @@ steps:
       failTaskOnFailedTests: true
     displayName: 'Publish Performance Test Results'
 
+  - task: PublishPipelineArtifact@1
+    displayName: JMeter - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOutputDir }}/performance
+      artifact: $(build.buildid)-jmeter-results
+      
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Publish Html Report
   #   inputs:
