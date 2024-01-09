@@ -36,12 +36,12 @@ steps:
     displayName: JMeter - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/performance
-      artifact: $(build.buildid)-jmeter-results
+      artifact: $(build.buildid)-jmeter-results-${{ parameters.typeOfTest }}
 
   - task: PublishTestResults@2
     inputs:
       testResultsFormat: 'JUnit'
-      testRunTitle: 'Performance Test Result'
+      testRunTitle: 'Performance Test Result- -${{ parameters.typeOfTest }}'
       testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
       failTaskOnFailedTests: false #TODO: THis needs to be set to true
     displayName: 'Publish Performance Test Results'
