@@ -3,20 +3,37 @@ parameters:
   - name: IsPrBuild
     displayName: Is PR Build
     type: boolean
-    default: false   
+    default: false       
   - name: appTestConfig
     displayName: AppTestConfig
     type: object
-  
+  - name: isIntegration     
+    type: boolean 
+    default: false      
+  - name: isServiceAcceptance     
+    type: boolean 
+    default: false  
+  - name: isZap
+    type: boolean 
+    default: false
+  - name: isPa11y
+    type: boolean 
+    default: false
+  - name: isAxe
+    type: boolean 
+    default: false
+  - name: isJmeter
+    type: boolean 
+    default: false
+  - name: isAcceptance
+    type: boolean 
+    default: false
 steps:
-  - task: PowerShell@2
-    displayName: 'Set Docker compose test file variable flags'
-    inputs:
-      targetType: filePath
-      filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Set-TestFileVariables.ps1'
-      failOnStderr: false
-      pwsh: true
-      workingDirectory: '$(Pipeline.Workspace)/s'   
+  - script: | 
+      cd $(System.DefaultWorkingDirectory)
+      wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
+      sudo dpkg -i pandoc-3.1.11-1-amd64.deb
+    displayName: 'Pandoc tool'
 
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
@@ -36,39 +53,50 @@ steps:
       addSpnToEnvironment: true
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'    
-
-  # - bash: 'env | sort'    
-
-  # Run this task if './docker-compose.test.yaml' file present    
-  - task: PowerShell@2
-    displayName: Build test image
-    condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
-    inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Build test image if ./docker-compose.test.yaml file exist"    
-          Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
+      
+  - bash: 'env | sort'    
 
   # Run this task if './docker-compose.test.yaml' file present    
-  - task: PowerShell@2
-    displayName: Run tests
-    condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
-    inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Run tests if ./docker-compose.test.yaml file exist"     
-          Write-Host "Create powershell module for `Test` related task like 'runTests'"
+  # - ${{ if parameters.isIntegration }}:
+  #   - template: /templates/steps/tests/integration-test.yaml
+  #     parameters:
+  #       service : '${{ parameters.serviceName }}'
+  #       testDir : '$(Pipeline.Workspace)/s'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
-  - task: PowerShell@2
-    displayName: Run Service Acceptance Tests
-    condition: eq(variables['docker_compose_dot_acceptance_yaml'], 'true')
-    inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
-          Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
-
+  - ${{ if parameters.isServiceAcceptance }}:
+    - template: /templates/steps/tests/service-acceptance-test.yaml
+      parameters:
+        service : '${{ parameters.serviceName }}'
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
+  - ${{ if parameters.isZap }}:
+    - template: /templates/steps/tests/owasp-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  - ${{ if parameters.isPa11y }}:
+    - template: /templates/steps/tests/accessibility-test-pa11y.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'         
+  - ${{ if parameters.isAxe }}:
+    - template: /templates/steps/tests/accessibility-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  - ${{ if parameters.isJmeter }}:
+    - template: /templates/steps/tests/performance-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s/test/performance'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
+  # - ${{ if parameters.isAcceptance }}:
+  #   - template: /templates/steps/tests/acceptance-test.yaml
+  #     parameters:
+  #       testDir : '$(Pipeline.Workspace)/s'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test/acceptance/html-reports'
   # Need to verify when to delete resources? After Pre deployment or post deployment test?
   - task: AzureCLI@2
     displayName: 'Delete Dynamically provisioned resources'
