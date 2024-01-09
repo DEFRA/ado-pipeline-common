@@ -42,6 +42,7 @@ steps:
       sudo chmod -R 777 ${{ parameters.testDir }}/app
 
       export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+      echo $TEST_ENVIRONMENT_ROOT_URL
       cd test/acceptance
       docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --build --abort-on-container-exit
     displayName: Acceptance - Run Tests

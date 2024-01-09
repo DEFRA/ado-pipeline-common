@@ -211,7 +211,7 @@ stages:
           - checkout: PipelineCommon
             path: s/PipelineCommon       
 
-          - ${{ if ne(parameters.appTestConfig, '') }}:
+          - ${{ if ne(parameters.appTestConfig, 'skip') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
               parameters:
                 serviceName: ${{ parameters.serviceName }}

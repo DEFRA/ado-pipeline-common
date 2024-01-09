@@ -14,6 +14,7 @@ parameters:
 steps:  
   - script: |
       echo "https;${{ parameters.url }};443" >> jmeterConfig.csv
+      cat jmeterConfig.csv
     workingDirectory: ${{ parameters.testDir }}
     displayName: Update jmeterConfig      
     condition: ${{ eq(parameters.typeOfTest,'PostDeploy') }}
@@ -21,6 +22,7 @@ steps:
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/performance/htmlreport
       sudo chmod -R 777 ${{ parameters.testOutputDir }}/performance
+      cat jmeterConfig.csv
       cd ${{ parameters.testDir }} 
       docker-compose -f ../../docker-compose.yaml -f docker-compose.jmeter.yaml run jmeter-test
     displayName: JMeter - Run Tests
