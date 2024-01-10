@@ -25,7 +25,7 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report
     inputs:
-      targetPath: ${{ ${{ parameters.testDir }} }}/test/acceptance
+      targetPath: ${{ parameters.testDir }}/test/acceptance
       artifact: $(build.buildid)-acceptance-before
 
   - script: |
@@ -60,7 +60,7 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report
     inputs:
-      targetPath: ${{ ${{ parameters.testDir }} }}/test/acceptance
+      targetPath: ${{ parameters.testDir }}/test/acceptance
       artifact: $(build.buildid)-acceptance-after
     condition: always()
   - pwsh: | 
