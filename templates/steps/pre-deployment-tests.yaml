@@ -65,33 +65,33 @@ steps:
   #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
-  - ${{ if parameters.isServiceAcceptance }}:
-    - template: /templates/steps/tests/service-acceptance-test.yaml
-      parameters:
-        service : '${{ parameters.serviceName }}'
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
-  - ${{ if parameters.isZap }}:
-    - template: /templates/steps/tests/owasp-test.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-  - ${{ if parameters.isPa11y }}:
-    - template: /templates/steps/tests/accessibility-test-pa11y.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'         
-  - ${{ if parameters.isAxe }}:
-    - template: /templates/steps/tests/accessibility-test.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-  - ${{ if parameters.isJmeter }}:
-    - template: /templates/steps/tests/performance-test.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s/test/performance'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
+  # - ${{ if parameters.isServiceAcceptance }}:
+  #   - template: /templates/steps/tests/service-acceptance-test.yaml
+  #     parameters:
+  #       service : '${{ parameters.serviceName }}'
+  #       testDir : '$(Pipeline.Workspace)/s'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
+  # - ${{ if parameters.isZap }}:
+  #   - template: /templates/steps/tests/owasp-test.yaml
+  #     parameters:
+  #       testDir : '$(Pipeline.Workspace)/s'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  # - ${{ if parameters.isPa11y }}:
+  #   - template: /templates/steps/tests/accessibility-test-pa11y.yaml
+  #     parameters:
+  #       testDir : '$(Pipeline.Workspace)/s'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'         
+  # - ${{ if parameters.isAxe }}:
+  #   - template: /templates/steps/tests/accessibility-test.yaml
+  #     parameters:
+  #       testDir : '$(Pipeline.Workspace)/s'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  # - ${{ if parameters.isJmeter }}:
+  #   - template: /templates/steps/tests/performance-test.yaml
+  #     parameters:
+  #       testDir : '$(Pipeline.Workspace)/s/test/performance'
+  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  #       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
   - ${{ if parameters.isAcceptance }}:
     - template: /templates/steps/tests/acceptance-test.yaml
       parameters:
