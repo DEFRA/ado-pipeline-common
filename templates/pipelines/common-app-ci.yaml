@@ -300,7 +300,7 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart,Pre_Deployment_Tests]
+        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
         condition: |
           and(
             succeeded(), 
