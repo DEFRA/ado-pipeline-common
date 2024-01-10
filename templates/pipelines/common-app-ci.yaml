@@ -194,6 +194,8 @@ stages:
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
       - job: Pre_Deployment_Tests
+        workspace:
+          clean: all
         displayName: 'Pre-Deployment Tests'  
         dependsOn: [Initialise]
         variables:
@@ -386,6 +388,8 @@ stages:
             vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
         jobs:        
           - deployment: PublishTo${{ deploymentEnv.name }}
+            workspace:
+              clean: all
             condition:  |
               or(
                 eq( variables.IsDefaultBranchBuild, true),
