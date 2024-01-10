@@ -21,7 +21,7 @@ steps:
       docker-compose --version
     displayName: 'Update docker compose'
     enabled: true
-
+  - powershell: Get-ChildItem -Path '${{ parameters.testOutputDir }}' -recurse -File -Force   
   - script: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
       sudo chmod -R 777 ${{ parameters.testDir }}/app
