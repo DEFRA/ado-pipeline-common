@@ -23,7 +23,7 @@ steps:
     enabled: true
 
   - script: |
-      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/acceptancetest
       sudo chmod -R 777 ${{ parameters.testDir }}/app
     
       docker-compose -f docker-compose.yaml -f docker-compose.override.yaml run --service-ports --build -d --rm ffc-demo-web 
@@ -38,7 +38,7 @@ steps:
     condition: ${{ eq(parameters.typeOfTest,'PreDeploy') }}
 
   - script: |
-      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/acceptancetest
       sudo chmod -R 777 ${{ parameters.testDir }}/app
 
       export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
@@ -49,7 +49,7 @@ steps:
     condition: ${{ eq(parameters.typeOfTest,'PostDeploy') }}
 
   - pwsh: | 
-      $htmlfile="${{ parameters.testOutputDir }}/html-reports/acceptance-test-suite-report.html" 
+      $htmlfile="${{ parameters.testOutputDir }}/acceptancetest/acceptance-test-suite-report.html" 
       $mdfile="$(System.ArtifactsDirectory)/acceptance-test-suite-report.md" 
       pandoc $htmlfile -o $mdfile 
       Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=AcceptanceTestReport;]$mdfile" 
@@ -58,6 +58,6 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report
     inputs:
-      targetPath: ${{ parameters.testOutputDir }}/html-reports
+      targetPath: ${{ parameters.testOutputDir }}/acceptancetest
       artifact: $(build.buildid)-acceptance-results
     
