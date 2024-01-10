@@ -49,7 +49,7 @@ steps:
     condition: ${{ eq(parameters.typeOfTest,'PostDeploy') }}
 
   - pwsh: | 
-      $htmlfile="${{ parameters.testOutputDir }}/acceptance-test-suite-report.html" 
+      $htmlfile="${{ parameters.testOutputDir }}/html-reports/acceptance-test-suite-report.html" 
       $mdfile="$(System.ArtifactsDirectory)/acceptance-test-suite-report.md" 
       pandoc $htmlfile -o $mdfile 
       Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=AcceptanceTestReport;]$mdfile" 
@@ -58,6 +58,6 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report
     inputs:
-      targetPath: ${{ parameters.testOutputDir }}
+      targetPath: ${{ parameters.testOutputDir }}/html-reports
       artifact: $(build.buildid)-acceptance-results
     
