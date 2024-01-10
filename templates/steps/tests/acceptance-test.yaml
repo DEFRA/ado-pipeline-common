@@ -22,9 +22,16 @@ steps:
     displayName: 'Update docker compose'
     enabled: true
 
+  - task: PublishPipelineArtifact@1
+    displayName: Acceptance - Publish Test Report
+    inputs:
+      targetPath: ${{ ${{ parameters.testDir }} }}/test/acceptance
+      artifact: $(build.buildid)-acceptance-before
+
   - script: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
-      #sudo chmod -R 777 ${{ parameters.testDir }}/app
+      sudo chmod -R 777 ${{ parameters.testOutputDir }}
+      sudo chmod -R 777 ${{ parameters.testDir }}/app
     
       docker-compose -f docker-compose.yaml -f docker-compose.override.yaml run --service-ports --build -d --rm ffc-demo-web 
 
@@ -39,7 +46,8 @@ steps:
     condition: ${{ eq(parameters.typeOfTest,'PreDeploy') }}
 
   - script: |
-      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/acceptancetest
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+      sudo chmod -R 777 ${{ parameters.testOutputDir }}
       #sudo chmod -R 777 ${{ parameters.testDir }}/app
 
       export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
@@ -49,6 +57,12 @@ steps:
     displayName: Acceptance - Run Tests
     condition: ${{ eq(parameters.typeOfTest,'PostDeploy') }}
 
+  - task: PublishPipelineArtifact@1
+    displayName: Acceptance - Publish Test Report
+    inputs:
+      targetPath: ${{ ${{ parameters.testDir }} }}/test/acceptance
+      artifact: $(build.buildid)-acceptance-before
+    condition: always()
   - pwsh: | 
       $htmlfile="${{ parameters.testOutputDir }}/acceptancetest/acceptance-test-suite-report.html" 
       $mdfile="$(System.ArtifactsDirectory)/acceptance-test-suite-report.md" 
