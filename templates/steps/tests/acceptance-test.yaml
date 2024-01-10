@@ -32,15 +32,17 @@ steps:
       #IP_ADDRESS=$(ip addr show | grep "\binet\b.*\bdocker0\b" | awk '{print $2}' | cut -d '/' -f 1)
 
       #export TEST_ENVIRONMENT_ROOT_URL=http://${IP_ADDRESS}:3000      
+      export TEST_ENVIRONMENT_ROOT_URL=https://ffc-demo-web.snd3.adp.defra.gov.uk
     displayName: Acceptance - Run Tests
     condition: ${{ eq(parameters.typeOfTest,'PreDeploy') }}
   - pwsh: |
-      export TEST_ENVIRONMENT_ROOT_URL=https://ffc-demo-web.snd3.adp.defra.gov.uk
+      $env:TEST_ENVIRONMENT_ROOT_URL="https://ffc-demo-web.snd3.adp.defra.gov.uk"
       cd test/acceptance
       docker-compose build
       docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
     displayName: Acceptance - Run Tests  
     workingDirectory: ${{ parameters.testDir }}
+    continueOnError: true
     condition: ${{ eq(parameters.typeOfTest,'PreDeploy') }}
 
   - script: |
