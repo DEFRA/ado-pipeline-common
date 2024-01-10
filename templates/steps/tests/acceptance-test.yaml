@@ -33,13 +33,14 @@ steps:
       echo ${IP_ADDRESS}
       export TEST_ENVIRONMENT_ROOT_URL=http://${IP_ADDRESS}:3000
       cd test/acceptance
-      docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --build --abort-on-container-exit
+      docker-compose -f docker-compose.yaml up --build --abort-on-container-exit
+      #docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --build --abort-on-container-exit
     displayName: Acceptance - Run Tests
     condition: ${{ eq(parameters.typeOfTest,'PreDeploy') }}
 
   - script: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/acceptancetest
-      sudo chmod -R 777 ${{ parameters.testDir }}/app
+      #sudo chmod -R 777 ${{ parameters.testDir }}/app
 
       export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
       echo $TEST_ENVIRONMENT_ROOT_URL
