@@ -24,6 +24,8 @@ steps:
 
   - script: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
+      sudo chmod -R 777 ${{ parameters.testOutputDir }}/html-reports
       sudo chmod -R 777 ${{ parameters.testDir }}/app
     
       docker-compose -f docker-compose.yaml -f docker-compose.override.yaml run --service-ports --build -d --rm ffc-demo-web 
@@ -39,6 +41,8 @@ steps:
 
   - script: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
+      sudo chmod -R 777 ${{ parameters.testOutputDir }}/html-reports
       sudo chmod -R 777 ${{ parameters.testDir }}/app
 
       export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
