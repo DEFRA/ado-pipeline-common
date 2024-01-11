@@ -40,7 +40,7 @@ steps:
     displayName: Acceptance - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/html-reports
-      artifact: $(build.buildid)-acceptance-results
+      artifact: $(build.buildid)-acceptance-results-${{ parameters.typeOfTest }}
     
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Publish Html Report
