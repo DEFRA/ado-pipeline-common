@@ -216,12 +216,13 @@ stages:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
+                isZap: $(docker_compose_dot_zap_yaml)
                 ${{ if eq(variables.docker_compose_dot_test_yaml, 'True') }}:
                   isIntegration: $(docker_compose_dot_test_yaml)
                 ${{ if eq(variables.docker_compose_dot_acceptance_yaml, 'True') }}:
                   isServiceAcceptance: true
                 ${{ if eq(variables.docker_compose_dot_zap_yaml, 'True') }}:
-                  isZap: $(docker_compose_dot_zap_yaml)
+                  isZap: true
                 ${{ if eq(variables.docker_compose_dot_pa11y_yaml, 'True') }}:
                   isPa11y: true
                 ${{ if eq(variables.docker_compose_dot_axe_yaml, 'True') }}:
