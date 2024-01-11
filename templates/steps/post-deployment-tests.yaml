@@ -10,7 +10,7 @@ parameters:
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
-      docker-compose : true
+      DockerCompose : true
       
   - ${{ if parameters.isJmeter }}:
     - template: /templates/steps/tests/performance-test.yaml

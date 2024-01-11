@@ -1,5 +1,5 @@
 parameters:
-  - name: docker-compose
+  - name: DockerCompose
     type: boolean 
     default: false
   - name: Pandoc
@@ -15,7 +15,7 @@ steps:
       sudo chmod 755 $DESTINATION    
       docker-compose --version
     displayName: 'Update docker compose'
-    condition: ${{ parameters.docker-compose }}
+    condition: ${{ parameters.DockerCompose }}
 
   - script: | 
       cd $(System.DefaultWorkingDirectory)
