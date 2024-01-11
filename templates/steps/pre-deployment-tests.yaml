@@ -56,7 +56,7 @@ steps:
   - bash: 'env | sort'    
 
   # Run this task if './docker-compose.test.yaml' file present    
-  # - ${{ if eq(parameters.isIntegration,'true') }}:
+  # - ${{ if eq(parameters.isIntegration, true) }}:
   #   - template: /templates/steps/tests/integration-test.yaml
   #     parameters:
   #       service : '${{ parameters.serviceName }}'
@@ -64,34 +64,34 @@ steps:
   #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
-  - ${{ if eq(parameters.isServiceAcceptance,'true') }}:
+  - ${{ if eq(parameters.isServiceAcceptance, true) }}:
     - template: /templates/steps/tests/service-acceptance-test.yaml
       parameters:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
-  - ${{ if eq(parameters.isZap,'true') }}:
+  - ${{ if eq(parameters.isZap, true) }}:
     - template: /templates/steps/tests/owasp-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-  - ${{ if eq(parameters.isPa11y,'true') }}:
+  - ${{ if eq(parameters.isPa11y, true) }}:
     - template: /templates/steps/tests/accessibility-test-pa11y.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'         
-  - ${{ if eq(parameters.isAxe,'true') }}:
+  - ${{ if eq(parameters.isAxe, true) }}:
     - template: /templates/steps/tests/accessibility-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-  - ${{ if eq(parameters.isJmeter,'true') }}:
+  - ${{ if eq(parameters.isJmeter, true) }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s/test/performance'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
-  - ${{ if eq(parameters.isAcceptance,'true') }}:
+  - ${{ if eq(parameters.isAcceptance, true) }}:
     - template: /templates/steps/tests/acceptance-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
