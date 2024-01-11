@@ -56,7 +56,7 @@ steps:
   - bash: 'env | sort'    
 
   # Run this task if './docker-compose.test.yaml' file present    
-  # - ${{ if parameters.isIntegration }}:
+  # - ${{ if eq(parameters.isIntegration,'true') }}:
   #   - template: /templates/steps/tests/integration-test.yaml
   #     parameters:
   #       service : '${{ parameters.serviceName }}'
@@ -64,7 +64,7 @@ steps:
   #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
 
   # Run this task if './docker-compose.acceptance.yaml' file present    
-  - ${{ if eq(parameters.isServiceAcceptance,'true' }}:
+  - ${{ if eq(parameters.isServiceAcceptance,'true') }}:
     - template: /templates/steps/tests/service-acceptance-test.yaml
       parameters:
         service : '${{ parameters.serviceName }}'
