@@ -1,6 +1,5 @@
 parameters:
   - name: serviceName
-  - name: test
   - name: IsPrBuild
     displayName: Is PR Build
     type: boolean
@@ -35,7 +34,6 @@ steps:
       DockerCompose : true
       Pandoc: true
   - script: |    
-      echo 'Test - ${{ parameters.test }}'
       echo "Other parameters ${{ convertToJson(parameters) }}"   
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
