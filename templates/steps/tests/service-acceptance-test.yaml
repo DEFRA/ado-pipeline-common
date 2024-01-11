@@ -27,5 +27,11 @@ steps:
     displayName: Service Acceptance - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}
-      artifact: $(build.buildid)-acceptance-results
+      artifact: $(build.buildid)-service-acceptance-results
     enabled: false
+
+  # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
+  #   displayName: Publish Html Report
+  #   inputs:
+  #     htmlType: genericHTML
+  #     htmlPath: '${{ parameters.testOutputDir }}/Tobeupdated'    

@@ -29,11 +29,9 @@ parameters:
     type: boolean 
     default: false
 steps:
-  - script: | 
-      cd $(System.DefaultWorkingDirectory)
-      wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
-      sudo dpkg -i pandoc-3.1.11-1-amd64.deb
-    displayName: 'Pandoc tool'
+  - template: /templates/steps/additional-tools.yaml
+    parameters:
+      docker-compose : true
 
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
@@ -54,7 +52,7 @@ steps:
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'    
       
-  - bash: 'env | sort'    
+  # - bash: 'env | sort'    
 
   # Run this task if './docker-compose.test.yaml' file present    
   # - ${{ if parameters.isIntegration }}:

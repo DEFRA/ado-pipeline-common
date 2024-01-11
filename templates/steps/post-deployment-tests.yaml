@@ -8,7 +8,10 @@ parameters:
     type: boolean 
     default: false
 steps:
-
+  - template: /templates/steps/additional-tools.yaml
+    parameters:
+      docker-compose : true
+      
   - ${{ if parameters.isJmeter }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:

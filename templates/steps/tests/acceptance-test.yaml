@@ -11,16 +11,6 @@ parameters:
     default: ''
 steps:  
 
-  - bash: |
-      docker-compose --version
-      sudo apt-get remove docker-compose
-      VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')
-      DESTINATION=/usr/local/bin/docker-compose
-      sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
-      sudo chmod 755 $DESTINATION    
-      docker-compose --version
-    displayName: 'Update docker compose'
-    enabled: true
   # - powershell: Get-ChildItem -Path '${{ parameters.testOutputDir }}' -recurse -File -Force -Name
   - script: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
@@ -45,13 +35,6 @@ steps:
       docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
     displayName: Acceptance - Run Tests
     condition: ${{ eq(parameters.typeOfTest,'PostDeploy') }}
-
-  - pwsh: | 
-      $htmlfile="${{ parameters.testOutputDir }}/html-reports/acceptance-test-suite-report.html" 
-      $mdfile="$(System.ArtifactsDirectory)/acceptance-test-suite-report.md" 
-      pandoc $htmlfile -o $mdfile 
-      Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=AcceptanceTestReport;]$mdfile" 
-    displayName: Acceptance - Attach Summary
 
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report

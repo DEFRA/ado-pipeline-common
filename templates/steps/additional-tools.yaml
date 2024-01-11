@@ -1,0 +1,25 @@
+parameters:
+  - name: docker-compose
+    type: boolean 
+    default: false
+  - name: Pandoc
+    type: boolean 
+    default: false
+steps:    
+  - bash: |
+      docker-compose --version
+      #sudo apt-get remove docker-compose
+      VERSION=$(curl --silent https://api.github.com/repos/docker/compose/releases/latest | grep -Po '"tag_name": "\K.*\d')
+      DESTINATION=/usr/local/bin/docker-compose
+      sudo curl -L https://github.com/docker/compose/releases/download/${VERSION}/docker-compose-$(uname -s)-$(uname -m) -o $DESTINATION
+      sudo chmod 755 $DESTINATION    
+      docker-compose --version
+    displayName: 'Update docker compose'
+    condition: ${{ parameters.docker-compose }}
+
+  - script: | 
+      cd $(System.DefaultWorkingDirectory)
+      wget https://github.com/jgm/pandoc/releases/download/3.1.11/pandoc-3.1.11-1-amd64.deb
+      sudo dpkg -i pandoc-3.1.11-1-amd64.deb
+    displayName: 'Pandoc tool'
+     condition: ${{ parameters.Pandoc }}
