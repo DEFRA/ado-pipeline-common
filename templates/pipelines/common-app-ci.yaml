@@ -302,7 +302,7 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,Pre_Deployment_Tests,BuildHelmChart]
         condition: |
           and(
             succeeded(), 
@@ -446,7 +446,7 @@ stages:
                     - ${{ if eq(deploymentEnv.name, 'snd1') }}:
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
-                          url: "${{ parameters.serviceName }}.snd3.adp.defra.gov.uk"
+                          url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.adp.defra.gov.uk"
                           ${{ if variables.test_performance_docker_compose_dot_jmeter_yaml }}:
                             isJmeter: true
                           ${{ if variables.test_acceptance_docker_compose_dot_yaml }}:
