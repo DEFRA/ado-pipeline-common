@@ -216,19 +216,19 @@ stages:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
-                ${{ if eq( $(docker_compose_dot_test_yaml), 'True') }}:
+                ${{ if eq(variables.docker_compose_dot_test_yaml, 'True') }}:
                   isIntegration: true
-                ${{ if eq( $(docker_compose_dot_acceptance_yaml), 'True') }}:
+                ${{ if eq(variables.docker_compose_dot_acceptance_yaml, 'True') }}:
                   isServiceAcceptance: true
-                ${{ if eq( $(docker_compose_dot_zap_yaml), 'True') }}:
+                ${{ if eq(variables.docker_compose_dot_zap_yaml, 'True') }}:
                   isZap: true
-                ${{ if eq( $(docker_compose_dot_pa11y_yaml), 'True') }}:
+                ${{ if eq(variables.docker_compose_dot_pa11y_yaml, 'True') }}:
                   isPa11y: true
-                ${{ if eq(docker_compose_dot_axe_yaml, 'True') }}:
+                ${{ if eq(variables.docker_compose_dot_axe_yaml, 'True') }}:
                   isAxe: true
-                ${{ if eq($(test_performance_docker_compose_dot_jmeter_yaml), 'True') }}:
+                ${{ if eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'True') }}:
                   isJmeter: true
-                ${{ if eq($(test_acceptance_docker_compose_dot_yaml), 'True') }}:
+                ${{ if eq(variables.test_acceptance_docker_compose_dot_yaml, 'True') }}:
                   isAcceptance: true
 
       - job: BuildHelmChart
@@ -445,7 +445,7 @@ stages:
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.adp.defra.gov.uk"
-                          ${{ if eq($(test_performance_docker_compose_dot_jmeter_yaml), 'True') }}:
+                          ${{ if eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'True') }}:
                             isJmeter: true
-                          ${{ if eq($(test_acceptance_docker_compose_dot_yaml), 'True') }}:
+                          ${{ if eq(variables.test_acceptance_docker_compose_dot_yaml, 'True') }}:
                             isAcceptance: true
