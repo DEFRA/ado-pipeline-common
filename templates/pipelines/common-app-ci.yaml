@@ -216,7 +216,7 @@ stages:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
-                isZap: lower($(docker_compose_dot_zap_yaml))
+                isZap: ${{ lower(variables.docker_compose_dot_zap_yaml) }}
                 ${{ if eq(variables.docker_compose_dot_test_yaml, 'True') }}:
                   isIntegration: $(docker_compose_dot_test_yaml)
                 ${{ if eq(variables.docker_compose_dot_acceptance_yaml, 'True') }}:
