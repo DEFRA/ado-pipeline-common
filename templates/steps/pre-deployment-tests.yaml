@@ -34,7 +34,7 @@ steps:
     parameters:
       DockerCompose : true
       Pandoc: true
-
+  - bash: 'echo $(parameters.test)'    
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
     inputs:
