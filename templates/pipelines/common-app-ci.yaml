@@ -217,19 +217,19 @@ stages:
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
                 ${{ if eq(variables.docker_compose_dot_test_yaml, 'True') }}:
-                  isIntegration: 'true'
+                  isIntegration: true
                 ${{ if eq(variables.docker_compose_dot_acceptance_yaml, 'True') }}:
-                  isServiceAcceptance: 'true'
+                  isServiceAcceptance: true
                 ${{ if eq(variables.docker_compose_dot_zap_yaml, 'True') }}:
-                  isZap: 'true'
+                  isZap: true
                 ${{ if eq(variables.docker_compose_dot_pa11y_yaml, 'True') }}:
-                  isPa11y: 'true'
+                  isPa11y: true
                 ${{ if eq(variables.docker_compose_dot_axe_yaml, 'True') }}:
-                  isAxe: 'true'
+                  isAxe: true
                 ${{ if eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'True') }}:
-                  isJmeter: 'true'
+                  isJmeter: true
                 ${{ if eq(variables.test_acceptance_docker_compose_dot_yaml, 'True') }}:
-                  isAcceptance: 'true'
+                  isAcceptance: true
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
@@ -446,6 +446,6 @@ stages:
                         parameters:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.adp.defra.gov.uk"
                           ${{ if eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'True') }}:
-                            isJmeter: 'true'
+                            isJmeter: true
                           ${{ if eq(variables.test_acceptance_docker_compose_dot_yaml, 'True') }}:
-                            isAcceptance: 'true'
+                            isAcceptance: true
