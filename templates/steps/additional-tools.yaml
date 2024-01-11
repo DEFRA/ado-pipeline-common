@@ -16,6 +16,7 @@ steps:
       docker-compose --version
     displayName: 'Update docker compose'
     condition: ${{ parameters.DockerCompose }}
+    continueOnError: true
 
   - script: | 
       cd $(System.DefaultWorkingDirectory)
@@ -23,3 +24,4 @@ steps:
       sudo dpkg -i pandoc-3.1.11-1-amd64.deb
     displayName: 'Pandoc tool'
     condition: ${{ parameters.Pandoc }}
+    
