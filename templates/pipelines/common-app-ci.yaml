@@ -443,7 +443,7 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
-                    - ${{ if eq(deploymentEnv.name, 'snd1') }}:
+                    - ${{ if eq(deploymentEnv.name, 'snd3') }}:
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.adp.defra.gov.uk"
