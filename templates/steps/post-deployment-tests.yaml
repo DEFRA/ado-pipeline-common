@@ -12,7 +12,7 @@ steps:
     parameters:
       DockerCompose : true
       
-  - ${{ if eq(parameters.isJmeter,'true') }}:
+  - ${{ if eq(parameters.isJmeter,true) }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s/test/performance'
@@ -20,7 +20,7 @@ steps:
         typeOfTest: 'PostDeploy'
         scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
         url: ${{ parameters.url }}
-  - ${{ if eq(parameters.isAcceptance,'true') }}:
+  - ${{ if eq(parameters.isAcceptance,true) }}:
     - template: /templates/steps/tests/acceptance-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
