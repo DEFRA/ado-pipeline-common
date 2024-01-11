@@ -194,8 +194,6 @@ stages:
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
       - job: Pre_Deployment_Tests
-        workspace:
-          clean: all
         displayName: 'Pre-Deployment Tests'  
         dependsOn: [Initialise]
         variables:
