@@ -199,7 +199,7 @@ stages:
         variables:
           docker_compose_dot_test_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_test_yaml'],'true') ] 
           docker_compose_dot_acceptance_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_acceptance_yaml'],'true') ]  
-          docker_compose_dot_zap_yaml: $[ lower(eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'],'true')) ]    
+          docker_compose_dot_zap_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'],'true') ]    
           docker_compose_dot_pa11y_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'],'true') ]    
           docker_compose_dot_axe_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'],'true') ]    
           test_acceptance_docker_compose_dot_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'],'true') ]                
@@ -216,13 +216,13 @@ stages:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
-                isZap: ${{ variables.docker_compose_dot_zap_yaml }}
+                test: $(docker_compose_dot_zap_yaml)
                 ${{ if eq(variables.docker_compose_dot_test_yaml, 'True') }}:
                   isIntegration: true
                 ${{ if eq(variables.docker_compose_dot_acceptance_yaml, 'True') }}:
                   isServiceAcceptance: true
                 ${{ if eq(variables.docker_compose_dot_zap_yaml, 'True') }}:
-                  isZap: ${{ variables.docker_compose_dot_zap_yaml }}
+                  isZap: true
                 ${{ if eq(variables.docker_compose_dot_pa11y_yaml, 'True') }}:
                   isPa11y: true
                 ${{ if eq(variables.docker_compose_dot_axe_yaml, 'True') }}:

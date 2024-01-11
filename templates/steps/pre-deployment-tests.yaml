@@ -1,5 +1,6 @@
 parameters:
   - name: serviceName
+  - name: test
   - name: IsPrBuild
     displayName: Is PR Build
     type: boolean
