@@ -12,29 +12,29 @@ parameters:
 steps:  
 
   # - powershell: Get-ChildItem -Path '${{ parameters.testOutputDir }}' -recurse -File -Force -Name
-  - script: |
-      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
-      sudo chmod -R 777 ${{ parameters.testDir }}/app    
-      docker-compose -f docker-compose.yaml -f docker-compose.override.yaml run --service-ports --build -d --rm ffc-demo-web 
+  - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
+    - script: |
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
+        sudo chmod -R 777 ${{ parameters.testDir }}/app    
+        docker-compose -f docker-compose.yaml -f docker-compose.override.yaml run --service-ports --build -d --rm ffc-demo-web 
 
-      echo '127.0.0.1 host.docker.internal' | sudo tee -a /etc/hosts
-      IP_ADDRESS=$(ip addr show | grep "\binet\b.*\bdocker0\b" | awk '{print $2}' | cut -d '/' -f 1)
+        echo '127.0.0.1 host.docker.internal' | sudo tee -a /etc/hosts
+        IP_ADDRESS=$(ip addr show | grep "\binet\b.*\bdocker0\b" | awk '{print $2}' | cut -d '/' -f 1)
 
-      export TEST_ENVIRONMENT_ROOT_URL=http://${IP_ADDRESS}:3000       
-      cd test/acceptance
-      docker-compose build
-      docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit     
-    displayName: Acceptance - Run Tests
-    condition: ${{ eq(parameters.typeOfTest,'PreDeploy') }}
+        export TEST_ENVIRONMENT_ROOT_URL=http://${IP_ADDRESS}:3000       
+        cd test/acceptance
+        docker-compose build
+        docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit     
+      displayName: Acceptance - Run Tests
 
-  - script: |
-      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
-      export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
-      cd test/acceptance
-      docker-compose build
-      docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
-    displayName: Acceptance - Run Tests
-    condition: ${{ eq(parameters.typeOfTest,'PostDeploy') }}
+  - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
+    - script: |
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
+        export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        cd test/acceptance
+        docker-compose build
+        docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
+      displayName: Acceptance - Run Tests
 
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report

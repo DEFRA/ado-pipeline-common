@@ -216,19 +216,19 @@ stages:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
-                ${{ if variables.docker_compose_dot_test_yaml }}:
+                ${{ if (variables.docker_compose_dot_test_yaml, 'true') }}:
                   isIntegration: true
-                ${{ if variables.docker_compose_dot_acceptance_yaml }}:
+                ${{ if (variables.docker_compose_dot_acceptance_yaml, 'true') }}:
                   isServiceAcceptance: true
-                ${{ if variables.docker_compose_dot_zap_yaml }}:
+                ${{ if (variables.docker_compose_dot_zap_yaml, 'true') }}:
                   isZap: true
-                ${{ if variables.docker_compose_dot_pa11y_yaml }}:
+                ${{ if (variables.docker_compose_dot_pa11y_yaml, 'true') }}:
                   isPa11y: true
-                ${{ if variables.docker_compose_dot_axe_yaml }}:
+                ${{ if (variables.docker_compose_dot_axe_yaml, 'true') }}:
                   isAxe: true
-                ${{ if variables.test_performance_docker_compose_dot_jmeter_yaml }}:
+                ${{ if (variables.test_performance_docker_compose_dot_jmeter_yaml, 'true') }}:
                   isJmeter: true
-                ${{ if variables.test_acceptance_docker_compose_dot_yaml }}:
+                ${{ if (variables.test_acceptance_docker_compose_dot_yaml, 'true') }}:
                   isAcceptance: true
 
       - job: BuildHelmChart
