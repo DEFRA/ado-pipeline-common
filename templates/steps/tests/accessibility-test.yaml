@@ -10,15 +10,20 @@ parameters:
     type: string
     default: ''
 steps:  
-
+  - pwsh: |
+      if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.axe.yaml"){
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_axe_yaml]true"
+      }
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
       docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
       docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
     displayName: AXE - Run Tests
+    condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
     displayName: AXE - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/axe
       artifact: $(build.buildid)-axe-results
+    condition: eq(variables.docker_compose_dot_axe_yaml, 'true')

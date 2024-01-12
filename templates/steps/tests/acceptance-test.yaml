@@ -11,6 +11,10 @@ parameters:
     default: '' 
 steps:  
 
+  - pwsh: |
+      if(Test-Path -Path "${{ parameters.testDir }}/test/acceptance/docker-compose.yaml"){
+        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]true"
+      }
   # - powershell: Get-ChildItem -Path '${{ parameters.testOutputDir }}' -recurse -File -Force -Name
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
     - script: |
@@ -26,6 +30,7 @@ steps:
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit     
       displayName: Acceptance - Run Tests
+      condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
 
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
     - script: |
@@ -35,15 +40,18 @@ steps:
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
       displayName: Acceptance - Run Tests
+      condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
     displayName: Acceptance - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/html-reports
       artifact: $(build.buildid)-acceptance-results-${{ parameters.typeOfTest }}
+    condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
     
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Publish Html Report
   #   inputs:
   #     htmlType: genericHTML
-  #     htmlPath: '${{ parameters.testOutputDir }}/html-reports/acceptance-test-suite-report.html'       
+  #     htmlPath: '${{ parameters.testOutputDir }}/html-reports/acceptance-test-suite-report.html'
+  #   condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')       

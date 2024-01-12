@@ -12,12 +12,16 @@ parameters:
   - name: scriptPath
     type: string
 steps:  
+  - pwsh: |
+      if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.jmeter.yaml"){
+        Write-Output "##vso[task.setvariable variable=test_performance_docker_compose_dot_jmeter_yaml]true"
+      }
   - script: |
       echo "https;${{ parameters.url }};443" > jmeterConfig.csv
       cat jmeterConfig.csv
     workingDirectory: ${{ parameters.testDir }}
     displayName: Update jmeterConfig      
-    condition: ${{ eq(parameters.typeOfTest,'PostDeploy') }}
+    condition: ${{ eq(parameters.typeOfTest,'PostDeploy') and eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true') }}
 
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/performance/htmlreport
@@ -26,6 +30,7 @@ steps:
       cd ${{ parameters.testDir }} 
       docker-compose -f ../../docker-compose.yaml -f docker-compose.jmeter.yaml run jmeter-test
     displayName: JMeter - Run Tests
+    condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   - script: |
       JMETER_RESULTS=${{ parameters.testOutputDir }}/performance/testresults.jtl
@@ -33,12 +38,14 @@ steps:
       python3 ${{ parameters.scriptPath }} $JMETER_RESULTS $JUNIT_RESULTS
     workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: 'Convert JMeter Results to JUnit Format'
+    condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
     displayName: JMeter - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/performance
       artifact: $(build.buildid)-jmeter-results-${{ parameters.typeOfTest }}
+    condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   - task: PublishTestResults@2
     inputs:
@@ -47,9 +54,11 @@ steps:
       testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
       failTaskOnFailedTests: true
     displayName: 'Publish Performance Test Results'
+    condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Publish Html Report
   #   inputs:
   #     htmlType: Jmeter
-  #     JmeterReportsPath: '${{ parameters.testOutputDir }}/performance/htmlreport'    
+  #     JmeterReportsPath: '${{ parameters.testOutputDir }}/performance/htmlreport'
+  #   condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')    

@@ -81,17 +81,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
-          
-          - task: PowerShell@2
-            name: SetTestVariableFlags
-            displayName: 'Set Docker compose test file variable flags'
-            inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Set-TestFileVariables.ps1'
-              failOnStderr: false
-              pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s/source'   
+                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"          
 
       - job: Build
         displayName: 'Build'  
@@ -196,14 +186,6 @@ stages:
       - job: Pre_Deployment_Tests
         displayName: 'Pre-Deployment Tests'  
         dependsOn: [Initialise]
-        variables:
-          docker_compose_dot_test_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_test_yaml'],'true') ] 
-          docker_compose_dot_acceptance_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_acceptance_yaml'],'true') ]  
-          docker_compose_dot_zap_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_zap_yaml'],'true') ]    
-          docker_compose_dot_pa11y_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_pa11y_yaml'],'true') ]    
-          docker_compose_dot_axe_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.docker_compose_dot_axe_yaml'],'true') ]    
-          test_acceptance_docker_compose_dot_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'],'true') ]                
-          test_performance_docker_compose_dot_jmeter_yaml: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.test_performance_docker_compose_dot_jmeter_yaml'],'true') ] 
         steps:
           - checkout: self
             path: s/
@@ -359,10 +341,6 @@ stages:
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
-        - name: test_acceptance_docker_compose_dot_yaml
-          value: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.test_acceptance_docker_compose_dot_yaml'],'true') ]                
-        - name: test_performance_docker_compose_dot_jmeter_yaml
-          value: $[ eq(dependencies.Initialise.outputs['SetTestVariableFlags.test_performance_docker_compose_dot_jmeter_yaml'],'true') ] 
   
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
@@ -431,7 +409,3 @@ stages:
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.adp.defra.gov.uk"
-                          ${{ if eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'True') }}:
-                            isJmeter: true
-                          ${{ if eq(variables.test_acceptance_docker_compose_dot_yaml, 'True') }}:
-                            isAcceptance: true

@@ -15,9 +15,6 @@ steps:
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.zap.yaml"){
         Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml]true"
       }
-      else{
-        Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml]false"
-      }
 
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}

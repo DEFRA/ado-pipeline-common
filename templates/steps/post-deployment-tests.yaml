@@ -1,29 +1,20 @@
 parameters:
   - name: url
     type: string 
-  - name: isJmeter
-    type: boolean 
-    default: false
-  - name: isAcceptance
-    type: boolean 
-    default: false
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
-      DockerCompose : true
-      
-  - ${{ if eq(parameters.isJmeter, true) }}:
-    - template: /templates/steps/tests/performance-test.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s/test/performance'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-        typeOfTest: 'PostDeploy'
-        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
-        url: ${{ parameters.url }}
-  - ${{ if eq(parameters.isAcceptance, true) }}:
-    - template: /templates/steps/tests/acceptance-test.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-        typeOfTest: 'PostDeploy'  
-        url: ${{ parameters.url }}
+      DockerCompose : true      
+  - template: /templates/steps/tests/performance-test.yaml
+    parameters:
+      testDir : '$(Pipeline.Workspace)/s/test/performance'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+      typeOfTest: 'PostDeploy'
+      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
+      url: ${{ parameters.url }}
+  - template: /templates/steps/tests/acceptance-test.yaml
+    parameters:
+      testDir : '$(Pipeline.Workspace)/s'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+      typeOfTest: 'PostDeploy'  
+      url: ${{ parameters.url }}

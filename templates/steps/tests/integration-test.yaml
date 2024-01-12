@@ -12,14 +12,19 @@ parameters:
     type: string
     default: ''
 steps:  
-
+  - pwsh: |
+      if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.test.yaml"){
+        Write-Output "##vso[task.setvariable variable=docker_compose_dot_test_yaml]true"
+      }
   - pwsh: |
       sudo mkdir -R 777 ${{ parameters.testOutputDir }}
       docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" 
     displayName: Integration - Run Tests
+    condition: eq(variables.docker_compose_dot_test_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
     displayName: Integration - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}
       artifact: $(build.buildid)-int-results
+    condition: eq(variables.docker_compose_dot_test_yaml, 'true')
