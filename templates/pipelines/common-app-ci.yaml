@@ -183,8 +183,8 @@ stages:
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
-      - job: Pre_Deployment_Tests
-        displayName: 'Pre-Deployment Tests'  
+      - job: PreDeploymentTests
+        displayName: 'Pre Deployment Tests'  
         condition: |
           and(
             succeeded('BuildDockerImage'),
@@ -273,7 +273,7 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildDockerImage,Pre_Deployment_Tests,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
         condition: |
           and(
             succeeded(), 

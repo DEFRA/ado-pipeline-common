@@ -45,13 +45,26 @@ stage: Application_CI
     dependsOn: Initialise
         task: Docker Build Image
         task: Snyk container security scan # Fail pipeline for threashold breach, if PR build
+    job: PreDeploymentTests
+    dependsOn: BuildDockerImage
+        task: install-additional-tools (docker-compose-update)
+        task: Provision Resources for Tests
+        task: integration-test
+        task: service-acceptance-test
+        task: owasp-test-zap
+        task: accessibility-test-pa11y
+        task: accessibility-test-axe
+        task: performance-test-jmeter
+        task: acceptance-test
+        task: Delete Dynamically provisioned resources
+
     job: BuildHelmChart
     dependsOn: Initialise
         task: Helm Lint        
         task: Helm Add KV Roleassignment template to ASO Infra helm chart        
         task: Helm LintAndBuild Chart
     job: Publish Artifacts
-    dependsOn: Initialise,Build,BuildDockerImage,BuildHelmChart
+    dependsOn: Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart
         task: Publish Artifact - code version
         task: Publish Artifact - docker image
         task: Publish Artifact - helm chart
@@ -70,7 +83,10 @@ dependsOn: Application_CI
         task: Push changes in App Configuration file to AzureAppConfig
         task: Push Docker Image to ACR
         task: Push Helm Chart to ACR
-
+      # Post Deployment Test if applicable for given env
+        task: install-additional-tools (docker-compose-update)
+        task: performance-test-jmeter
+        task: acceptance-test
 ```
 
 ## Usage
@@ -121,7 +137,15 @@ extends:
     privateAgentName: 'DEFRA-ubuntu2204'                    #Optional:  Name of the private build agent. default will use Azure hosted linux agent.
     packageFeedName: 'artifact-feed'                        #Mandatory: Name of the Azure Devops Artifacts package feed. Used by .Net and NodeJs build.
     appBuildConfig: ${{ parameters.appBuildConfig }}        #Mandatory: Object which contains configration used for building the application. Such as appFrameworkType, defaultBranch, frameworkVersion, projectPath, manifestPath, imageRepoName
-    appTestConfig: ${{ parameters.appTestConfig }}          #Mandatory: Object which contains configration used for testing the application. Such as testFilePath, acceptanceTestFilePath etc
+    appTestConfig: ${{ parameters.appTestConfig }}          #Mandatory: Object which contains configration used for testing the application. Such as testFilePath, 
+      preDeployTest:                                        #Mandatory Pre deployment test variables
+        envToTest: snd1                                     #Mandatory Pre deployment test environment name
+        serviceConnection: AZD-ADP-SND1                     #Mandatory Service connection for Pre deployment test env
+        azureServiceBusResourceGroup: rg                    #Mandatory Service Bus RG for Pre deployment test env
+        azureServiceBusNamespace: name                      #Mandatory Service Bus namespace for Pre deployment test env
+      postDeployTest:                                       #Mandatory Post deployment test variables
+        envToTest: snd3                                     #Mandatory Post deployment test environment name
+        domain: 'adp.defra.gov.uk'                          #Mandatory Post deployment test domain name 
     appDeployConfig: ${{ parameters.appDeployConfig }}      #Mandatory: Object which contains configration used for application deployment. Such as config file path.
     sharedAcrConfig:                                        #Mandatory: Object which contains configration for helm lint and build
       name: 'ssvadpinfcr3401'
@@ -205,8 +229,10 @@ extends:
             testProjectPath: "./ProjectName.Tests/ProjectName.Tests.csproj" #Optional: Used to run Unit Tests of DotNet Projects
             manifestPath: "./obj/ProjectName/project.assets.json" #Mandatory: Used by Snyk to identify the vulnerabilities.  packages.config (.NET Framework) .proj file or project.json or project.assets.json for (.NET Core) package.json for (NodeJS)
             imageRepoName: "repo-name"      #Mandatory: Used for publishing docker, helm charts and also used by snyk to publish the results
-        appTestConfig:                      #Optional: Used for testing application
-            testFilePath: './docker-compose.test.yaml'
+        appTestConfig:                      #Mandatory: Used for testing application
+          postDeployTest:                   #Mandatory Post deployment test variables
+            envToTest: snd3                 #Mandatory Post deployment test environment name
+            domain: 'adp.defra.gov.uk'      #Mandatory Post deployment test domain name
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
             filetype: "yaml"                #Optional: default value json
@@ -271,9 +297,10 @@ extends:
             projectPath: "./package.json"   #Mandatory: Used to extract project version. For DotNet projects provide the csproj file path. For NodeJS package.json file path.
             manifestPath: "./package.json"  #Mandatory: Used by Snyk to identify the vulnerabilities.  packages.config (.NET Framework) .proj file or project.json or project.assets.json for (.NET Core) package.json for (NodeJS)
             imageRepoName: "repo-name"      #Mandatory: Used for publishing docker, helm charts and also used by snyk to publish the results
-        appTestConfig:                      #Optional: Used for testing application
-            testFilePath: "./docker-compose.test.yaml"
-            acceptanceTestFilePath: "./docker-compose.acceptance.yaml"
+        appTestConfig:                      #Mandatory: Used for testing application
+          postDeployTest:                   #Mandatory Post deployment test variables
+            envToTest: snd3                 #Mandatory Post deployment test environment name
+            domain: 'adp.defra.gov.uk'      #Mandatory Post deployment test domain name
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
             filetype: "yaml"                #Optional: default value json
