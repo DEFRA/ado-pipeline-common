@@ -16,19 +16,19 @@ steps:
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.acceptance.yaml"){
         Write-Output "##vso[task.setvariable variable=docker_compose_dot_acceptance_yaml]true"
       }
+    displayName: Service Acceptance Test - File Validation
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
       sudo chmod -R 777 ${{ parameters.testDir }}/app
-      service="ffc-pay-processing"
       docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" build
       docker-compose -f docker-compose.yaml -f docker-compose.migrate.yaml -p "${{ parameters.service }}-acceptance-test" run --rm database-up
       docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" run --rm "${{ parameters.service }}-test-runner"
-    displayName: Service Acceptance - Run Tests
+    displayName: Service Acceptance Test - Run
     enabled: false
     condition: eq(variables.docker_compose_dot_acceptance_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
-    displayName: Service Acceptance - Publish Test Report
+    displayName: Service Acceptance Test - Publish Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}
       artifact: $(build.buildid)-service-acceptance-results
@@ -36,7 +36,7 @@ steps:
     condition: eq(variables.docker_compose_dot_acceptance_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-  #   displayName: Publish Html Report
+  #   displayName: Service Acceptance Test - Publish Html Report
   #   inputs:
   #     htmlType: genericHTML
   #     htmlPath: '${{ parameters.testOutputDir }}/Tobeupdated'

@@ -15,32 +15,24 @@ steps:
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.zap.yaml"){
         Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml]true"
       }
-
+    displayName: OWASP Test - File Validation
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
       sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
       docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
       docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
-    displayName: ZAP - Run Tests
-    condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
-
-  - pwsh: | 
-      $htmlfile="${{ parameters.testOutputDir }}/zap-report.html" 
-      $mdfile="$(System.ArtifactsDirectory)/zap-report.md" 
-      pandoc $htmlfile -o $mdfile 
-      Write-Host "##vso[task.addattachment type=Distributedtask.Core.Summary;name=ZapReport;]$mdfile" 
-    displayName: ZAP - Attach Summary
+    displayName: OWASP Test - Run
     condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
-    displayName: ZAP - Publish Test Report
+    displayName: OWASP Test - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/zap-report.html
       artifact: $(build.buildid)-zap-results
     condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-  #   displayName: Publish Html Report
+  #   displayName: OWASP Test - Publish Html Report
   #   inputs:
   #     htmlType: genericHTML
   #     htmlPath: '${{ parameters.testOutputDir }}/zap-report.html' 

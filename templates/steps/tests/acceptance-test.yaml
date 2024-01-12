@@ -15,7 +15,8 @@ steps:
       if(Test-Path -Path "${{ parameters.testDir }}/test/acceptance/docker-compose.yaml"){
         Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]true"
       }
-  # - powershell: Get-ChildItem -Path '${{ parameters.testOutputDir }}' -recurse -File -Force -Name
+    displayName: Acceptance Test - File Validation
+
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
     - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
@@ -29,7 +30,7 @@ steps:
         cd test/acceptance
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit     
-      displayName: Acceptance - Run Tests
+      displayName: Acceptance Test - Run
       condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
 
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
@@ -39,18 +40,18 @@ steps:
         cd test/acceptance
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
-      displayName: Acceptance - Run Tests
+      displayName: Acceptance Test - Run
       condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
-    displayName: Acceptance - Publish Test Report
+    displayName: Acceptance Test - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/html-reports
       artifact: $(build.buildid)-acceptance-results-${{ parameters.typeOfTest }}
     condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
     
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-  #   displayName: Publish Html Report
+  #   displayName: Acceptance Test - Publish Html Report
   #   inputs:
   #     htmlType: genericHTML
   #     htmlPath: '${{ parameters.testOutputDir }}/html-reports/acceptance-test-suite-report.html'

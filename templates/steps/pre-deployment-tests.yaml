@@ -12,7 +12,7 @@ steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
       DockerCompose : true
-      Pandoc: true
+
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
     inputs:
@@ -34,14 +34,11 @@ steps:
       
   - bash: 'env | sort'    
 
-  # Run this task if './docker-compose.test.yaml' file present    
-  #   - template: /templates/steps/tests/integration-test.yaml
-  #     parameters:
-  #       service : '${{ parameters.serviceName }}'
-  #       testDir : '$(Pipeline.Workspace)/s'
-  #       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-
-  # Run this task if './docker-compose.acceptance.yaml' file present    
+  - template: /templates/steps/tests/integration-test.yaml
+    parameters:
+      service : '${{ parameters.serviceName }}'
+      testDir : '$(Pipeline.Workspace)/s'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'
   - template: /templates/steps/tests/service-acceptance-test.yaml
     parameters:
       service : '${{ parameters.serviceName }}'

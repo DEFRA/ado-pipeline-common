@@ -16,15 +16,18 @@ steps:
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.test.yaml"){
         Write-Output "##vso[task.setvariable variable=docker_compose_dot_test_yaml]true"
       }
+    displayName: Intg Test - File Validation
   - pwsh: |
       sudo mkdir -R 777 ${{ parameters.testOutputDir }}
-      docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" 
-    displayName: Integration - Run Tests
+      docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
+    displayName: Intg Test - Run
     condition: eq(variables.docker_compose_dot_test_yaml, 'true')
+    enabled: false
 
   - task: PublishPipelineArtifact@1
-    displayName: Integration - Publish Test Report
+    displayName: Intg Test - Publish Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}
       artifact: $(build.buildid)-int-results
     condition: eq(variables.docker_compose_dot_test_yaml, 'true')
+    enabled: false

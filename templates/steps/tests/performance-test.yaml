@@ -16,11 +16,12 @@ steps:
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.jmeter.yaml"){
         Write-Output "##vso[task.setvariable variable=test_performance_docker_compose_dot_jmeter_yaml]true"
       }
+    displayName: Perf Test - File Validation
   - script: |
       echo "https;${{ parameters.url }};443" > jmeterConfig.csv
       cat jmeterConfig.csv
     workingDirectory: ${{ parameters.testDir }}
-    displayName: Update jmeterConfig      
+    displayName: Perf Test - Update jmeterConfig      
     condition: ${{ and(eq(parameters.typeOfTest,'PostDeploy'),eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')) }}
 
   - pwsh: |
@@ -29,7 +30,7 @@ steps:
       cat jmeterConfig.csv
       cd ${{ parameters.testDir }} 
       docker-compose -f ../../docker-compose.yaml -f docker-compose.jmeter.yaml run jmeter-test
-    displayName: JMeter - Run Tests
+    displayName: Perf Test - Run
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   - script: |
@@ -37,11 +38,11 @@ steps:
       JUNIT_RESULTS=${{ parameters.testOutputDir }}/performance/testresults.xml
       python3 ${{ parameters.scriptPath }} $JMETER_RESULTS $JUNIT_RESULTS
     workingDirectory: '$(System.DefaultWorkingDirectory)'
-    displayName: 'Convert JMeter Results to JUnit Format'
+    displayName: 'Perf Test - Convert JMeter Results to JUnit Format'
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
-    displayName: JMeter - Publish Test Report
+    displayName: Perf Test - Publish Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/performance
       artifact: $(build.buildid)-jmeter-results-${{ parameters.typeOfTest }}
@@ -53,11 +54,11 @@ steps:
       testRunTitle: 'Performance Test Result- -${{ parameters.typeOfTest }}'
       testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
       failTaskOnFailedTests: true
-    displayName: 'Publish Performance Test Results'
+    displayName: 'Perf Test Publish Test Results'
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-  #   displayName: Publish Html Report
+  #   displayName: Perf Test - Publish Html Report
   #   inputs:
   #     htmlType: Jmeter
   #     JmeterReportsPath: '${{ parameters.testOutputDir }}/performance/htmlreport'
