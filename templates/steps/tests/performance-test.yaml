@@ -22,7 +22,7 @@ steps:
       cat jmeterConfig.csv
     workingDirectory: ${{ parameters.testDir }}
     displayName: Perf Test - Update jmeterConfig      
-    condition: and(eq( ${{ parameters.typeOfTest }} ,'PostDeploy'),eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true'))
+    condition: and( ${{ eq(parameters.typeOfTest,'PostDeploy') }}, eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true'))
 
   - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/performance/htmlreport
