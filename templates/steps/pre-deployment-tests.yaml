@@ -25,7 +25,7 @@ steps:
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
         -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
-        -Environment '${{ parameters.appTestConfig.testEnvironment }}'
+        -Environment '${{ parameters.appTestConfig.preDeployTest.envToTest }}'
         -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.preDeployTest.azureServiceBusResourceGroup }}'
         -AzureServiceBusNamespace '${{ parameters.appTestConfig.preDeployTest.azureServiceBusNamespace }}'
       addSpnToEnvironment: true
@@ -76,7 +76,7 @@ steps:
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
         -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
-        -Environment '${{ parameters.appTestConfig.testEnvironment }}'
+        -Environment '${{ parameters.appTestConfig.preDeployTest.envToTest }}'
         -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.preDeployTest.azureServiceBusResourceGroup }}'
         -AzureServiceBusNamespace '${{ parameters.appTestConfig.preDeployTest.azureServiceBusNamespace }}'
       addSpnToEnvironment: true
