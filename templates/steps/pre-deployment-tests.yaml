@@ -30,9 +30,7 @@ steps:
         -AzureServiceBusNamespace '${{ parameters.appTestConfig.azureServiceBusNamespace }}'
       addSpnToEnvironment: true
       failOnStandardError: false
-      workingDirectory: '$(Pipeline.Workspace)/s'    
-      
-  - bash: 'env | sort'    
+      workingDirectory: '$(Pipeline.Workspace)/s'             
 
   - template: /templates/steps/tests/integration-test.yaml
     parameters:
