@@ -9,6 +9,9 @@ parameters:
   - name: url
     type: string
     default: ''
+  - name: appTestConfig
+    displayName: AppTestConfig
+    type: object    
 steps:  
 
   - task: AzureCLI@2
