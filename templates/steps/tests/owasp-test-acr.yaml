@@ -1,0 +1,45 @@
+parameters:
+  - name: testDir
+    type: string
+  - name: testOutputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+  - name: url
+    type: string
+    default: ''
+steps:  
+
+  - task: AzureCLI@2
+    condition: always()
+    inputs:
+      azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az acr login --name ssvadpinfcr3401
+        if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.zap.yaml"){
+          Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml]true"
+        }
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+        sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
+        docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
+      addSpnToEnvironment: true
+      failOnStandardError: false
+      workingDirectory: '$(Pipeline.Workspace)/s'     
+
+
+  - task: PublishPipelineArtifact@1
+    displayName: OWASP Test - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOutputDir }}/zap-report.html
+      artifact: $(build.buildid)-zap-results
+    condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
+
+  # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
+  #   displayName: OWASP Test - Publish Html Report
+  #   inputs:
+  #     htmlType: genericHTML
+  #     htmlPath: '${{ parameters.testOutputDir }}/zap-report.html' 
+  #   condition: eq(variables.docker_compose_dot_zap_yaml, 'true')        
