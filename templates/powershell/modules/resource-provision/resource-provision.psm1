@@ -543,7 +543,7 @@ function Set-ServiceBusCredEnvironmentVariables {
 		$primaryKey = Invoke-CommandLine -Command "az servicebus namespace authorization-rule keys list $serviceBusNameAndRg --name $KeyName --query 'primaryKey'" -IsSensitive
 		if ($primaryKey) {
 			Write-Output "##vso[task.setvariable variable=MESSAGE_QUEUE_HOST]$Global:AzureServiceBusNamespace"
-			Write-Output "##vso[task.setvariable variable=MESSAGE_QUEUE_PASSWORD]$primaryKey"
+			Write-Output "##vso[task.setvariable variable=MESSAGE_QUEUE_PASSWORD;issecret=true]$primaryKey"
 			Write-Output "##vso[task.setvariable variable=MESSAGE_QUEUE_USER]$KeyName"
 		}
 		else {
