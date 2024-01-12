@@ -81,7 +81,7 @@ stages:
             inputs:
               targetType: 'inline'
               script: |
-                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"          
+                Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
 
       - job: Build
         displayName: 'Build'  
@@ -185,7 +185,12 @@ stages:
 
       - job: Pre_Deployment_Tests
         displayName: 'Pre-Deployment Tests'  
-        dependsOn: [Initialise]
+        condition: |
+          and(
+            succeeded('BuildDockerImage'),
+            ${{ eq(parameters.deployConfigOnly, false) }}
+          )
+        dependsOn: [Initialise, BuildDockerImage]
         steps:
           - checkout: self
             path: s/
@@ -350,8 +355,6 @@ stages:
             vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
         jobs:        
           - deployment: PublishTo${{ deploymentEnv.name }}
-            workspace:
-              clean: all
             condition:  |
               or(
                 eq( variables.IsDefaultBranchBuild, true),
@@ -405,7 +408,7 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
-                    - ${{ if eq(deploymentEnv.name, 'snd3') }}:
+                    - ${{ if eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest) }}:
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
-                          url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.adp.defra.gov.uk"
+                          url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"

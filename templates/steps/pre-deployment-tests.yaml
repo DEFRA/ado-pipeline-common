@@ -16,7 +16,7 @@ steps:
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
     inputs:
-      azureSubscription: ${{ parameters.appTestConfig.serviceConnection }}
+      azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Provision-Resources.ps1'
@@ -26,8 +26,8 @@ steps:
         -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
         -Environment '${{ parameters.appTestConfig.testEnvironment }}'
-        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.azureServiceBusResourceGroup }}'
-        -AzureServiceBusNamespace '${{ parameters.appTestConfig.azureServiceBusNamespace }}'
+        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.preDeployTest.azureServiceBusResourceGroup }}'
+        -AzureServiceBusNamespace '${{ parameters.appTestConfig.preDeployTest.azureServiceBusNamespace }}'
       addSpnToEnvironment: true
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'             
@@ -68,7 +68,7 @@ steps:
     displayName: 'Delete Dynamically provisioned resources'
     condition: always()
     inputs:
-      azureSubscription: ${{ parameters.appTestConfig.serviceConnection }}
+      azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Delete-Resources.ps1'
@@ -77,8 +77,8 @@ steps:
         -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
         -Environment '${{ parameters.appTestConfig.testEnvironment }}'
-        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.azureServiceBusResourceGroup }}'
-        -AzureServiceBusNamespace '${{ parameters.appTestConfig.azureServiceBusNamespace }}'
+        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.preDeployTest.azureServiceBusResourceGroup }}'
+        -AzureServiceBusNamespace '${{ parameters.appTestConfig.preDeployTest.azureServiceBusNamespace }}'
       addSpnToEnvironment: true
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'           

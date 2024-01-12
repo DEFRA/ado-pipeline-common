@@ -58,7 +58,7 @@ steps:
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
-  #   displayName: Perf Test - Publish Html Report
+  #   displayName: Performance Test - Publish Html Report
   #   inputs:
   #     htmlType: Jmeter
   #     JmeterReportsPath: '${{ parameters.testOutputDir }}/performance/htmlreport'
