@@ -45,11 +45,7 @@ steps:
   - template: /templates/steps/tests/owasp-test.yaml
     parameters:
       testDir : '$(Pipeline.Workspace)/s'
-      testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-  - template: /templates/steps/tests/accessibility-test-pa11y.yaml
-    parameters:
-      testDir : '$(Pipeline.Workspace)/s'
-      testOutputDir: '$(Pipeline.Workspace)/s/test-output'         
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'        
   - template: /templates/steps/tests/accessibility-test.yaml
     parameters:
       testDir : '$(Pipeline.Workspace)/s'
