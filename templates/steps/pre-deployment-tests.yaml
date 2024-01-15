@@ -3,25 +3,20 @@ parameters:
   - name: IsPrBuild
     displayName: Is PR Build
     type: boolean
-    default: false   
+    default: false       
   - name: appTestConfig
     displayName: AppTestConfig
     type: object
-  
+
 steps:
-  - task: PowerShell@2
-    displayName: 'Set Docker compose test file variable flags'
-    inputs:
-      targetType: filePath
-      filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Set-TestFileVariables.ps1'
-      failOnStderr: false
-      pwsh: true
-      workingDirectory: '$(Pipeline.Workspace)/s'   
+  - template: /templates/steps/additional-tools.yaml
+    parameters:
+      DockerCompose : true
 
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
     inputs:
-      azureSubscription: ${{ parameters.appTestConfig.serviceConnection }}
+      azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Provision-Resources.ps1'
@@ -30,51 +25,46 @@ steps:
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
         -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
-        -Environment '${{ parameters.appTestConfig.testEnvironment }}'
-        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.azureServiceBusResourceGroup }}'
-        -AzureServiceBusNamespace '${{ parameters.appTestConfig.azureServiceBusNamespace }}'
+        -Environment '${{ parameters.appTestConfig.preDeployTest.envToTest }}'
+        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.preDeployTest.azureServiceBusResourceGroup }}'
+        -AzureServiceBusNamespace '${{ parameters.appTestConfig.preDeployTest.azureServiceBusNamespace }}'
       addSpnToEnvironment: true
       failOnStandardError: false
-      workingDirectory: '$(Pipeline.Workspace)/s'    
+      workingDirectory: '$(Pipeline.Workspace)/s'             
 
-  # - bash: 'env | sort'    
-
-  # Run this task if './docker-compose.test.yaml' file present    
-  - task: PowerShell@2
-    displayName: Build test image
-    condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
-    inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Build test image if ./docker-compose.test.yaml file exist"    
-          Write-Host "Create powershell module for `Build` related task like 'buildTestImage'"
-
-  # Run this task if './docker-compose.test.yaml' file present    
-  - task: PowerShell@2
-    displayName: Run tests
-    condition: eq(variables['docker_compose_dot_test_yaml'], 'true')
-    inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Run tests if ./docker-compose.test.yaml file exist"     
-          Write-Host "Create powershell module for `Test` related task like 'runTests'"
-
-  # Run this task if './docker-compose.acceptance.yaml' file present    
-  - task: PowerShell@2
-    displayName: Run Service Acceptance Tests
-    condition: eq(variables['docker_compose_dot_acceptance_yaml'], 'true')
-    inputs:
-        targetType: 'inline'
-        script: |
-          Write-Host "In Progress: Run Service Acceptance Tests if ./docker-compose.acceptance.yaml file exist"  
-          Write-Host "Create powershell module for `Test` related task like 'runServiceAcceptanceTests'"
-
+  - template: /templates/steps/tests/integration-test.yaml
+    parameters:
+      service : '${{ parameters.serviceName }}'
+      testDir : '$(Pipeline.Workspace)/s'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  - template: /templates/steps/tests/service-acceptance-test.yaml
+    parameters:
+      service : '${{ parameters.serviceName }}'
+      testDir : '$(Pipeline.Workspace)/s'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
+  - template: /templates/steps/tests/owasp-test.yaml
+    parameters:
+      testDir : '$(Pipeline.Workspace)/s'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'        
+  - template: /templates/steps/tests/accessibility-test.yaml
+    parameters:
+      testDir : '$(Pipeline.Workspace)/s'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  - template: /templates/steps/tests/performance-test.yaml
+    parameters:
+      testDir : '$(Pipeline.Workspace)/s/test/performance'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
+  - template: /templates/steps/tests/acceptance-test.yaml
+    parameters:
+      testDir : '$(Pipeline.Workspace)/s'
+      testOutputDir: '$(Pipeline.Workspace)/s/test-output'
   # Need to verify when to delete resources? After Pre deployment or post deployment test?
   - task: AzureCLI@2
     displayName: 'Delete Dynamically provisioned resources'
     condition: always()
     inputs:
-      azureSubscription: ${{ parameters.appTestConfig.serviceConnection }}
+      azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Delete-Resources.ps1'
@@ -82,9 +72,9 @@ steps:
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
         -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
-        -Environment '${{ parameters.appTestConfig.testEnvironment }}'
-        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.azureServiceBusResourceGroup }}'
-        -AzureServiceBusNamespace '${{ parameters.appTestConfig.azureServiceBusNamespace }}'
+        -Environment '${{ parameters.appTestConfig.preDeployTest.envToTest }}'
+        -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.preDeployTest.azureServiceBusResourceGroup }}'
+        -AzureServiceBusNamespace '${{ parameters.appTestConfig.preDeployTest.azureServiceBusNamespace }}'
       addSpnToEnvironment: true
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'           

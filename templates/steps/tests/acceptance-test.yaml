@@ -1,0 +1,58 @@
+parameters:
+  - name: testDir
+    type: string
+  - name: testOutputDir
+    type: string
+  - name: typeOfTest
+    type: string    
+    default: 'PreDeploy'
+  - name: url
+    type: string
+    default: '' 
+steps:  
+
+  - pwsh: |
+      if(Test-Path -Path "${{ parameters.testDir }}/test/acceptance/docker-compose.yaml"){
+        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]true"
+      }
+    displayName: Acceptance Test - File Validation
+
+  - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
+    - script: |
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
+        sudo chmod -R 777 ${{ parameters.testDir }}/app    
+        docker-compose -f docker-compose.yaml -f docker-compose.override.yaml run --service-ports --build -d --rm ffc-demo-web 
+
+        echo '127.0.0.1 host.docker.internal' | sudo tee -a /etc/hosts
+        IP_ADDRESS=$(ip addr show | grep "\binet\b.*\bdocker0\b" | awk '{print $2}' | cut -d '/' -f 1)
+
+        export TEST_ENVIRONMENT_ROOT_URL=http://${IP_ADDRESS}:3000       
+        cd test/acceptance
+        docker-compose build
+        docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit     
+      displayName: Acceptance Test - Run
+      condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
+
+  - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
+    - script: |
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
+        export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        cd test/acceptance
+        docker-compose build
+        docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
+      displayName: Acceptance Test - Run
+      condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
+
+  - task: PublishPipelineArtifact@1
+    displayName: Acceptance Test - Publish Test Report
+    inputs:
+      targetPath: ${{ parameters.testOutputDir }}/html-reports
+      artifact: $(build.buildid)-acceptance-results-${{ parameters.typeOfTest }}
+    condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
+    
+  # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
+  #   displayName: Acceptance Test - Publish Html Report
+  #   inputs:
+  #     htmlType: genericHTML
+  #     htmlPath: '${{ parameters.testOutputDir }}/html-reports/acceptance-test-suite-report.html'
+  #   condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')       

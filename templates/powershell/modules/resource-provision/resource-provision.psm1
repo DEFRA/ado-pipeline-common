@@ -40,6 +40,7 @@ function New-ServiceBusEntities {
 	}
 	process {
 		if (Check-HasResourcesToProvision) {
+			Set-ServiceBusCredEnvironmentVariables
 			New-AllServiceBusEntities -Environment $Environment -RepoName $RepoName -Pr $Pr
 		}
 		else {
@@ -521,6 +522,32 @@ function Get-ExistingServiceBusEntities {
 		}
 		else {
 			return @()
+		}			
+	}
+	end {
+		Write-Debug "${functionName}:Exited"
+	}
+}
+
+function Set-ServiceBusCredEnvironmentVariables {
+	param(
+		[string]$KeyName = 'RootManageSharedAccessKey'
+	)
+	begin {
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Entered"
+		Write-Debug "${functionName}:KeyName=$KeyName"
+	}
+	process {
+		[string]$serviceBusNameAndRg = Get-ServiceBusResGroupAndNamespace
+		$primaryKey = Invoke-CommandLine -Command "az servicebus namespace authorization-rule keys list $serviceBusNameAndRg --name $KeyName --query 'primaryKey'" -IsSensitive
+		if ($primaryKey) {
+			Write-Output "##vso[task.setvariable variable=MESSAGE_QUEUE_HOST]$Global:AzureServiceBusNamespace"
+			Write-Output "##vso[task.setvariable variable=MESSAGE_QUEUE_PASSWORD;issecret=true]$primaryKey"
+			Write-Output "##vso[task.setvariable variable=MESSAGE_QUEUE_USER]$KeyName"
+		}
+		else {
+			throw "Could not find primaryKey for '$KeyName' in namespace '$Global:AzureServiceBusNamespace'"
 		}			
 	}
 	end {
