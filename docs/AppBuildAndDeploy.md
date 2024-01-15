@@ -52,7 +52,6 @@ stage: Application_CI
         task: integration-test
         task: service-acceptance-test
         task: owasp-test-zap
-        task: accessibility-test-pa11y
         task: accessibility-test-axe
         task: performance-test-jmeter
         task: acceptance-test
