@@ -23,8 +23,7 @@ parameters:
 steps:
   - checkout: Self
     path: s/ 
-  - checkout: PipelineCommon
-    path: s/PipelineCommon
+
   - ${{ if ne(parameters.appDeployConfig, '') }}:          
     - pwsh: |
         $PSVersionTable

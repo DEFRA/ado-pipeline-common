@@ -63,9 +63,6 @@ stages:
           - checkout: self
             path: s/source
 
-          - checkout: PipelineCommon
-            path: s/PipelineCommon
-
           - task: PowerShell@2
             inputs:
               targetType: filePath
@@ -95,9 +92,7 @@ stages:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
           - checkout: self
-            path: s/
-          - checkout: PipelineCommon
-            path: s/PipelineCommon       
+            path: s/    
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
@@ -150,8 +145,6 @@ stages:
         steps:
           - checkout: self
             path: s/
-          - checkout: PipelineCommon
-            path: s/PipelineCommon
 
           - task: Cache@2
             displayName: Cache docker
@@ -193,9 +186,7 @@ stages:
         dependsOn: [Initialise, BuildDockerImage]
         steps:
           - checkout: self
-            path: s/
-          - checkout: PipelineCommon
-            path: s/PipelineCommon       
+            path: s/  
 
           - ${{ if ne(parameters.appTestConfig, '') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
@@ -219,8 +210,6 @@ stages:
         steps:
           - checkout: self
             path: s/
-          - checkout: PipelineCommon
-            path: s/PipelineCommon
           
           - task: Cache@2
             displayName: Cache helm chart
@@ -288,8 +277,6 @@ stages:
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
           helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
         steps:
-          - checkout: PipelineCommon
-            path: s/PipelineCommon
 
           - task: Cache@2
             displayName: Restore Cached docker image
@@ -376,8 +363,7 @@ stages:
                     - ${{ if ne(parameters.appDeployConfig, '') }}:
                       - checkout: Self
                         path: s/ 
-                      - checkout: PipelineCommon
-                        path: s/PipelineCommon 
+
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}: 
                         - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
                           - ${{ if contains( varGroup, deploymentEnv.name) }}:

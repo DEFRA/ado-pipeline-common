@@ -17,8 +17,6 @@ steps:
 
   - checkout: Self
     path: s/
-  - checkout: PipelineCommon
-    path: s/PipelineCommon
 
   - task: DownloadPipelineArtifact@2
     displayName: 'Download App Version' 
