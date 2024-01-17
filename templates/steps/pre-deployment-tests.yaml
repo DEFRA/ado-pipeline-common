@@ -19,7 +19,7 @@ steps:
       azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
-      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Provision-Resources.ps1'
+      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/test/Provision-Resources.ps1'
       arguments: > 
         -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
@@ -54,7 +54,7 @@ steps:
     parameters:
       testDir : '$(Pipeline.Workspace)/s/test/performance'
       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
+      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/scripts/jtl_junit_converter.py'     
   - template: /templates/steps/tests/acceptance-test.yaml
     parameters:
       testDir : '$(Pipeline.Workspace)/s'
@@ -67,7 +67,7 @@ steps:
       azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
-      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/test/Delete-Resources.ps1'
+      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/test/Delete-Resources.ps1'
       arguments: > 
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
         -ServiceName '${{ parameters.serviceName }}'

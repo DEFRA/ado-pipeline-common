@@ -39,9 +39,9 @@ variables:
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
-  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+  value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
 - name: AppConfigModuleDirectory
-  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/app-config'
+  value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/app-config'
 - name: RunDate
   value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
 - name: Revision
@@ -63,10 +63,13 @@ stages:
           - checkout: self
             path: s/source
 
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
+
           - task: PowerShell@2
             inputs:
               targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Extract-CodeVersion.ps1'
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Extract-CodeVersion.ps1'
               arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
@@ -92,7 +95,9 @@ stages:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
         steps:
           - checkout: self
-            path: s/    
+            path: s/                
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
@@ -145,6 +150,8 @@ stages:
         steps:
           - checkout: self
             path: s/
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
           - task: Cache@2
             displayName: Cache docker
@@ -157,7 +164,7 @@ stages:
             displayName: 'Docker Build Image'
             inputs:
               targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
               arguments: >
                  -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                  -ImageVersion  $(appVersion) 
@@ -187,6 +194,8 @@ stages:
         steps:
           - checkout: self
             path: s/  
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
           - ${{ if ne(parameters.appTestConfig, '') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
@@ -210,7 +219,9 @@ stages:
         steps:
           - checkout: self
             path: s/
-          
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
+
           - task: Cache@2
             displayName: Cache helm chart
             inputs:
@@ -222,7 +233,7 @@ stages:
             displayName: 'Helm Lint'
             inputs:
               targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/HelmLintAndPublish.ps1'
               arguments: > 
                 -Command 'lint' 
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
@@ -237,7 +248,7 @@ stages:
               pwsh: true
               azurePowerShellVersion: latestVersion
               targetType: 'filePath'
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/Build-Helm-KVSecretsRoleAssignments.ps1'
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Build-Helm-KVSecretsRoleAssignments.ps1'
               arguments: >
                 -KeyVaultVSecretNames '${{ convertToJson(parameters.appDeployConfig.variables) }}' 
                 -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
@@ -249,7 +260,7 @@ stages:
             displayName: 'Helm Lint & Build'
             inputs:
               targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/HelmLintAndPublish.ps1'
               arguments: > 
                 -ChartVersion  $(appVersion) 
                 -ChartCachePath '$(Pipeline.Workspace)/helm' 
@@ -277,6 +288,8 @@ stages:
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
           helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
         steps:
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
           - task: Cache@2
             displayName: Restore Cached docker image
@@ -296,7 +309,7 @@ stages:
             displayName: 'Set App Version'   
             inputs:
               targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/GetSet-CodeVersion.ps1'
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/GetSet-CodeVersion.ps1'
               arguments: -Command "Set" -AppVersion $(appVersion) -ArtifactFilePath  $(System.ArtifactsDirectory)/version
               failOnStderr: false
               pwsh: true
@@ -332,7 +345,7 @@ stages:
         - name: serviceName
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
-          value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+          value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
   
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
@@ -363,7 +376,8 @@ stages:
                     - ${{ if ne(parameters.appDeployConfig, '') }}:
                       - checkout: Self
                         path: s/ 
-
+                      - checkout: PipelineCommon
+                        path: s/ADO-Pipeline-Common
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}: 
                         - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
                           - ${{ if contains( varGroup, deploymentEnv.name) }}:

@@ -12,7 +12,7 @@ variables:
 - name: IsPrBuild
   value: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
 - name: PSHelperDirectory
-  value: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/modules/ps-helpers'
+  value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
 stages:
     - stage: Build
       displayName: 'Build'
@@ -38,7 +38,7 @@ stages:
             - task: PowerShell@2
               inputs:
                 targetType: filePath
-                filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/PublishTechDocs.ps1'
+                filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/PublishTechDocs.ps1'
                 arguments: >
                  -Command 'Build' 
                  -SitePath $(System.ArtifactsDirectory)/site
@@ -84,7 +84,7 @@ stages:
                         azureSubscription: ${{ deploymentEnv.serviceConnection }}
                         scriptType: pscore
                         scriptLocation: scriptPath
-                        scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/PublishTechDocs.ps1'
+                        scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/PublishTechDocs.ps1'
                         arguments: > 
                           -Command 'Publish' 
                           -StorageAccountName ${{ deploymentEnv.StorageAccountName }}  

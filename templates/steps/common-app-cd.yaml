@@ -18,7 +18,8 @@ steps:
 
   - checkout: Self
     path: s/
-
+  - checkout: PipelineCommon
+    path: s/ADO-Pipeline-Common
   - task: DownloadPipelineArtifact@2
     displayName: 'Download App Version' 
     inputs:
@@ -30,7 +31,7 @@ steps:
     name: GetAppVersion   
     inputs:
       targetType: filePath
-      filePath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/GetSet-CodeVersion.ps1'
+      filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/GetSet-CodeVersion.ps1'
       arguments: -Command "Get" -ArtifactFilePath  $(System.ArtifactsDirectory)/version
       failOnStderr: false
       pwsh: true
@@ -53,7 +54,7 @@ steps:
       azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
-      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/BuildAndPushDockerImage.ps1'
+      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
       arguments: > 
         -AcrName ${{ parameters.environmentObj.acrName }} 
         -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
@@ -71,7 +72,7 @@ steps:
       azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
       scriptType: pscore
       scriptLocation: scriptPath
-      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/powershell/build/HelmLintAndPublish.ps1'
+      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/HelmLintAndPublish.ps1'
       arguments: > 
         -AcrName ${{ parameters.environmentObj.acrName }}  
         -ChartVersion $(GetAppVersion.appVersion) 
