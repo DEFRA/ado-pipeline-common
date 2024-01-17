@@ -10,7 +10,7 @@ steps:
       testDir : '$(Pipeline.Workspace)/s/test/performance'
       testOutputDir: '$(Pipeline.Workspace)/s/test-output'
       typeOfTest: 'PostDeploy'
-      scriptPath: '$(Pipeline.Workspace)/s/PipelineCommon/templates/scripts/jtl_junit_converter.py'     
+      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/scripts/jtl_junit_converter.py'     
       url: ${{ parameters.url }}
   - template: /templates/steps/tests/acceptance-test.yaml
     parameters:
