@@ -22,7 +22,7 @@ steps:
       scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/test/Provision-Resources.ps1'
       arguments: > 
         -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
-        -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
+        -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
         -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
         -Environment '${{ parameters.appTestConfig.preDeployTest.envToTest }}'
@@ -69,7 +69,7 @@ steps:
       scriptLocation: scriptPath
       scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/test/Delete-Resources.ps1'
       arguments: > 
-        -PipelineCommonDirectory '$(Pipeline.Workspace)/s/PipelineCommon'
+        -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
         -ServiceName '${{ parameters.serviceName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
         -Environment '${{ parameters.appTestConfig.preDeployTest.envToTest }}'
