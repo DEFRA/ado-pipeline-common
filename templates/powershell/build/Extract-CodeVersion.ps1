@@ -106,7 +106,7 @@ try {
             Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'."    
         }
         else {
-            Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'."   
+            Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."   
             $exitCode = -2
         }
     }
