@@ -44,7 +44,6 @@ stages:
         steps:
           - checkout: self
             path: s/source
-
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
