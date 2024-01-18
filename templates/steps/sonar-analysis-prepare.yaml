@@ -17,7 +17,7 @@ steps:
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
       scannerMode: MSBuild
       projectKey: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
-      projectName: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+      projectName: ${{ parameters.appBuildConfig.imageRepoName}}
       projectVersion: ${{ parameters.appVersion}}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
@@ -35,14 +35,14 @@ steps:
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
-          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectName=${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
           sonar.javascript.lcov.reportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
           sonar.coverage.jacoco.xmlReportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
-          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectName=${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
           sonar.javascript.lcov.reportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
           sonar.coverage.jacoco.xmlReportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
