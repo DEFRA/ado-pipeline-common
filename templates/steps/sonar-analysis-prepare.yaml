@@ -14,7 +14,7 @@ steps:
   inputs:
     azureSubscription: AZD-ADP-SND1
     ScriptType: 'FilePath'
-    ScriptPath: $(Agent.BuildDirectory)/s/PipelineCommonFiles/templates/powershell/build/Set-SonarCloud.ps1
+    ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Set-SonarCloud.ps1
     ScriptArguments: >
       -RepositoryName ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
       -KeyVaultName sndadpinfvt1402
