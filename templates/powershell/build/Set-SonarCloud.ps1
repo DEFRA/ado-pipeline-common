@@ -5,6 +5,8 @@ param(
     [Parameter(Mandatory)]
     [string]$KeyVaultName,
     [Parameter()]
+    [string]$keyVaultSecretName = 'sonar-api-key',
+    [Parameter()]
     [string]$SonarOrganisation = 'defra'
 )
 
@@ -34,17 +36,17 @@ try {
     $sonarUrl = "https://sonarcloud.io"
 
     Write-Debug "Reading SonarCloud API key from '$KeyVaultName' KeyVault..."
-    [string]$sonarKey = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "sonar-api-key" -AsPlainText -ErrorAction Stop
+    [string]$sonarKey = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $keyVaultSecretName -AsPlainText -ErrorAction Stop
     $sonarKey += ":"
-    $EncodedText = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($sonarKey))
+    [string]$encodedText = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($sonarKey))
 
     $headers = @{
-        "Authorization" = "Basic $EncodedText"
+        "Authorization" = "Basic $encodedText"
         "Accept"        = "application/json"
     }
 
     Write-Debug "Checking existence of the project '$RepositoryName'..."
-    [Object]$response = Invoke-RestMethod -Method Get -Uri "$sonarUrl/api/components/search_projects?organization=defra&filter=query+%3D+%22$RepositoryName%22" -Headers $headers
+    [Object]$response = Invoke-RestMethod -Method Get -Uri "$sonarUrl/api/components/search_projects?organization=$SonarOrganisation&filter=query+%3D+%22$RepositoryName%22" -Headers $headers
 
     if ($response -and $response.components.Count -le 0) {
         Write-Output "Creating project '$RepositoryName' on '$SonarOrganisation' organisation."
@@ -54,7 +56,7 @@ try {
         Invoke-RestMethod -Method Post -Uri "$sonarUrl/api/project_branches/rename" -Headers $headers -Body "project=$RepositoryName&name=main"
     }
     else {
-        Write-Output "Project '$RepositoryName' already exists on '$SonarOrganisation' organisation."
+        Write-Output "The project '$RepositoryName' already exists on '$SonarOrganisation' organisation."
     }
 
     $exitCode = 0
