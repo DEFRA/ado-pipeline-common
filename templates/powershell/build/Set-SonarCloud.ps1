@@ -35,6 +35,7 @@ try {
 
     Write-Debug "Reading SonarCloud API key from '$KeyVaultName' KeyVault..."
     [string]$sonarKey = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "sonar-api-key" -AsPlainText -ErrorAction Stop
+    Write-Debug "SonarKey: $sonarKey"
     $EncodedText = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($sonarKey))
 
     $headers = @{
