@@ -8,7 +8,21 @@ parameters:
   - name: appRootDir
     type: string
 
-steps:   
+steps:
+- task: AzurePowerShell@5
+  displayName: "Setup SonarCloud Project"
+  inputs:
+    azureSubscription: AZD-ADP-SND1
+    ScriptType: 'FilePath'
+    ScriptPath: $(Agent.BuildDirectory)/s/PipelineCommonFiles/templates/powershell/build/Set-SonarCloud.ps1
+    ScriptArguments: >
+      -RepositoryName ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+      -KeyVaultName sndadpinfvt1402
+    FailOnStandardError: true
+    azurePowerShellVersion: 'LatestVersion'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    pwsh: true
+
 - task: SonarCloudPrepare@1
   displayName: 'Prepare Sonar analysis'
   inputs:
@@ -17,7 +31,7 @@ steps:
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'dotnet') }}:
       scannerMode: MSBuild
       projectKey: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
-      projectName: ${{ parameters.appBuildConfig.imageRepoName}}
+      projectName: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
       projectVersion: ${{ parameters.appVersion}}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
@@ -35,19 +49,17 @@ steps:
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
-          sonar.projectName=${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
           sonar.javascript.lcov.reportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
           sonar.coverage.jacoco.xmlReportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
-          sonar.projectName=${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
           sonar.projectVersion=${{ parameters.appVersion}}
           sonar.javascript.lcov.reportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.lcovReportPaths }}
           sonar.coverage.jacoco.xmlReportPaths=${{ parameters.appRootDir}}/${{ parameters.sonarConfig.nodejs.xmlReportPaths }}
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
-
-    
