@@ -8,7 +8,22 @@ parameters:
   - name: appRootDir
     type: string
 
-steps:   
+steps:
+- task: AzurePowerShell@5
+  displayName: "Setup SonarCloud Project"
+  inputs:
+    azureSubscription: ${{ parameters.sonarConfig.keyVaultServiceConnection }}
+    ScriptType: 'FilePath'
+    ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Set-SonarCloud.ps1
+    ScriptArguments: >
+      -RepositoryName ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+      -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }}
+      -keyVaultSecretName ${{ parameters.sonarConfig.keyVaultSecretName }}
+    FailOnStandardError: true
+    azurePowerShellVersion: 'LatestVersion'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+    pwsh: true
+
 - task: SonarCloudPrepare@1
   displayName: 'Prepare Sonar analysis'
   inputs:
@@ -49,5 +64,3 @@ steps:
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
-
-    

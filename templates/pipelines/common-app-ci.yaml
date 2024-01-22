@@ -31,8 +31,6 @@ parameters:
 - name: appDeployConfig
   type: object
   default: null
-- name: sharedAcrConfig
-  type: object
 variables:
 - name: IsDefaultBranchBuild
   value: ${{ or( in(variables['Build.SourceBranch'], 'refs/heads/main','refs/heads/master'), contains(variables['Build.SourceBranch'],'refs/tags') ) }}
@@ -92,10 +90,10 @@ stages:
           )
         dependsOn: Initialise
         variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]                    
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
         steps:
           - checkout: self
-            path: s/                
+            path: s/
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
@@ -113,7 +111,7 @@ stages:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
                 projectPath: ${{ parameters.appBuildConfig.projectPath }}
                 testProjectPath: ${{ parameters.appBuildConfig.testProjectPath }}
-                packageFeedName: ${{ parameters.packageFeedName }}                
+                packageFeedName: ${{ parameters.packageFeedName }}
 
           - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'nodejs') }}:
             - template: /templates/steps/nodejs-build.yaml
@@ -129,13 +127,12 @@ stages:
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
             - template: /templates/steps/security-scan-application.yaml
               parameters:
-                snykConnection: ${{ parameters.snykConfig.snykConnection }}              
+                snykConnection: ${{ parameters.snykConfig.snykConnection }}
                 snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}  
 
-       
       - job: BuildDockerImage
         displayName: 'Build Docker Image'
         condition:  |
@@ -254,7 +251,7 @@ stages:
                 -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                 -ServiceName ${{ parameters.serviceName }}
-              workingDirectory: $(Pipeline.Workspace)/s    
+              workingDirectory: $(Pipeline.Workspace)/s
 
           - task: PowerShell@2
             displayName: 'Helm Lint & Build'
@@ -280,7 +277,7 @@ stages:
             or(
               eq( variables.IsDefaultBranchBuild , true),
               eq( variables.IsPrBuild , true),
-              eq( ${{ parameters.deployFromFeature }} , true)              
+              eq( ${{ parameters.deployFromFeature }} , true)
             ) 
           )
         variables:
@@ -333,7 +330,7 @@ stages:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
   - ${{ each deploymentEnv in parameters.environments }}:  
-    - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:                  
+    - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD: ${{ deploymentEnv.name }}'
@@ -362,7 +359,7 @@ stages:
                 and(
                   or(
                     eq(variables.IsPrBuild, true),
-                    eq(${{ parameters.deployFromFeature }},true)                    
+                    eq(${{ parameters.deployFromFeature }},true)
                   ),
                   eq('${{ deploymentEnv.type }}','dev')
                 ) 
@@ -399,7 +396,7 @@ stages:
                           serviceName: ${{ parameters.serviceName }}
                           configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
                           PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                          AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}                          
+                          AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
                         parameters:
