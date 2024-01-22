@@ -31,8 +31,6 @@ parameters:
 - name: appDeployConfig
   type: object
   default: null
-- name: sharedAcrConfig
-  type: object
 variables:
 - name: IsDefaultBranchBuild
   value: ${{ or( in(variables['Build.SourceBranch'], 'refs/heads/main','refs/heads/master'), contains(variables['Build.SourceBranch'],'refs/tags') ) }}
