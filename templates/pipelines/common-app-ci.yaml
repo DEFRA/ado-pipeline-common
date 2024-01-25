@@ -65,7 +65,7 @@ stages:
             path: s/ADO-Pipeline-Common
 
           - pwsh: |
-              Write-Output ${{ join(parameters.appTestConfig.preDeployTest.testsToRun, ';') }}
+              Write-Output ${{ parameters.appTestConfig.preDeployTest.testsToRun }}
           - task: PowerShell@2
             inputs:
               targetType: filePath
