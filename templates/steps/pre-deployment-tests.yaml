@@ -12,7 +12,6 @@ steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
       DockerCompose : true
-
   - task: AzureCLI@2
     displayName: 'Provision Resources for Tests'
     inputs:
