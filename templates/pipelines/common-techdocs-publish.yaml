@@ -44,7 +44,7 @@ stages:
                  -SitePath $(System.ArtifactsDirectory)/site
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                 pwsh: true
-                failOnStderr: true
+                failOnStderr: false
                 #errorActionPreference: silentlyContinue
                 warningPreference: silentlyContinue
                 workingDirectory: '$(Pipeline.Workspace)/s/source${{ parameters.config.DocsPath }}'
