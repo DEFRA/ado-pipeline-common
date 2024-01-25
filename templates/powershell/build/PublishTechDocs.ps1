@@ -63,7 +63,7 @@ Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
   
     npm install -g @techdocs/cli
-    pip3 install mkdocs-techdocs-core
+    pip3 install mkdocs-techdocs-core --no-warn-script-location
     if ("Build" -eq $Command) {
         #Following command expects the mkdocs.yml to be in current directory and generates the site folder             
         techdocs-cli generate --source-dir . --output-dir $SitePath
