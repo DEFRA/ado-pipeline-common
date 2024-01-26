@@ -72,7 +72,7 @@ try {
 
     if ("Build" -eq $Command) {
         #Following command expects the mkdocs.yml to be in current directory and generates the site folder             
-        techdocs-cli generate --source-dir . --output-dir $SitePath
+        techdocs-cli generate --no-docker --source-dir . --output-dir $SitePath
     }
     elseif ("Publish" -eq $Command) {
         Import-Module $PSHelperDirectory -Force  
