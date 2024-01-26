@@ -62,11 +62,19 @@ Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
   
-    npm install -g @techdocs/cli
-    pip3 install mkdocs-techdocs-core
+    npm install -g @techdocs/cli --loglevel=error
+    
+    python3 -m venv venv
+    ./venv/bin/Activate.ps1
+    pip3 install mkdocs-material --no-warn-script-location
+    pip3 install pillow cairosvg --no-warn-script-location
+    pip3 install mkdocs-glightbox --no-warn-script-location
+    pip3 install mkdocs-nav-weight --no-warn-script-location
+    pip3 install mkdocs-techdocs-core --no-warn-script-location
+
     if ("Build" -eq $Command) {
         #Following command expects the mkdocs.yml to be in current directory and generates the site folder             
-        techdocs-cli generate --source-dir . --output-dir $SitePath
+        techdocs-cli generate --no-docker --source-dir . --output-dir $SitePath
     }
     elseif ("Publish" -eq $Command) {
         Import-Module $PSHelperDirectory -Force  
