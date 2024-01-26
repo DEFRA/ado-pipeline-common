@@ -64,6 +64,7 @@ try {
   
     npm install -g @techdocs/cli --loglevel=error
     pip3 install mkdocs-techdocs-core --no-warn-script-location
+    pip3 install mkdocs-nav-weight==0.0.1 --no-warn-script-location
     if ("Build" -eq $Command) {
         #Following command expects the mkdocs.yml to be in current directory and generates the site folder             
         techdocs-cli generate --source-dir . --output-dir $SitePath
