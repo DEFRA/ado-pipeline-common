@@ -64,8 +64,8 @@ try {
   
     npm install -g @techdocs/cli --loglevel=error
     
-    python -m venv venv
-    source venv/bin/activate
+    python3 -m venv venv
+    ./venv/bin/activate
     pip3 install mkdocs-material --no-warn-script-location
     pip3 install pillow cairosvg --no-warn-script-location
     pip3 install mkdocs-glightbox --no-warn-script-location
