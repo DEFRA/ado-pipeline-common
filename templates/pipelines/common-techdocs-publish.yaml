@@ -45,7 +45,6 @@ stages:
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                 pwsh: true
                 failOnStderr: true
-                warningPreference: silentlyContinue
                 workingDirectory: '$(Pipeline.Workspace)/s/source${{ parameters.config.DocsPath }}'
               displayName: 'Generate Docs'            
               name: Generate 
