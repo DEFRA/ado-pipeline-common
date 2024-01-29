@@ -1,0 +1,41 @@
+parameters:
+  - name: appBuildConfig
+    type: object       
+  - name: appVersion
+    type: string 
+
+steps:  
+- checkout: self
+  path: s/source
+  persistCredentials: true
+
+- task: PowerShell@2
+  displayName: Tag
+  inputs:
+    targetType: 'inline'
+    script: |
+      $version = "${{ parameters.appVersion }}"
+      $exists = git tag -l "$version"
+      if ($exists) { 
+        echo "Tag already exists"
+        Write-Output "##vso[task.setvariable variable=TagExists]true"
+      }
+      else {
+        Write-Output "##vso[task.setvariable variable=TagExists]false"
+        git tag $version
+        git push origin $version
+        echo "Tag $version Applied"
+      }
+    workingDirectory: '$(Pipeline.Workspace)/s/source'
+    
+- task: GitHubRelease@1
+  displayName: 'GitHub release (create)'
+  condition: eq(variables.TagExists, 'false')
+  inputs:
+    gitHubConnection: ${{ parameters.appBuildConfig.GitHubReleaseConnection}}
+    repositoryName: '$(Build.Repository.Name)'
+    tagSource: userSpecifiedTag
+    tag: ${{ parameters.appVersion }}
+    title: 'Release ${{ parameters.appVersion }}'
+    releaseNotesSource: inline
+    isPreRelease: false

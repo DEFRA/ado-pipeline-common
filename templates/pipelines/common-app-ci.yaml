@@ -74,42 +74,17 @@ stages:
             displayName: GetAppVersion            
             name: GetAppVersion
 
-          - checkout: self
-            path: s/source
-            persistCredentials: true
-
-          - task: PowerShell@2
-            displayName: Tag
-            inputs:
-              targetType: 'inline'
-              script: |
-                $version = "$(GetAppVersion.appVersion)"
-                $exists = git tag -l "$version"
-                if ($exists) { 
-                    echo "Tag already exists"
-                }
-                else {
-                    git tag $version
-                    git push origin $version
-                }
-              workingDirectory: '$(Pipeline.Workspace)/s/source'
-          - task: GitHubRelease@1
-            displayName: 'GitHub release (create)'
-            inputs:
-              gitHubConnection: rajeshkaremane
-              repositoryName: '$(Build.Repository.Name)'
-              tagSource: userSpecifiedTag
-              tag: $(GetAppVersion.appVersion)
-              title: 'Release $(GetAppVersion.appVersion)'
-              releaseNotesSource: inline
-              isPreRelease: true
-
           - task: PowerShell@2
             displayName: UpdateBuildNumber
             inputs:
               targetType: 'inline'
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
+
+          - template: /templates/steps/tag-and-release.yaml
+            parameters:
+              appBuildConfig: ${{ parameters.appBuildConfig }}
+              appVersion: $(GetAppVersion.appVersion)
 
       - job: Build
         displayName: 'Build'  
