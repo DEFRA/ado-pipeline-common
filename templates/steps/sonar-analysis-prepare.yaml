@@ -41,8 +41,6 @@ steps:
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
           sonar.cs.xunit.reportsPaths=${Agent.TempDirectory}/**/XUnit.TestResults.xml
           sonar.cs.opencover.reportsPaths=${Agent.TempDirectory}/**/opencoverCoverage.xml
-          sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
-          sonar.cs.vscoveragexml.reportsPaths=$(Agent.TempDirectory)/**/*.coverage
           sonar.exclusions=**/obj/**,**/Migrations/*
           sonar.qualitygate.wait=true
 
