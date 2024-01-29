@@ -91,7 +91,7 @@ stages:
           - task: GitHubRelease@1
             displayName: 'GitHub release (create)'
             inputs:
-              gitHubConnection: DEFRA
+              gitHubConnection: defra-adp-sandpit
               tagSource: userSpecifiedTag
               tag: $(GetAppVersion.appVersion)
               title: 'Release $(GetAppVersion.appVersion)'
