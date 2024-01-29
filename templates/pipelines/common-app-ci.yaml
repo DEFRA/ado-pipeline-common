@@ -81,11 +81,6 @@ stages:
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
 
-          - template: /templates/steps/tag-and-release.yaml
-            parameters:
-              appBuildConfig: ${{ parameters.appBuildConfig }}
-              appVersion: $(GetAppVersion.appVersion)
-
       - job: Build
         displayName: 'Build'  
         condition: |
@@ -334,6 +329,13 @@ stages:
             inputs:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
+          
+          - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
+            - template: /templates/steps/tag-and-release.yaml
+              parameters:
+                appBuildConfig: ${{ parameters.appBuildConfig }}
+                appVersion: $(GetAppVersion.appVersion)
+
   - ${{ each deploymentEnv in parameters.environments }}:  
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:
       - stage: ${{ deploymentEnv.name }}

@@ -10,7 +10,7 @@ steps:
   persistCredentials: true
 
 - task: PowerShell@2
-  displayName: Tag
+  displayName: Git-Tag
   inputs:
     targetType: 'inline'
     script: |
@@ -27,9 +27,9 @@ steps:
         echo "Tag $version Applied"
       }
     workingDirectory: '$(Pipeline.Workspace)/s/source'
-    
+
 - task: GitHubRelease@1
-  displayName: 'GitHub release (create)'
+  displayName: 'GitHub-Release'
   condition: eq(variables.TagExists, 'false')
   inputs:
     gitHubConnection: ${{ parameters.appBuildConfig.GitHubReleaseConnection}}
