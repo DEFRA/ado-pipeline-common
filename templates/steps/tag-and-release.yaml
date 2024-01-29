@@ -18,10 +18,17 @@ steps:
       $exists = git tag -l "$version"
       if ($exists) { 
         echo "Tag already exists"
-        Write-Output "##vso[task.setvariable variable=TagExists]true"
+      }
+      $giturl=git config --get remote.origin.url
+      $gitEndpoint = $giturl.split("/")[-2]
+      $gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
+      $latestReleaseTag=((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+      if ($latestReleaseTag -eq $version) {
+        echo "Release already exists"
+        Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
       }
       else {
-        Write-Output "##vso[task.setvariable variable=TagExists]false"
+        Write-Output "##vso[task.setvariable variable=ReleaseExists]false"
       }
       git tag $version --force
       git push origin $version
@@ -30,7 +37,7 @@ steps:
 
 - task: GitHubRelease@1
   displayName: 'GitHub-Release'
-  condition: eq(variables.TagExists, 'false')
+  condition: eq(variables.ReleaseExists, 'false')
   inputs:
     gitHubConnection: ${{ parameters.appBuildConfig.GitHubReleaseConnection}}
     repositoryName: '$(Build.Repository.Name)'
