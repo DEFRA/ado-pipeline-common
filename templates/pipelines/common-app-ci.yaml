@@ -60,6 +60,7 @@ stages:
         steps:
           - checkout: self
             path: s/source
+            persistCredentials: true
 
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
@@ -91,7 +92,7 @@ stages:
           - task: GitHubRelease@1
             displayName: 'GitHub release (create)'
             inputs:
-              gitHubConnection: defra-adp-sandpit
+              gitHubConnection: rajeshkaremane
               tagSource: userSpecifiedTag
               tag: $(GetAppVersion.appVersion)
               title: 'Release $(GetAppVersion.appVersion)'
