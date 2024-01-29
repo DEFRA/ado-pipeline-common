@@ -22,10 +22,10 @@ steps:
       }
       else {
         Write-Output "##vso[task.setvariable variable=TagExists]false"
-        git tag $version
-        git push origin $version
-        echo "Tag $version Applied"
       }
+      git tag $version --force
+      git push origin $version
+      echo "Tag $version updated to latest commit"
     workingDirectory: '$(Pipeline.Workspace)/s/source'
 
 - task: GitHubRelease@1
