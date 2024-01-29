@@ -97,6 +97,7 @@ stages:
             displayName: 'GitHub release (create)'
             inputs:
               gitHubConnection: rajeshkaremane
+              repositoryName: '$(Build.Repository.Name)'
               tagSource: userSpecifiedTag
               tag: $(GetAppVersion.appVersion)
               title: 'Release $(GetAppVersion.appVersion)'
