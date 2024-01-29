@@ -60,7 +60,6 @@ stages:
         steps:
           - checkout: self
             path: s/source
-            persistCredentials: true
 
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
@@ -74,6 +73,10 @@ stages:
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: GetAppVersion            
             name: GetAppVersion
+
+          - checkout: self
+            path: s/source
+            persistCredentials: true
 
           - task: PowerShell@2
             displayName: Tag
