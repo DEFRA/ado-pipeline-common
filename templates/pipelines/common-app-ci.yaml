@@ -334,7 +334,7 @@ stages:
             - template: /templates/steps/tag-and-release.yaml
               parameters:
                 appBuildConfig: ${{ parameters.appBuildConfig }}
-                appVersion: $(GetAppVersion.appVersion)
+                appVersion: $(appVersion)
 
   - ${{ each deploymentEnv in parameters.environments }}:  
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:
