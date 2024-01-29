@@ -89,6 +89,7 @@ stages:
                     git tag $version
                     git push origin $version
                 }
+              workingDirectory: '$(Pipeline.Workspace)/s/source'
           - task: GitHubRelease@1
             displayName: 'GitHub release (create)'
             inputs:
