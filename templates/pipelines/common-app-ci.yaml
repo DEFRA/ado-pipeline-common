@@ -60,6 +60,7 @@ stages:
         steps:
           - checkout: self
             path: s/source
+            persistCredentials: true
 
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
@@ -73,6 +74,30 @@ stages:
               workingDirectory: '$(Pipeline.Workspace)/s/source'
             displayName: GetAppVersion            
             name: GetAppVersion
+
+          - task: PowerShell@2
+            displayName: UpdateBuildNumber
+            inputs:
+              targetType: 'inline'
+              script: |
+                $version = "$(GetAppVersion.appVersion)"
+                $exists = git tag -l "$version"
+                if ($exists) { 
+                    echo "Tag already exists"
+                }
+                else {
+                    git tag $version
+                    git push origin $version
+                }
+          - task: GitHubRelease@1
+            displayName: 'GitHub release (create)'
+            inputs:
+              gitHubConnection: DEFRA
+              tagSource: userSpecifiedTag
+              tag: $(GetAppVersion.appVersion)
+              title: 'Release $(GetAppVersion.appVersion)'
+              releaseNotesSource: inline
+              isPreRelease: true
 
           - task: PowerShell@2
             displayName: UpdateBuildNumber
