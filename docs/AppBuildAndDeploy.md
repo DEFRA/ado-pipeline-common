@@ -228,10 +228,14 @@ extends:
             testProjectPath: "./ProjectName.Tests/ProjectName.Tests.csproj" #Optional: Used to run Unit Tests of DotNet Projects
             manifestPath: "./obj/ProjectName/project.assets.json" #Mandatory: Used by Snyk to identify the vulnerabilities.  packages.config (.NET Framework) .proj file or project.json or project.assets.json for (.NET Core) package.json for (NodeJS)
             imageRepoName: "repo-name"      #Mandatory: Used for publishing docker, helm charts and also used by snyk to publish the results
-        appTestConfig:                      #Mandatory: Used for testing application
-          postDeployTest:                   #Mandatory Post deployment test variables
-            envToTest: snd3                 #Mandatory Post deployment test environment name
-            domain: 'adp.defra.gov.uk'      #Mandatory Post deployment test domain name
+        appTestConfig:                      #Optional : Used for testing application
+          preDeployTest:                    #Optional: Used for testing application
+            testsToRun:                     #Optional: Specify the list of pre deployment tests to run. integration, service-acceptance,owasp, accessibility,performance,acceptance. If not specified default tests for feature brach: integration;owasp;accessibility. PR branch will run all available tests.
+              - owasp                       
+              - accessibility
+          postDeployTest:                   #Optional Post deployment test variables
+            envToTest: snd3                 #Optional Post deployment test environment name. Default snd3
+            domain: 'adp.defra.gov.uk'      #Optional Post deployment test domain name. Default adp.defra.gov.uk
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
             filetype: "yaml"                #Optional: default value json
@@ -296,10 +300,14 @@ extends:
             projectPath: "./package.json"   #Mandatory: Used to extract project version. For DotNet projects provide the csproj file path. For NodeJS package.json file path.
             manifestPath: "./package.json"  #Mandatory: Used by Snyk to identify the vulnerabilities.  packages.config (.NET Framework) .proj file or project.json or project.assets.json for (.NET Core) package.json for (NodeJS)
             imageRepoName: "repo-name"      #Mandatory: Used for publishing docker, helm charts and also used by snyk to publish the results
-        appTestConfig:                      #Mandatory: Used for testing application
-          postDeployTest:                   #Mandatory Post deployment test variables
-            envToTest: snd3                 #Mandatory Post deployment test environment name
-            domain: 'adp.defra.gov.uk'      #Mandatory Post deployment test domain name
+        appTestConfig:                      #Optional : Used for testing application
+          preDeployTest:                    #Optional: Used for testing application
+            testsToRun:                     #Optional: Specify the list of pre deployment tests to run. integration, service-acceptance,owasp, accessibility,performance,acceptance. If not specified default tests for feature brach: integration;owasp;accessibility. PR branch will run all available tests.
+              - owasp                       
+              - accessibility
+          postDeployTest:                   #Optional Post deployment test variables
+            envToTest: snd3                 #Optional Post deployment test environment name. Default snd3
+            domain: 'adp.defra.gov.uk'      #Optional Post deployment test domain name. Default adp.defra.gov.uk
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
             filetype: "yaml"                #Optional: default value json
