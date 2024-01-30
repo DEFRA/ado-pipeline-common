@@ -10,36 +10,20 @@ steps:
   persistCredentials: true
 
 - task: PowerShell@2
-  displayName: Git-Tag
+  displayName: Git-Tag  
   inputs:
-    targetType: 'inline'
-    script: |
-      $version = "${{ parameters.appVersion }}"
-      $exists = git tag -l "$version"
-      if ($exists) { 
-        echo "Tag already exists"
-      }
-      $giturl=git config --get remote.origin.url
-      $gitEndpoint = $giturl.split("/")[-2]
-      $gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
-      $latestReleaseTag=((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
-      if ($latestReleaseTag -eq $version) {
-        echo "Release already exists"
-        Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
-      }
-      else {
-        Write-Output "##vso[task.setvariable variable=ReleaseExists]false"
-      }
-      git tag $version --force
-      git push origin $version
-      echo "Tag $version updated to latest commit"
+    targetType: filePath
+    filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/TagRelease.ps1'
+    arguments: -AppVersion $(appVersion) -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+    failOnStderr: false
+    pwsh: true
     workingDirectory: '$(Pipeline.Workspace)/s/source'
-
+    
 - task: GitHubRelease@1
   displayName: 'GitHub-Release'
   condition: eq(variables.ReleaseExists, 'false')
   inputs:
-    gitHubConnection: ${{ parameters.appBuildConfig.GitHubReleaseConnection}}
+    gitHubConnection: ${{ parameters.appBuildConfig.githubreleaseconnection}}
     repositoryName: '$(Build.Repository.Name)'
     tagSource: userSpecifiedTag
     tag: ${{ parameters.appVersion }}
