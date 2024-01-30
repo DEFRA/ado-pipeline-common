@@ -14,11 +14,11 @@ steps:
   inputs:
     targetType: filePath
     filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/TagRelease.ps1'
-    arguments: -AppVersion $(appVersion) -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+    arguments: -AppVersion $(appVersion)
     failOnStderr: false
     pwsh: true
     workingDirectory: '$(Pipeline.Workspace)/s/source'
-    
+
 - task: GitHubRelease@1
   displayName: 'GitHub-Release'
   condition: eq(variables.ReleaseExists, 'false')

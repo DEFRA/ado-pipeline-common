@@ -9,15 +9,13 @@ Mandatory. Application version
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 .EXAMPLE
-.\ImportSecretsToKV.ps1 -AppVersion <AppVersion> -PSHelperDirectory <PSHelperDirectory>
+.\TagRelease.ps1 -AppVersion <AppVersion>
 #> 
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string] $AppVersion,
-    [Parameter(Mandatory)]
-    [string]$PSHelperDirectory
+    [string] $AppVersion
 )
 
 Set-StrictMode -Version 3.0
@@ -39,19 +37,21 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AppVersion=$AppVersion"
-Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
 
-    Import-Module $PSHelperDirectory -Force
     $exists = git tag -l "$AppVersion"
     if ($exists) { 
         Write-Host "Tag already exists"
-    }
-    $giturl=git config --get remote.origin.url
+    }    
+    git tag $AppVersion --force
+    git push origin $AppVersion
+    Write-Host "Tag $AppVersion updated to latest commit"
+
+    $giturl = git config --get remote.origin.url
     $gitEndpoint = $giturl.split("/")[-2]
     $gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
-    $latestReleaseTag=((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+    $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
     if ($latestReleaseTag -eq $AppVersion) {
         Write-Host "Release already exists"
         Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
@@ -59,10 +59,6 @@ try {
     else {
         Write-Output "##vso[task.setvariable variable=ReleaseExists]false"
     }
-    git tag $AppVersion --force
-    git push origin $AppVersion
-    Write-Host "Tag $AppVersion updated to latest commit"
-
     $exitCode = 0
 }
 catch {
