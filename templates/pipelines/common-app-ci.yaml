@@ -335,8 +335,7 @@ stages:
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD: ${{ deploymentEnv.name }}'
         variables:
-        - name: env
-          value: ${{ deploymentEnv.name }}
+          env: ${{ deploymentEnv.name }}
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
             - ${{ if contains( varGroup, 'environment') }}:
