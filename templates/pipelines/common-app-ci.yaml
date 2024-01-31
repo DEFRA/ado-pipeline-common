@@ -337,9 +337,9 @@ stages:
         variables:       
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-            - ${{ if contains( varGroup, 'environment') }}:
+            - ${{ if contains( varGroup, '${environment}') }}:
               # - group: '${{ varGroup }}'
-              - group: ${{ replace(varGroup, 'environment', deploymentEnv.name) }}
+              - group: ${{ replace(varGroup, '${environment}', deploymentEnv.name) }}
             - ${{ else }}:
               - group: ${{ varGroup }}
         - name: serviceName
