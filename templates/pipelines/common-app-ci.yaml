@@ -342,7 +342,7 @@ stages:
             - ${{ if contains( varGroup, 'environment') }}:
               # - group: '${{ varGroup }}'
               - group: $[ replace(varGroup, 'environment', 'variables.env') ]
-            - ${{ else }}:s
+            - ${{ else }}:
               - group: ${{ varGroup }}
         - name: serviceName
           value: ${{ parameters.serviceName }}
