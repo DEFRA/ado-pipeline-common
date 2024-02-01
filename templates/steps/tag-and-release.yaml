@@ -3,7 +3,8 @@ parameters:
     type: object       
   - name: appVersion
     type: string 
-
+  - name: PSHelperDirectory
+    type: string 
 steps:  
 - checkout: self
   path: s/source
@@ -14,7 +15,7 @@ steps:
   inputs:
     targetType: filePath
     filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/TagRelease.ps1'
-    arguments: -AppVersion $(appVersion)
+    arguments: -AppVersion ${{ parameters.appVersion }} -PSHelperDirectory  ${{ parameters.PSHelperDirectory }}
     failOnStderr: false
     pwsh: true
     workingDirectory: '$(Pipeline.Workspace)/s/source'

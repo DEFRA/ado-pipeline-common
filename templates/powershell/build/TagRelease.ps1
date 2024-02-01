@@ -15,7 +15,9 @@ Mandatory. Directory Path of PSHelper module
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string] $AppVersion
+    [string] $AppVersion,
+    [Parameter(Mandatory)]
+    [string]$PSHelperDirectory
 )
 
 Set-StrictMode -Version 3.0
@@ -37,21 +39,23 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AppVersion=$AppVersion"
-
+Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
-
-    $exists = git tag -l "$AppVersion"
+    Import-Module $PSHelperDirectory -Force  
+    $exists = Invoke-CommandLine -Command "git tag -l '$AppVersion'"
     if ($exists) { 
         Write-Host "Tag already exists"
     }    
-    git tag $AppVersion --force
-    git push origin $AppVersion
+    Invoke-CommandLine -Command "git tag $AppVersion --force"
+    Invoke-CommandLine -Command "git push origin $AppVersion"
+
     Write-Host "Tag $AppVersion updated to latest commit"
 
-    $giturl = git config --get remote.origin.url
+    $giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
     $gitEndpoint = $giturl.split("/")[-2]
     $gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
     $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+    
     if ($latestReleaseTag -eq $AppVersion) {
         Write-Host "Release already exists"
         Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
