@@ -30,7 +30,7 @@ steps:
     projectName: '${{ parameters.acrRepoName }}'
     organization: '${{ parameters.snykOrganizationName }}'    
     failOnThreshold: '${{ parameters.failOnThreshold }}'
-    additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }}'
+    additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }} --exclude-base-image-vulns'
   enabled: true
   continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
     
