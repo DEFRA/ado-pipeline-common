@@ -445,11 +445,11 @@ function Get-AppConfigValuesFromYamlFile {
 			if ($configFileObj.ContainsKey("type") -and $configFileObj.type -eq "keyvault" ) {
 				$configFileObj.ContentType = $kvContentType
 
-				[System.Text.StringBuilder]$kvBuilder = [System.Text.StringBuilder]::new("{ `"uri`" : `" https://")
+				[System.Text.StringBuilder]$kvBuilder = [System.Text.StringBuilder]::new("{ `"uri`" : `"https://")
 				[void]$kvBuilder.Append($KeyVault)
 				[void]$kvBuilder.Append(".vault.azure.net/Secrets/")
 				[void]$kvBuilder.Append($configFileObj.Value)
-				[void]$kvBuilder.Append(" `" } ")
+				[void]$kvBuilder.Append("`" } ")
 				[string]$keyVaultRef = $kvBuilder.ToString()
 
 				$configFileObj.Value = $keyVaultRef
