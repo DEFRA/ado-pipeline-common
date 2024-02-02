@@ -339,10 +339,8 @@ stages:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
             - ${{ if contains(varGroup, deploymentEnv.name) }}:
               - group: '${{ varGroup }}'
-            - ${{ elseif contains(replace(varGroup, '<environment>', deploymentEnv.name), deploymentEnv.name) }}:
-              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}
-            - ${{ else }}:
-              - group: ${{ varGroup }}      
+            - ${{ elseif contains(varGroup, '<environment>') }}:
+              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}     
         - name: serviceName
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
@@ -381,7 +379,7 @@ stages:
                         path: s/ADO-Pipeline-Common
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}: 
                         - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-                          # - ${{ if or( contains(varGroup, deploymentEnv.name), contains(replace(varGroup, '<environment>', deploymentEnv.name), deploymentEnv.name)) }}:
+                          - ${{ if or( contains(varGroup, deploymentEnv.name), contains(varGroup, '<environment>')) }}:
                             - ${{ each secret in parameters.appDeployConfig.variables }} :
                               - template: /templates/steps/secrets-import-kv.yaml
                                 parameters:
