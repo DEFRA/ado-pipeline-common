@@ -381,7 +381,7 @@ stages:
                         path: s/ADO-Pipeline-Common
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}: 
                         - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-                          - ${{ if or( contains(varGroup, deploymentEnv.name), contains(replace(varGroup, '<environment>', deploymentEnv.name), deploymentEnv.name)) }}:
+                          # - ${{ if or( contains(varGroup, deploymentEnv.name), contains(replace(varGroup, '<environment>', deploymentEnv.name), deploymentEnv.name)) }}:
                             - ${{ each secret in parameters.appDeployConfig.variables }} :
                               - template: /templates/steps/secrets-import-kv.yaml
                                 parameters:
