@@ -66,11 +66,7 @@ try {
     
     python3 -m venv venv
     ./venv/bin/Activate.ps1
-    pip3 install mkdocs-material --no-warn-script-location
-    pip3 install pillow cairosvg --no-warn-script-location
-    pip3 install mkdocs-glightbox --no-warn-script-location
-    pip3 install mkdocs-nav-weight --no-warn-script-location
-    pip3 install mkdocs-techdocs-core --no-warn-script-location
+    pip3 install -r requirements.txt --no-warn-script-location
 
     if ("Build" -eq $Command) {
         #Following command expects the mkdocs.yml to be in current directory and generates the site folder             
