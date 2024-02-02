@@ -339,7 +339,7 @@ stages:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
             - ${{ if contains(varGroup, deploymentEnv.name) }}:
               - group: '${{ varGroup }}'
-            - ${{ elseif contains(replace(varGroup, '<environment>', deploymentEnv.name)) }}:
+            - ${{ elseif contains(replace(varGroup, '<environment>', deploymentEnv.name), deploymentEnv.name) }}:
               - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}
             - ${{ else }}:
               - group: ${{ varGroup }}      
