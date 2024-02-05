@@ -1,0 +1,33 @@
+parameters:
+  - name: appBuildConfig
+    type: object       
+  - name: appVersion
+    type: string 
+  - name: PSHelperDirectory
+    type: string 
+steps:  
+- checkout: self
+  path: s/source
+  persistCredentials: true
+
+- task: PowerShell@2
+  displayName: Git-Tag  
+  inputs:
+    targetType: filePath
+    filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/TagRelease.ps1'
+    arguments: -AppVersion ${{ parameters.appVersion }} -PSHelperDirectory  ${{ parameters.PSHelperDirectory }}
+    failOnStderr: false
+    pwsh: true
+    workingDirectory: '$(Pipeline.Workspace)/s/source'
+
+- task: GitHubRelease@1
+  displayName: 'GitHub-Release'
+  condition: eq(variables.ReleaseExists, 'false')
+  inputs:
+    gitHubConnection: ${{ parameters.appBuildConfig.githubreleaseconnection}}
+    repositoryName: '$(Build.Repository.Name)'
+    tagSource: userSpecifiedTag
+    tag: ${{ parameters.appVersion }}
+    title: 'Release ${{ parameters.appVersion }}'
+    releaseNotesSource: inline
+    isPreRelease: false

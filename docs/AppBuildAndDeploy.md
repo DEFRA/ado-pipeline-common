@@ -67,6 +67,9 @@ stage: Application_CI
         task: Publish Artifact - code version
         task: Publish Artifact - docker image
         task: Publish Artifact - helm chart
+        #If main branch build only
+        task: Tag             #Create or Force Update to latest commit
+        task: Github Release  #Create if not exists
 #For Each environment
 #If master or main Branch build - Deploy to all environments
 #If PR or Feature Branch build - Deploy to dev environment only
@@ -134,14 +137,16 @@ extends:
     deployFromFeature: ${{ parameters.deployFromFeature }}  #Mandatory: True/False(default)  parameter used to deploy feature branch to dev environment.
     deployConfigOnly: ${{ parameters.deployConfigOnly }}    #Mandatory: True/False(default)  parameter used to deploy app config to various environments.
     privateAgentName: 'DEFRA-ubuntu2204'                    #Optional:  Name of the private build agent. default will use Azure hosted linux agent.
-    packageFeedName: 'artifact-feed'                        #Mandatory: Name of the Azure Devops Artifacts package feed. Used by .Net and NodeJs build.
+    packageFeedName: 'artifact-feed'                        #Optional: Name of the Azure Devops Artifacts package feed. Used by .Net and NodeJs build.
     appBuildConfig: ${{ parameters.appBuildConfig }}        #Mandatory: Object which contains configration used for building the application. Such as appFrameworkType, defaultBranch, frameworkVersion, projectPath, manifestPath, imageRepoName
+      githubreleaseconnection: 'github connection'          #Mandatory: Should be a OAuth or PAT. Used to tag and create github release
     appTestConfig: ${{ parameters.appTestConfig }}          #Mandatory: Object which contains configration used for testing the application. Such as testFilePath, 
       preDeployTest:                                        #Mandatory Pre deployment test variables
         envToTest: snd1                                     #Mandatory Pre deployment test environment name
         serviceConnection: AZD-ADP-SND1                     #Mandatory Service connection for Pre deployment test env
         azureServiceBusResourceGroup: rg                    #Mandatory Service Bus RG for Pre deployment test env
         azureServiceBusNamespace: name                      #Mandatory Service Bus namespace for Pre deployment test env
+        testsToRun: 'integration;owasp;accessibility'       #Optional: sets the list of tests to run for feature branch.
       postDeployTest:                                       #Mandatory Post deployment test variables
         envToTest: snd3                                     #Mandatory Post deployment test environment name
         domain: 'adp.defra.gov.uk'                          #Mandatory Post deployment test domain name 
@@ -155,6 +160,9 @@ extends:
       failOnThreshold: 'critical'                           #Mandatory: Threshold to fail the task if vulrarabilies identified
     sonarConfig:                                            #Optional: 
       sonarConnection: 'SonarCloud Connection name'         #Mandatory: Name of the connection in ADO
+      keyVaultServiceConnection: ''                         #Mandatory: service connection used to connect to Keyvault
+      keyVaultName: ''                                      #Mandatory: Keyvault containing sonar api key
+      keyVaultSecretName: 'SONAR-API-KEY'                   #Mandatory: secret name
       organization: defra                                   #Mandatory: Name of organization
       projectKeyPrefix: 'adp-'                              #Optional:  Prefix to be added while creating project key in Sonar
     npmConfig:                                              #Mandatory: 
@@ -228,10 +236,14 @@ extends:
             testProjectPath: "./ProjectName.Tests/ProjectName.Tests.csproj" #Optional: Used to run Unit Tests of DotNet Projects
             manifestPath: "./obj/ProjectName/project.assets.json" #Mandatory: Used by Snyk to identify the vulnerabilities.  packages.config (.NET Framework) .proj file or project.json or project.assets.json for (.NET Core) package.json for (NodeJS)
             imageRepoName: "repo-name"      #Mandatory: Used for publishing docker, helm charts and also used by snyk to publish the results
-        appTestConfig:                      #Mandatory: Used for testing application
-          postDeployTest:                   #Mandatory Post deployment test variables
-            envToTest: snd3                 #Mandatory Post deployment test environment name
-            domain: 'adp.defra.gov.uk'      #Mandatory Post deployment test domain name
+        appTestConfig:                      #Optional : Used for testing application
+          preDeployTest:                    #Optional: Used for testing application
+            testsToRun:                     #Optional: Specify the list of pre deployment tests to run. integration, service-acceptance,owasp, accessibility,performance,acceptance. If not specified default tests for feature brach: integration;owasp;accessibility. PR branch will run all available tests.
+              - owasp                       
+              - accessibility
+          postDeployTest:                   #Optional Post deployment test variables
+            envToTest: snd3                 #Optional Post deployment test environment name. Default snd3
+            domain: 'adp.defra.gov.uk'      #Optional Post deployment test domain name. Default adp.defra.gov.uk
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
             filetype: "yaml"                #Optional: default value json
@@ -296,10 +308,14 @@ extends:
             projectPath: "./package.json"   #Mandatory: Used to extract project version. For DotNet projects provide the csproj file path. For NodeJS package.json file path.
             manifestPath: "./package.json"  #Mandatory: Used by Snyk to identify the vulnerabilities.  packages.config (.NET Framework) .proj file or project.json or project.assets.json for (.NET Core) package.json for (NodeJS)
             imageRepoName: "repo-name"      #Mandatory: Used for publishing docker, helm charts and also used by snyk to publish the results
-        appTestConfig:                      #Mandatory: Used for testing application
-          postDeployTest:                   #Mandatory Post deployment test variables
-            envToTest: snd3                 #Mandatory Post deployment test environment name
-            domain: 'adp.defra.gov.uk'      #Mandatory Post deployment test domain name
+        appTestConfig:                      #Optional : Used for testing application
+          preDeployTest:                    #Optional: Used for testing application
+            testsToRun:                     #Optional: Specify the list of pre deployment tests to run. integration, service-acceptance,owasp, accessibility,performance,acceptance. If not specified default tests for feature brach: integration;owasp;accessibility. PR branch will run all available tests.
+              - owasp                       
+              - accessibility
+          postDeployTest:                   #Optional Post deployment test variables
+            envToTest: snd3                 #Optional Post deployment test environment name. Default snd3
+            domain: 'adp.defra.gov.uk'      #Optional Post deployment test domain name. Default adp.defra.gov.uk
         appDeployConfig:                    #Optional: Used for deploying application configuration to various environments
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
             filetype: "yaml"                #Optional: default value json
