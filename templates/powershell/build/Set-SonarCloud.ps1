@@ -50,7 +50,7 @@ try {
 
     if ($response -and $response.components.Count -le 0) {
         Write-Output "Creating project '$RepositoryName' on '$SonarOrganisation' organisation."
-        Invoke-RestMethod -Method Post -Uri "$sonarUrl/api/projects/create" -Headers $headers -Body "name=$RepositoryName&project=$RepositoryName&organization=$SonarOrganisation&visibility=public"
+        Invoke-RestMethod -Method Post -Uri "$sonarUrl/api/projects/create" -Headers $headers -Body "name=$RepositoryName&project=$RepositoryName&organization=$SonarOrganisation&visibility=public&newCodeDefinitionType=previous_version"
 
         Write-Debug "Renaming default branch of the project '$RepositoryName' to 'main'."
         Invoke-RestMethod -Method Post -Uri "$sonarUrl/api/project_branches/rename" -Headers $headers -Body "project=$RepositoryName&name=main"
