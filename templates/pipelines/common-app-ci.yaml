@@ -342,11 +342,13 @@ stages:
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD: ${{ deploymentEnv.name }}'
-        variables:
+        variables:       
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-            - ${{ if contains( varGroup, deploymentEnv.name) }}:
+            - ${{ if contains(varGroup, deploymentEnv.name) }}:
               - group: '${{ varGroup }}'
+            - ${{ elseif contains(varGroup, '<environment>') }}:
+              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}     
         - name: serviceName
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
@@ -385,7 +387,7 @@ stages:
                         path: s/ADO-Pipeline-Common
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}: 
                         - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-                          - ${{ if contains( varGroup, deploymentEnv.name) }}:
+                          - ${{ if or( contains(varGroup, deploymentEnv.name), contains(varGroup, '<environment>')) }}:
                             - ${{ each secret in parameters.appDeployConfig.variables }} :
                               - template: /templates/steps/secrets-import-kv.yaml
                                 parameters:
@@ -394,7 +396,7 @@ stages:
                                   workingDirectory: '$(Pipeline.Workspace)/s'
                                   serviceName: ${{ parameters.serviceName }}
                                   PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                                  secretName: ${{ secret }}       
+                                  secretName: ${{ secret }}
                       - template: /templates/steps/appconfig-import.yaml
                         parameters:
                           dryRun: false
