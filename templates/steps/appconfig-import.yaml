@@ -29,7 +29,7 @@ steps:
   - ${{ if ne(parameters.appDeployConfig, '') }}:          
     - pwsh: |
         $PSVersionTable
-        sudo apt-get install -y powershell=7.4.0-1.deb
+        sudo apt-get install -y powershell=7.4.0-1.deb --allow-downgrades
       errorActionPreference: silentlyContinue
       displayName: 'Upgrade PowerShell Version'  
     - task: PowerShell@2
