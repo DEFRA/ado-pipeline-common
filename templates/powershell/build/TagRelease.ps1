@@ -58,7 +58,7 @@ try {
         $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
     }
     catch {
-        Write-Host "Release name 'latest' could not be found for the repository '$gitRepoName'."
+        Write-Host "Release '$AppVersion' could not be found for the repository '$gitRepoName'."
     }
     
     if ($latestReleaseTag -eq $AppVersion) {
