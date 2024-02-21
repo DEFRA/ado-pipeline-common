@@ -51,10 +51,13 @@ try {
 
     Write-Host "Tag $AppVersion updated to latest commit"
 
-    $giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
-    $gitEndpoint = $giturl.split("/")[-2]
-    $gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
-    $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+    try {
+        $giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
+        $gitEndpoint = $giturl.split("/")[-2]
+        $gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
+        $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+    }
+    catch { }
     
     if ($latestReleaseTag -eq $AppVersion) {
         Write-Host "Release already exists"
