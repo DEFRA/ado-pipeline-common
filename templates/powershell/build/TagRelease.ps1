@@ -57,7 +57,9 @@ try {
         $gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
         $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
     }
-    catch { }
+    catch {
+        Write-Host "Release name 'latest' could not be found for the repository '$gitRepoName'."
+    }
     
     if ($latestReleaseTag -eq $AppVersion) {
         Write-Host "Release already exists"
