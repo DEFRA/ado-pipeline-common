@@ -330,12 +330,12 @@ stages:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
           
-          - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
-            - template: /templates/steps/tag-and-release.yaml
-              parameters:
-                appBuildConfig: ${{ parameters.appBuildConfig }}
-                appVersion: $(appVersion)
-                PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+          # - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
+          #   - template: /templates/steps/tag-and-release.yaml
+          #     parameters:
+          #       appBuildConfig: ${{ parameters.appBuildConfig }}
+          #       appVersion: $(appVersion)
+          #       PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
   - ${{ each deploymentEnv in parameters.environments }}:  
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:
