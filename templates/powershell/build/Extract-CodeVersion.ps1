@@ -50,7 +50,7 @@ try {
     
     Import-Module $PSHelperDirectory -Force
     $appVersion = ""    
-    $oldAppVersion = "0.0.0" #Assume version 0.0.0 for initial main branch
+    $oldAppVersion = "0.1.0" #Assume version 0.1.0 for initial main branch
     $exitCode = 0
     $versionFilePath = "./VERSION"
     $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
@@ -77,12 +77,20 @@ try {
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
         $xml = [Xml] (Get-Content $ProjectPath )
-        $appVersion = $xml.Project.PropertyGroup.Version
+   
+        $appVersion = $xml.Project.PropertyGroup[0].Version    
+
         if ($IsDefaultBranchBuild -eq "False") {      
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $xml = [Xml] (Get-Content $ProjectPath )
-                $oldAppVersion = $xml.Project.PropertyGroup.Version
+                try {
+                    $oldAppVersion = $xml.Project.PropertyGroup[0].Version
+                }
+                catch {  
+                    $oldAppVersion = "0.1.0" #Assume version 0.1.0 for initial main branch when migrated
+                }
+                
             }   
         }     
     }
