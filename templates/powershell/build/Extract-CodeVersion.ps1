@@ -77,7 +77,14 @@ try {
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
         $xml = [Xml] (Get-Content $ProjectPath )
-        $appVersion = $xml.Project.PropertyGroup.Version
+        try {
+            $appVersion = $xml.Project.PropertyGroup.Version
+        }
+        catch {
+            Write-Debug "${functionName}: $xml"     
+            $appVersion = "0.1.0" 
+        }
+
         if ($IsDefaultBranchBuild -eq "False") {      
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
