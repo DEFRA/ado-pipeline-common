@@ -83,7 +83,6 @@ try {
         else {
             $appVersion = $xml.Project.PropertyGroup.Version
         }
-          
 
         if ($IsDefaultBranchBuild -eq "False") {      
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
