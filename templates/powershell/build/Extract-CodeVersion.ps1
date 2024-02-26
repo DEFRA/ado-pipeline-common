@@ -82,7 +82,13 @@ try {
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $xml = [Xml] (Get-Content $ProjectPath )
-                $oldAppVersion = $xml.Project.PropertyGroup.Version
+                try {
+                    $oldAppVersion = $xml.Project.PropertyGroup.Version
+                }
+                catch {
+                    $oldAppVersion = "0.0.0" #Assume version 0.0.0 for initial main branch when migrated
+                }
+                
             }   
         }     
     }
