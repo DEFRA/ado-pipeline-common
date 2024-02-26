@@ -91,10 +91,10 @@ try {
                 $xml = [Xml] (Get-Content $ProjectPath )
                 try {
                     if ($xml.Project.PropertyGroup.length -gt 1) {
-                        $appVersion = $xml.Project.PropertyGroup[0].Version  
+                        $oldAppVersion = $xml.Project.PropertyGroup[0].Version  
                     }
                     else {
-                        $appVersion = $xml.Project.PropertyGroup.Version
+                        $oldAppVersion = $xml.Project.PropertyGroup.Version
                     }
                 }
                 catch {  
