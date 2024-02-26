@@ -86,6 +86,7 @@ try {
                     $oldAppVersion = $xml.Project.PropertyGroup.Version
                 }
                 catch {
+                    Write-Debug "${functionName}: Set default version"     
                     $oldAppVersion = "0.0.0" #Assume version 0.0.0 for initial main branch when migrated
                 }
                 
