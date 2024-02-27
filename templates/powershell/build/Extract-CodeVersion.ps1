@@ -77,15 +77,24 @@ try {
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
         $xml = [Xml] (Get-Content $ProjectPath )
-   
-        $appVersion = $xml.Project.PropertyGroup[0].Version    
+        if ($xml.Project.PropertyGroup.length -gt 1) {
+            $appVersion = $xml.Project.PropertyGroup[0].Version  
+        }
+        else {
+            $appVersion = $xml.Project.PropertyGroup.Version
+        }
 
         if ($IsDefaultBranchBuild -eq "False") {      
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $xml = [Xml] (Get-Content $ProjectPath )
                 try {
-                    $oldAppVersion = $xml.Project.PropertyGroup[0].Version
+                    if ($xml.Project.PropertyGroup.length -gt 1) {
+                        $oldAppVersion = $xml.Project.PropertyGroup[0].Version  
+                    }
+                    else {
+                        $oldAppVersion = $xml.Project.PropertyGroup.Version
+                    }
                 }
                 catch {  
                     $oldAppVersion = "0.1.0" #Assume version 0.1.0 for initial main branch when migrated
