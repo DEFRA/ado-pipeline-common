@@ -114,7 +114,8 @@ try {
             Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'."    
         }
         else {
-            Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."   
+            Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
+            Write-Host "##vso[task.logissue type=error]You didn't say the magic word!"
             $exitCode = -2
         }
     }
