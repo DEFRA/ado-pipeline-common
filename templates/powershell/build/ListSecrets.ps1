@@ -108,12 +108,17 @@ try {
                         if ($buildDetails.status -eq "notStarted") {
                             Write-Host $buildNumber -ForegroundColor Green
                         }
-                        if ($buildDetails.status -eq "canceled" -Or $buildDetails.status -eq "failed") {
+                        if ($buildDetails.status -eq "canceled") {
                             Write-Error "The build number $buildNumber is $buildDetails.status"
                         }
                         # Get the status of the triggered build again
                         $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
+                        
                     }		
+                    if ($buildDetails.status -eq "failed") {
+                        Write-Error "The build number $buildNumber is $buildDetails.status"
+                        $exitCode = -2
+                    }
                 }
             }
         }
