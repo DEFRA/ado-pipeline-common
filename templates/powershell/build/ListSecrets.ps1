@@ -60,8 +60,6 @@ try {
 
     Import-Module $PSHelperDirectory -Force
 
-    $exitCode = 0
-
     $variablesArray = @()
 
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpsUri"
@@ -126,7 +124,7 @@ try {
             Write-Host "${functionName} :$VariableGroup not related to env: $EnvName"        
         }
     }  
-    
+    $exitCode = 0
 }
 catch {
     $exitCode = -2
