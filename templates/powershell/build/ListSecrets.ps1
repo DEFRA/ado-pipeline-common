@@ -72,7 +72,7 @@ try {
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
     foreach ($VariableGroup in $VariableGroupsArray) {
-        if ($VariableGroup.contains($EnvName)) {
+        if ($VariableGroup.contains($EnvName) -or $VariableGroup.contains('<environment>')) {
             Write-Host "${functionName} :$VariableGroup"                  
             $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
             $groupId = $group.id
