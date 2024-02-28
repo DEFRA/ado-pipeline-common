@@ -1,0 +1,28 @@
+parameters:
+- name: secretNames
+  type: string  
+- name: variableGroups
+  type: string  
+- name: PSHelperDirectory
+  type: string    
+- name: serviceConnection
+  type: string
+- name: appKeyVault
+  type: string    
+  
+trigger:
+- none
+ 
+variables:
+- ${{ each varGroup in split(parameters.variableGroups, ';') }}:
+  - group: '${{ varGroup }}'
+
+steps:  
+  - ${{ each secret in split(parameters.secretNames, ';') }} :
+    - template: /templates/steps/secrets-import-kv.yaml
+      parameters:
+        workingDirectory: '$(Pipeline.Workspace)/s'
+        PSHelperDirectory: ${{ parameters.PSHelperDirectory }}
+        secretName: ${{ secret }}
+        serviceConnection: ${{ parameters.ServiceConnection }}
+        appKeyVault: ${{ parameters.appKeyVault }}  
