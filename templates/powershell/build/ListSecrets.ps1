@@ -67,9 +67,9 @@ try {
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpsUri"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
-    Write-Host "VariableGroupsArray: $VariableGroupsArray"  
+    #Write-Host "VariableGroupsArray: $VariableGroupsArray"  
     $VarFilter = $VarFilter -split ";"
-    Write-Host "VarFilter: $VarFilter"  
+    #Write-Host "VarFilter: $VarFilter"  
     foreach ($VariableGroup in $VariableGroupsArray) {
         if ($VariableGroup.contains('<environment>')) {
             $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
