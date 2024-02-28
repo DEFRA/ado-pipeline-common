@@ -23,12 +23,12 @@ Mandatory. Directory Path of PSHelper module
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string] $VariableGroups,
-    [string] $EnvName,       
-    [string] $ServiceConnection,         
-    [string] $AppKeyVault,        
-    [string] $VarFilter = "*",    
-    [string] $PSHelperDirectory
+    [string]$VariableGroups,
+    [string]$EnvName,       
+    [string]$ServiceConnection,         
+    [string]$AppKeyVault,        
+    [string]$VarFilter,    
+    [string]$PSHelperDirectory
 )
 
 Set-StrictMode -Version 3.0
