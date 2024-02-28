@@ -91,35 +91,37 @@ try {
                     }
                 }
             }
+
+            if ($variablesArray.Length -gt 0) {
+                $variablesArrayString = $variablesArray -join ';'
+                Write-Output "##vso[task.setvariable variable=secretVariables;isOutput=true]$variablesArrayString"     
+                Write-Host "variablesArrayString :$variablesArrayString"
+                $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'PSHelperDirectory=$PSHelperDirectory'  | ConvertFrom-Json" 
+                Write-Host "buildQueue :$buildQueue"
+                $buildNumber = $buildQueue.id
+                if ($null -ne $buildNumber) {
+                    # Get the status of triggered build
+                    $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
+
+                    while ($buildDetails.status -ne "completed") {
+                        Start-Sleep -Seconds 10
+                        if ($buildDetails.status -eq "notStarted") {
+                            Write-Host $buildNumber -ForegroundColor Green
+                        }
+                        if ($buildDetails.status -eq "canceled" -Or $buildDetails.status -eq "failed") {
+                            Write-Error "The build number $buildNumber is $buildDetails.status"
+                        }
+                        # Get the status of the triggered build again
+                        $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
+                    }		
+                }
+            }
         }
         else {
             Write-Host "${functionName} :$VariableGroup not related to env: $EnvName"        
         }
     }  
-    if ($variablesArray.Length -gt 0) {
-        $variablesArrayString = $variablesArray -join ';'
-        Write-Output "##vso[task.setvariable variable=secretVariables;isOutput=true]$variablesArrayString"     
-        Write-Host "variablesArrayString :$variablesArrayString"
-        $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroups' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'PSHelperDirectory=$PSHelperDirectory'  | ConvertFrom-Json" 
-        Write-Host "buildQueue :$buildQueue"
-        $buildNumber = $buildQueue.id
-        if ($null -ne $buildNumber) {
-            # Get the status of triggered build
-            $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
-
-            while ($buildDetails.status -ne "completed") {
-                Start-Sleep -Seconds 10
-                if ($buildDetails.status -eq "notStarted") {
-                    Write-Host $buildNumber -ForegroundColor Green
-                }
-                if ($buildDetails.status -eq "canceled" -Or $buildDetails.status -eq "failed") {
-                    Write-Error "The build number $buildNumber is $buildDetails.status"
-                }
-                # Get the status of the triggered build again
-                $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
-            }		
-        }
-    }
+    
 }
 catch {
     $exitCode = -2
