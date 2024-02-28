@@ -67,8 +67,14 @@ try {
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpsUri"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
+    Write-Host "VariableGroupsArray: $VariableGroupsArray"  
+    $VarFilter = $VarFilter -split ";"
+    Write-Host "VarFilter: $VarFilter"  
     foreach ($VariableGroup in $VariableGroupsArray) {
-        if ($VariableGroup.contains($EnvName) -or $VariableGroup.contains('<environment>')) {
+        if ($VariableGroup.contains('<environment>')) {
+            $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
+        }
+        if ($VariableGroup.contains($EnvName)) {
             Write-Host "${functionName} :$VariableGroup"                  
             $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
             $groupId = $group.id
@@ -78,8 +84,11 @@ try {
             $variables = $variable_group.psobject.Properties.Name
             Write-Host "variables :$variables" 
             foreach ($variable in $variables) {
-                if ($VarFilter.Equals('*') -or $variable.contains($VarFilter)) {
-                    $variablesArray += $variable
+                foreach ($filter in $VarFilter) {
+                    if ($variable -like $filter) {
+                        $variablesArray += $variable
+                        break
+                    }
                 }
             }
         }
