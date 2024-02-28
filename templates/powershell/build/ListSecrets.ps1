@@ -10,7 +10,7 @@ Mandatory. SemiColon seperated variable groups
 Mandatory. Environment Name
 .PARAMETER VarFilter
 Mandatory. variable filter default *
-.PARAMETER -ServiceConnection
+.PARAMETER ServiceConnection
 Mandatory. serviceConnection Name
 .PARAMETER AppKeyVault
 Mandatory. appKeyVault Name
@@ -48,13 +48,13 @@ if ($enableDebug) {
     Set-Variable -Name DebugPreference -Value Continue -Scope global
 }
 
-# Write-Host "${functionName} started at $($startTime.ToString('u'))"
-# Write-Debug "${functionName}:VariableGroups=$VariableGroups"
-# Write-Debug "${functionName}:EnvName=$EnvName"
-# Write-Debug "${functionName}:ServiceConnection=$ServiceConnection"
-# Write-Debug "${functionName}:AppKeyVault=$AppKeyVault"
-# Write-Debug "${functionName}:VarFilter=$VarFilter"
-# Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
+Write-Host "${functionName} started at $($startTime.ToString('u'))"
+Write-Debug "${functionName}:VariableGroups=$VariableGroups"
+Write-Debug "${functionName}:EnvName=$EnvName"
+Write-Debug "${functionName}:ServiceConnection=$ServiceConnection"
+Write-Debug "${functionName}:AppKeyVault=$AppKeyVault"
+Write-Debug "${functionName}:VarFilter=$VarFilter"
+Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
 
