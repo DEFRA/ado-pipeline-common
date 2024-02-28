@@ -87,7 +87,7 @@ try {
                 foreach ($filter in $VarFilter) {
                     if ($variable -like $filter) {
                         $variablesArray += $variable
-                        break
+                        continue
                     }
                 }
             }
