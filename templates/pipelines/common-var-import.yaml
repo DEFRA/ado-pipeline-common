@@ -29,7 +29,7 @@ steps:
   - checkout: PipelineCommon
     path: s/ADO-Pipeline-Common
   - ${{ each secret in split(parameters.secretNames, ';') }} :
-    - template: templates/steps/secrets-import-kv.yaml
+    - template: $(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/steps/secrets-import-kv.yaml
       parameters:
         workingDirectory: '$(Pipeline.Workspace)/s'
         PSHelperDirectory: ${{ parameters.PSHelperDirectory }}
