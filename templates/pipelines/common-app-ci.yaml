@@ -399,7 +399,7 @@ stages:
                             azureSubscription: ${{ deploymentEnv.serviceConnection }}
                             scriptType: pscore
                             scriptLocation: scriptPath
-                            scriptPath: 'templates/powershell/build/ListSecrets.ps1'
+                            scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ListSecrets.ps1'
                             arguments: >
                               -VariableGroups  ${{ join(';', parameters.appDeployConfig.variableGroups) }}
                               -EnvName ${{ deploymentEnv.name }} 
