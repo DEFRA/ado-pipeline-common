@@ -401,9 +401,9 @@ stages:
                             scriptLocation: scriptPath
                             scriptPath: '/templates/powershell/ListSecrets.ps1'
                             arguments: >
-                              -VariableGroups ${{ parameters.appDeployConfig.variableGroups }} 
+                              -VariableGroups  ${{ join(';', parameters.appDeployConfig.variableGroups) }}
                               -EnvName ${{ deploymentEnv.name }} 
-                              -VarFilter ${{ parameters.appDeployConfig.variables }} 
+                              -VarFilter ${{ join(';', parameters.appDeployConfig.variables) }}
                               -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
                               -serviceConnection ${{ deploymentEnv.serviceConnection }}
                               -appKeyVault ${{ deploymentEnv.appKeyVault }}
