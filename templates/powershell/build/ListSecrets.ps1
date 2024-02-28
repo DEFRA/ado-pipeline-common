@@ -48,13 +48,13 @@ if ($enableDebug) {
     Set-Variable -Name DebugPreference -Value Continue -Scope global
 }
 
-Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:VariableGroups=$VariableGroups"
-Write-Debug "${functionName}:EnvName=$EnvName"
-Write-Debug "${functionName}:ServiceConnection=$ServiceConnection"
-Write-Debug "${functionName}:AppKeyVault=$AppKeyVault"
-Write-Debug "${functionName}:VarFilter=$VarFilter"
-Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
+# Write-Host "${functionName} started at $($startTime.ToString('u'))"
+# Write-Debug "${functionName}:VariableGroups=$VariableGroups"
+# Write-Debug "${functionName}:EnvName=$EnvName"
+# Write-Debug "${functionName}:ServiceConnection=$ServiceConnection"
+# Write-Debug "${functionName}:AppKeyVault=$AppKeyVault"
+# Write-Debug "${functionName}:VarFilter=$VarFilter"
+# Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
 
@@ -70,56 +70,56 @@ try {
     Write-Host "VariableGroupsArray: $VariableGroupsArray"  
     $VarFilter = $VarFilter -split ";"
     Write-Host "VarFilter: $VarFilter"  
-    # foreach ($VariableGroup in $VariableGroupsArray) {
-    #     if ($VariableGroup.contains('<environment>')) {
-    #         $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
-    #     }
-    #     if ($VariableGroup.contains($EnvName)) {
-    #         Write-Host "${functionName} :$VariableGroup"                  
-    #         $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
-    #         $groupId = $group.id
-    #         Write-Host "groupId :$groupId"  
-    #         $variable_group = Invoke-CommandLine -Command "az pipelines variable-group variable list --group-id $groupId --detect true  | ConvertFrom-Json"  
-    #         Write-Host "variable_group :$variable_group" 
-    #         $variables = $variable_group.psobject.Properties.Name
-    #         Write-Host "variables :$variables" 
-    #         foreach ($variable in $variables) {
-    #             foreach ($filter in $VarFilter) {
-    #                 if ($variable -like $filter) {
-    #                     $variablesArray += $variable
-    #                     break
-    #                 }
-    #             }
-    #         }
-    #     }
-    #     else {
-    #         Write-Host "${functionName} :$VariableGroup not related to env: $EnvName"        
-    #     }
-    # }  
-    # if ($variablesArray.Length -gt 0) {
-    #     $variablesArrayString = $variablesArray -join ';'
-    #     Write-Output "##vso[task.setvariable variable=secretVariables;isOutput=true]$variablesArrayString"     
-    #     Write-Host "variablesArrayString :$variablesArrayString"
-    #     $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'variableGroups=$VariableGroups' 'PSHelperDirectory=$PSHelperDirectory'  | ConvertFrom-Json" 
-    #     Write-Host "buildQueue :$buildQueue"
-    #     $buildNumber = $buildQueue.id
-    #     if ($null -ne $buildNumber) {
-    #         # Get the status of triggered build
-    #         $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
+    foreach ($VariableGroup in $VariableGroupsArray) {
+        if ($VariableGroup.contains('<environment>')) {
+            $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
+        }
+        if ($VariableGroup.contains($EnvName)) {
+            Write-Host "${functionName} :$VariableGroup"                  
+            $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
+            $groupId = $group.id
+            Write-Host "groupId :$groupId"  
+            $variable_group = Invoke-CommandLine -Command "az pipelines variable-group variable list --group-id $groupId --detect true  | ConvertFrom-Json"  
+            Write-Host "variable_group :$variable_group" 
+            $variables = $variable_group.psobject.Properties.Name
+            Write-Host "variables :$variables" 
+            foreach ($variable in $variables) {
+                foreach ($filter in $VarFilter) {
+                    if ($variable -like $filter) {
+                        $variablesArray += $variable
+                        break
+                    }
+                }
+            }
+        }
+        else {
+            Write-Host "${functionName} :$VariableGroup not related to env: $EnvName"        
+        }
+    }  
+    if ($variablesArray.Length -gt 0) {
+        $variablesArrayString = $variablesArray -join ';'
+        Write-Output "##vso[task.setvariable variable=secretVariables;isOutput=true]$variablesArrayString"     
+        Write-Host "variablesArrayString :$variablesArrayString"
+        $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'variableGroups=$VariableGroups' 'PSHelperDirectory=$PSHelperDirectory'  | ConvertFrom-Json" 
+        Write-Host "buildQueue :$buildQueue"
+        $buildNumber = $buildQueue.id
+        if ($null -ne $buildNumber) {
+            # Get the status of triggered build
+            $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
 
-    #         while ($buildDetails.status -ne "completed") {
-    #             Start-Sleep -Seconds 10
-    #             if ($buildDetails.status -eq "notStarted") {
-    #                 Write-Host $buildNumber -ForegroundColor Green
-    #             }
-    #             if ($buildDetails.status -eq "canceled" -Or $buildDetails.status -eq "failed") {
-    #                 Write-Error "The build number $buildNumber is $buildDetails.status"
-    #             }
-    #             # Get the status of the triggered build again
-    #             $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
-    #         }		
-    #     }
-    # }
+            while ($buildDetails.status -ne "completed") {
+                Start-Sleep -Seconds 10
+                if ($buildDetails.status -eq "notStarted") {
+                    Write-Host $buildNumber -ForegroundColor Green
+                }
+                if ($buildDetails.status -eq "canceled" -Or $buildDetails.status -eq "failed") {
+                    Write-Error "The build number $buildNumber is $buildDetails.status"
+                }
+                # Get the status of the triggered build again
+                $buildDetails = (az pipelines build show --id $buildQueue.id --detect true --organization $ENV:DevOpsUri --project $ENV:DevOpsProject) | ConvertFrom-Json
+            }		
+        }
+    }
 }
 catch {
     $exitCode = -2
