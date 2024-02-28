@@ -13,21 +13,21 @@ parameters:
 trigger:
 - none
 
-resources:
-  repositories:
-    - repository: PipelineCommon
-      name: DEFRA/ADO-Pipeline-Common
-      endpoint: DEFRA
-      type: github
-      ref: refs/heads/rv/323021-importvariables
+# resources:
+#   repositories:
+#     - repository: PipelineCommon
+#       name: DEFRA/ADO-Pipeline-Common
+#       endpoint: DEFRA
+#       type: github
+#       ref: refs/heads/rv/323021-importvariables
 
 variables:
 - ${{ each varGroup in split(parameters.variableGroups, ';') }}:
   - group: '${{ varGroup }}'
 
 steps:  
-  - checkout: PipelineCommon
-    path: s/ADO-Pipeline-Common
+  # - checkout: PipelineCommon
+  #   path: s/ADO-Pipeline-Common
   - ${{ each secret in split(parameters.secretNames, ';') }} :
     - template: ../steps/secrets-import-kv.yaml
       parameters:
