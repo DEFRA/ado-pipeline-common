@@ -19,7 +19,7 @@ resources:
       name: DEFRA/ADO-Pipeline-Common
       endpoint: DEFRA
       type: github
-      ref: refs/heads/rv/323021
+      ref: refs/heads/rv/323021-importvariables
 
 variables:
 - ${{ each varGroup in split(parameters.variableGroups, ';') }}:
