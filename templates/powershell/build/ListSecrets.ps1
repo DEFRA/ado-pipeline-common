@@ -100,7 +100,7 @@ try {
         $variablesArrayString = $variablesArray -join ';'
         Write-Output "##vso[task.setvariable variable=secretVariables;isOutput=true]$variablesArrayString"     
         Write-Host "variablesArrayString :$variablesArrayString"
-        $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'variableGroups=$VariableGroups' 'PSHelperDirectory=$PSHelperDirectory'  | ConvertFrom-Json" 
+        $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroups' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'PSHelperDirectory=$PSHelperDirectory'  | ConvertFrom-Json" 
         Write-Host "buildQueue :$buildQueue"
         $buildNumber = $buildQueue.id
         if ($null -ne $buildNumber) {

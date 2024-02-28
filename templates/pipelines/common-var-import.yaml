@@ -3,13 +3,13 @@ parameters:
   type: string  
 - name: variableGroups
   type: string  
-- name: PSHelperDirectory
-  type: string    
 - name: serviceConnection
   type: string
 - name: appKeyVault
   type: string    
-  
+- name: PSHelperDirectory
+  type: string   
+
 trigger:
 - none
  
