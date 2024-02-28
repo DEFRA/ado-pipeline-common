@@ -404,9 +404,9 @@ stages:
                               -VariableGroups  ${{ join(';', parameters.appDeployConfig.variableGroups) }}
                               -EnvName ${{ deploymentEnv.name }} 
                               -VarFilter ${{ join(';', parameters.appDeployConfig.variables) }}
-                              -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
-                              -serviceConnection ${{ deploymentEnv.serviceConnection }}
-                              -appKeyVault ${{ deploymentEnv.appKeyVault }}
+                              -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                              -ServiceConnection ${{ deploymentEnv.serviceConnection }}
+                              -AppKeyVault ${{ deploymentEnv.appKeyVault }}
                             addSpnToEnvironment: true          
                             failOnStandardError: false
                             workingDirectory: '$(Pipeline.Workspace)/s'     
