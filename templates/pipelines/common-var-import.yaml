@@ -12,14 +12,24 @@ parameters:
 
 trigger:
 - none
- 
+
+resources:
+  repositories:
+    - repository: PipelineCommon
+      name: DEFRA/ADO-Pipeline-Common
+      endpoint: DEFRA
+      type: github
+      ref: refs/heads/rv/323021
+
 variables:
 - ${{ each varGroup in split(parameters.variableGroups, ';') }}:
   - group: '${{ varGroup }}'
 
 steps:  
+  - checkout: PipelineCommon
+    path: s/ADO-Pipeline-Common
   - ${{ each secret in split(parameters.secretNames, ';') }} :
-    - template: /templates/steps/secrets-import-kv.yaml
+    - template: templates/steps/secrets-import-kv.yaml
       parameters:
         workingDirectory: '$(Pipeline.Workspace)/s'
         PSHelperDirectory: ${{ parameters.PSHelperDirectory }}
