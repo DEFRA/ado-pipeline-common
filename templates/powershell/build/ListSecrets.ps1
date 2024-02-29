@@ -161,7 +161,8 @@ try {
                     $variablesArrayString = $variablesArray -join ';'  
                     Write-Debug "variablesArrayString :$variablesArrayString"
                     $command = "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch"
-                    $prameters = " --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName' 'buildNumber=$BuildNumber'"
+                    $prameters = " --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName' "
+                    $prameters = $prameters + " 'buildNumber=$BuildNumber' 'project=$ENV:DevOpsProject' 'organization=$ENV:DevOpOrganization'"
                     $buildQueue = Invoke-CommandLine -Command " $command $prameters  | ConvertFrom-Json" 
                     Write-Debug "buildQueue :$buildQueue"
                     Write-Host $buildQueue.url

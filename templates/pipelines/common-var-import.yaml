@@ -1,8 +1,6 @@
-name: ${{ parameters.buildNumber }}-${{ parameters.appKeyVault }}-${{ parameters.variableGroups }}
+name: ${{ parameters.project }}-${{ parameters.buildNumber }}-${{ parameters.appKeyVault }}-${{ parameters.variableGroups }}
 
 parameters:
-- name: buildNumber
-  type: string  
 - name: secretNames
   type: string  
 - name: variableGroups
@@ -13,7 +11,12 @@ parameters:
   type: string    
 - name: privateAgentName
   type: string   
-
+- name: buildNumber
+  type: string  
+- name: project
+  type: string 
+- name: organization
+  type: string     
 trigger:
 - none
 
@@ -40,6 +43,7 @@ stages:
       - checkout: ADOPipelineCommon
         path: s/ADO-Pipeline-Common
         clean: true
+      - script: "echo https://dev.azure.com/${{ parameters.organization }}/${{ parameters.project }}/_build/results?buildId=${{ parameters.buildNumber }}"
       - ${{ each secret in split(parameters.secretNames, ';') }} :
         - template: ../steps/secrets-import-kv.yaml
           parameters:
