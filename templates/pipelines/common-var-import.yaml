@@ -7,7 +7,7 @@ parameters:
   type: string
 - name: appKeyVault
   type: string    
-- name: PSHelperDirectory
+- name: privateAgentName
   type: string   
 
 trigger:
@@ -26,6 +26,10 @@ variables:
   - group: '${{ varGroup }}'
 - name: PSHelperDirectory
   value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
+
+pool:
+  name: ${{ parameters.privateAgentName }}  
+  
 steps:  
   - checkout: ADOPipelineCommon
     path: s/ADO-Pipeline-Common

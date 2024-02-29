@@ -403,10 +403,11 @@ stages:
                             arguments: >
                               -VariableGroups  "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
                               -EnvName ${{ deploymentEnv.name }} 
-                              -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"
-                              -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                              -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"                              
                               -ServiceConnection ${{ deploymentEnv.serviceConnection }}
                               -AppKeyVault ${{ deploymentEnv.appKeyVault }}
+                              -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                              -PrivateAgentName ${{ deploymentEnv.privateAgentName }}
                             addSpnToEnvironment: true          
                             failOnStandardError: false
                             workingDirectory: '$(Pipeline.Workspace)/s'     

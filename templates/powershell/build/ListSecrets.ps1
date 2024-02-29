@@ -9,26 +9,34 @@ Mandatory. SemiColon seperated variable groups
 .PARAMETER EnvName
 Mandatory. Environment Name
 .PARAMETER VarFilter
-Mandatory. variable filter default *
+Optional. SemiColon seperated variable filters defaults to *
 .PARAMETER ServiceConnection
 Mandatory. serviceConnection Name
 .PARAMETER AppKeyVault
 Mandatory. appKeyVault Name
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
+.PARAMETER PrivateAgentName
+Mandatory. PrivateAgent Name
 .EXAMPLE
-.\ListSecrets.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName>  -ServiceConnection <ServiceConnection>  -AppKeyVault <AppKeyVault> -VarFilter <VarFilter> PSHelperDirectory <PSHelperDirectory>
+.\ListSecrets.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName>  -ServiceConnection <ServiceConnection>  -AppKeyVault <AppKeyVault> -VarFilter <VarFilter> PSHelperDirectory <PSHelperDirectory> -PrivateAgentName <PrivateAgentName>
 #> 
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
     [string]$VariableGroups,
-    [string]$EnvName,       
+    [Parameter(Mandatory)]
+    [string]$EnvName,     
+    [Parameter(Mandatory)]  
     [string]$ServiceConnection,         
+    [Parameter(Mandatory)]
     [string]$AppKeyVault,        
-    [string]$VarFilter,    
-    [string]$PSHelperDirectory
+    [string]$VarFilter = "*",    
+    [Parameter(Mandatory)]
+    [string]$PSHelperDirectory,
+    [Parameter(Mandatory)]
+    [string]$PrivateAgentName
 )
 
 Set-StrictMode -Version 3.0
@@ -55,6 +63,7 @@ Write-Debug "${functionName}:ServiceConnection=$ServiceConnection"
 Write-Debug "${functionName}:AppKeyVault=$AppKeyVault"
 Write-Debug "${functionName}:VarFilter=$VarFilter"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
+Write-Debug "${functionName}:privateAgentName=$PrivateAgentName"
 
 try {
 
@@ -94,7 +103,7 @@ try {
                 $variablesArrayString = $variablesArray -join ';'
                 Write-Output "##vso[task.setvariable variable=secretVariables;isOutput=true]$variablesArrayString"     
                 Write-Host "variablesArrayString :$variablesArrayString"
-                $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'PSHelperDirectory=$PSHelperDirectory'  | ConvertFrom-Json" 
+                $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName'  | ConvertFrom-Json" 
                 Write-Host "buildQueue :$buildQueue"
                 $buildNumber = $buildQueue.id
                 if ($null -ne $buildNumber) {
