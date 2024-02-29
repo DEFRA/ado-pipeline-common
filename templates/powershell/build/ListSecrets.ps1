@@ -69,7 +69,7 @@ function GetPipelineBuildStatus {
             while ($buildDetails.status -ne "completed") {
                 Start-Sleep -Seconds 10
                 if ($buildDetails.status -eq "notStarted") {
-                    Write-Host $buildQueueId -ForegroundColor Green
+                    Write-Host $buildDetails.status -ForegroundColor Green
                 }
                 if ($buildDetails.status -eq "canceled") {
                     Write-Error "The build number $buildQueueId is $buildDetails.status"
@@ -158,7 +158,8 @@ try {
                     $variablesArrayString = $variablesArray -join ';'  
                     Write-Debug "variablesArrayString :$variablesArrayString"
                     $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName'  | ConvertFrom-Json" 
-                    Write-Host "buildQueue :$buildQueue"
+                    Write-Debug "buildQueue :$buildQueue"
+                    Write-Host "buildurl :$buildQueue.url"
                     GetPipelineBuildStatus -id $buildQueue.id -organization $ENV:DevOpOrganization -project $ENV:DevOpsProject
                 }
             }
