@@ -20,9 +20,11 @@ Mandatory. serviceConnection Name
 Mandatory. PrivateAgent Name
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
+.PARAMETER BuildNumber
+
 .EXAMPLE
 .\ListSecrets.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName> -ProgrammeName <ProgrammeName> -ServiceConnection <ServiceConnection> 
-    -AppKeyVault <AppKeyVault> -VarFilter <VarFilter>  -PrivateAgentName <PrivateAgentName> -PSHelperDirectory <PSHelperDirectory>
+    -AppKeyVault <AppKeyVault> -VarFilter <VarFilter>  -PrivateAgentName <PrivateAgentName> -PSHelperDirectory <PSHelperDirectory> -BuildNumber <BuildNumber>
 #> 
 
 [CmdletBinding()]
@@ -41,7 +43,9 @@ param(
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [Parameter(Mandatory)]
-    [string]$PrivateAgentName
+    [string]$PrivateAgentName,
+    [Parameter(Mandatory)]
+    [string]$BuildNumber
 )
 
 
@@ -143,7 +147,6 @@ try {
                 $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
                 $groupId = $group.id
                 $variable_group = Invoke-CommandLine -Command "az pipelines variable-group variable list --group-id $groupId --detect true  | ConvertFrom-Json"  
-                Write-Host "variable_group :$variable_group" 
                 $variables = $variable_group.psobject.Properties.Name
                 Write-Host "variables :$variables" 
                 foreach ($variable in $variables) {
@@ -158,7 +161,7 @@ try {
                     $variablesArrayString = $variablesArray -join ';'  
                     Write-Debug "variablesArrayString :$variablesArrayString"
                     $command = "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch"
-                    $prameters = " --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName' 'buildNumber=$(Build.BuildNumber)'"
+                    $prameters = " --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName' 'buildNumber=$BuildNumber'"
                     $buildQueue = Invoke-CommandLine -Command " $command $prameters  | ConvertFrom-Json" 
                     Write-Debug "buildQueue :$buildQueue"
                     Write-Host $buildQueue.url

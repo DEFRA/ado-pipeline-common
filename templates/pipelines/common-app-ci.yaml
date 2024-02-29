@@ -409,6 +409,7 @@ stages:
                               -ServiceConnection ${{ deploymentEnv.serviceConnection }}
                               -PrivateAgentName ${{ deploymentEnv.privateAgentName }}
                               -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                              -BuildNumber $(Build.BuildNumber)
                             addSpnToEnvironment: true          
                             failOnStandardError: false
                             workingDirectory: '$(Pipeline.Workspace)/s'     

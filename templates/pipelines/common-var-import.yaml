@@ -35,7 +35,7 @@ stages:
 - stage: ImportSecrets
   pool: ${{ parameters.privateAgentName }}  
   jobs:
-  - job: Import
+  - job: ${{ parameters.appKeyVault }}
     steps:
       - checkout: ADOPipelineCommon
         path: s/ADO-Pipeline-Common
