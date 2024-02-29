@@ -1,4 +1,4 @@
-name: "${{ parameters.organization }}${{ parameters.project }}/_build/results?buildId=${{ parameters.buildNumber }}"
+name: ${{ parameters.project }}-${{ parameters.buildNumber }}-${{ parameters.appKeyVault }}-${{ parameters.variableGroups }}
 
 parameters:
 - name: secretNames
@@ -20,6 +20,14 @@ parameters:
 trigger:
 - none
 
+resources:
+  repositories:
+    - repository: ADOPipelineCommon
+      name: DEFRA/ADO-Pipeline-Common
+      endpoint: DEFRA
+      type: github
+      ref: refs/heads/rv/323021-importvariables
+
 variables:
 - ${{ each varGroup in split(parameters.variableGroups, ';') }}:
   - group: '${{ varGroup }}'
@@ -32,6 +40,9 @@ stages:
   jobs:
   - job: ${{ parameters.appKeyVault }}
     steps:
+      - script: | 
+          "${{ parameters.organization }}${{ parameters.project }}/_build/results?buildId=${{ parameters.buildNumber }}"
+        displayName: 'Source Build URL'
       - ${{ each secret in split(parameters.secretNames, ';') }} :
         - template: ../steps/secrets-import-kv.yaml
           parameters:
