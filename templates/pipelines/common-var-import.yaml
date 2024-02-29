@@ -1,4 +1,4 @@
-name: ${{ parameters.project }}-${{ parameters.buildNumber }}-${{ parameters.appKeyVault }}-${{ parameters.variableGroups }}
+name: "${{ parameters.organization }}${{ parameters.project }}/_build/results?buildId=${{ parameters.buildNumber }}"
 
 parameters:
 - name: secretNames
@@ -32,9 +32,6 @@ stages:
   jobs:
   - job: ${{ parameters.appKeyVault }}
     steps:
-      - script: | 
-          "echo ${{ parameters.organization }}${{ parameters.project }}/_build/results?buildId=${{ parameters.buildNumber }}"
-        displayName: 'Source Build URL'
       - ${{ each secret in split(parameters.secretNames, ';') }} :
         - template: ../steps/secrets-import-kv.yaml
           parameters:
