@@ -1,4 +1,4 @@
-name: ${{ parameters.buildNumber }}-${{ parameters.appKeyVault }}-${{ Build.variableGroups }}
+name: ${{ parameters.buildNumber }}-${{ parameters.appKeyVault }}-${{ parameters.variableGroups }}
 
 parameters:
 - name: buildNumber
