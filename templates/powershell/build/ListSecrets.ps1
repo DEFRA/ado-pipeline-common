@@ -44,6 +44,53 @@ param(
     [string]$PrivateAgentName
 )
 
+
+function GetPipelineBuildStatus {
+    param(
+        [Parameter(Mandatory)]
+        [string]$buildQueueId,
+        [Parameter(Mandatory)]
+        [string]$organization,
+        [Parameter(Mandatory)]
+        [string]$project
+    )
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:buildQueueId=$buildQueueId"
+        Write-Debug "${functionName}:organization=$organization"
+        Write-Debug "${functionName}:project=$project"
+    }
+    process {
+        if ($null -ne $buildQueueId) {
+            # Get the status of triggered build
+            $buildDetails = Invoke-CommandLine -Command "(az pipelines build show --id $buildQueueId --detect true --organization $organization --project $project) | ConvertFrom-Json"   
+
+            while ($buildDetails.status -ne "completed") {
+                Start-Sleep -Seconds 10
+                if ($buildDetails.status -eq "notStarted") {
+                    Write-Host $buildQueueId -ForegroundColor Green
+                }
+                if ($buildDetails.status -eq "canceled") {
+                    Write-Error "The build number $buildQueueId is $buildDetails.status"
+                }
+                # Get the status of the triggered build again
+                $buildDetails = Invoke-CommandLine -Command "(az pipelines build show --id $buildQueueId --detect true --organization $organization --project $project) | ConvertFrom-Json"   
+                if ($buildDetails.status -eq "failed") {
+                    Write-Error "The build number $buildQueueId is $buildDetails.status"   
+                    throw "Import Secrets Build Failed"
+                }
+            }		
+           
+        }
+        
+        return $buildDetails
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -139,49 +186,3 @@ finally {
     exit $exitCode
 }
 
-
-function GetPipelineBuildStatus {
-    param(
-        [Parameter(Mandatory)]
-        [string]$buildQueueId,
-        [Parameter(Mandatory)]
-        [string]$organization,
-        [Parameter(Mandatory)]
-        [string]$project
-    )
-    begin {
-        [string]$functionName = $MyInvocation.MyCommand
-        Write-Debug "${functionName}:Entered"
-        Write-Debug "${functionName}:buildQueueId=$buildQueueId"
-        Write-Debug "${functionName}:organization=$organization"
-        Write-Debug "${functionName}:project=$project"
-    }
-    process {
-        if ($null -ne $buildQueueId) {
-            # Get the status of triggered build
-            $buildDetails = Invoke-CommandLine -Command "(az pipelines build show --id $buildQueueId --detect true --organization $organization --project $project) | ConvertFrom-Json"   
-
-            while ($buildDetails.status -ne "completed") {
-                Start-Sleep -Seconds 10
-                if ($buildDetails.status -eq "notStarted") {
-                    Write-Host $buildQueueId -ForegroundColor Green
-                }
-                if ($buildDetails.status -eq "canceled") {
-                    Write-Error "The build number $buildQueueId is $buildDetails.status"
-                }
-                # Get the status of the triggered build again
-                $buildDetails = Invoke-CommandLine -Command "(az pipelines build show --id $buildQueueId --detect true --organization $organization --project $project) | ConvertFrom-Json"   
-                if ($buildDetails.status -eq "failed") {
-                    Write-Error "The build number $buildQueueId is $buildDetails.status"   
-                    throw "Import Secrets Build Failed"
-                }
-            }		
-           
-        }
-        
-        return $buildDetails
-    }
-    end {
-        Write-Debug "${functionName}:Exited"
-    }
-}
