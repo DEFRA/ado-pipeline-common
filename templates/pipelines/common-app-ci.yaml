@@ -404,7 +404,7 @@ stages:
                               -VariableGroups  "${{ join(';', parameters.appDeployConfig.variableGroups) }}"                              
                               -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"                                                            
                               -EnvName ${{ deploymentEnv.name }} 
-                              -ProgrammeName ${{ parameters.appDeployConfig.variablesImport.ProgrammeName }}
+                              -ProgrammeName "${{ parameters.appDeployConfig.variablesImport.ProgrammeName }}"
                               -AppKeyVault ${{ deploymentEnv.appKeyVault }}                              
                               -ServiceConnection ${{ deploymentEnv.serviceConnection }}
                               -PrivateAgentName ${{ deploymentEnv.privateAgentName }}
