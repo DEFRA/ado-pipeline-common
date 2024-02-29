@@ -37,7 +37,7 @@ param(
     [string]$ServiceConnection,         
     [Parameter(Mandatory)]
     [string]$AppKeyVault,        
-    [string]$VarFilter = "*",    
+    [string]$VarFilter,    
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [Parameter(Mandatory)]
@@ -80,7 +80,12 @@ try {
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpOrganization"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
-    $VarFilter = $VarFilter -split ";"
+    if ( $varFilter.Length -eq 0) {
+        $VarFilter = "*"
+    }
+    else {
+        $VarFilter = $VarFilter -split ";"
+    }   
     foreach ($VariableGroup in $VariableGroupsArray) {
         if ($VariableGroup.contains($ProgrammeName)) {        
             if ($VariableGroup.contains('<environment>')) {
