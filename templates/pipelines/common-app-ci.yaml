@@ -390,24 +390,25 @@ stages:
                           displayName: 'List and Import Variables'
                           name: ListImportVariables
                           env:
-                            AZURE_DEVOPS_EXT_PAT: ${{ parameters.appDeployConfig.variablesImportPipelinePAT }}
-                            DevOpsUri: $(System.CollectionURI)
-                            DevOpsProject: ${{ parameters.appDeployConfig.variablesDevOpsProject }}
-                            ImportPipelineName: ${{ parameters.appDeployConfig.variablesImportPipelineName }}
-                            ImportPipelineBranch: ${{ parameters.appDeployConfig.variablesImportPipelineBranch }}
+                            AZURE_DEVOPS_EXT_PAT: ${{ parameters.appDeployConfig.variablesImport.PipelinePAT }}
+                            DevOpOrganization: $(System.CollectionURI)
+                            DevOpsProject: ${{ parameters.appDeployConfig.variablesImport.DevOpsProject }}
+                            ImportPipelineName: ${{ parameters.appDeployConfig.variablesImport.PipelineName }}
+                            ImportPipelineBranch: ${{ parameters.appDeployConfig.variablesImport.PipelineBranch }}
                           inputs:
                             azureSubscription: ${{ deploymentEnv.serviceConnection }}
                             scriptType: pscore
                             scriptLocation: scriptPath
                             scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ListSecrets.ps1'
                             arguments: >
-                              -VariableGroups  "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
+                              -VariableGroups  "${{ join(';', parameters.appDeployConfig.variableGroups) }}"                              
+                              -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"                                                            
                               -EnvName ${{ deploymentEnv.name }} 
-                              -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"                              
+                              -ProgrammeName ${{ parameters.appDeployConfig.variablesImport.ProgrammeName }}
+                              -AppKeyVault ${{ deploymentEnv.appKeyVault }}                              
                               -ServiceConnection ${{ deploymentEnv.serviceConnection }}
-                              -AppKeyVault ${{ deploymentEnv.appKeyVault }}
-                              -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                               -PrivateAgentName ${{ deploymentEnv.privateAgentName }}
+                              -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                             addSpnToEnvironment: true          
                             failOnStandardError: false
                             workingDirectory: '$(Pipeline.Workspace)/s'     
