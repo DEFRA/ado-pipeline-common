@@ -42,7 +42,6 @@ Write-Debug "${functionName}:KeyVault=$KeyVault"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
-    Get-ChildItem -Path . –Recurse
 
     Import-Module $PSHelperDirectory -Force
     try {
