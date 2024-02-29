@@ -24,7 +24,8 @@ resources:
 variables:
 - ${{ each varGroup in split(parameters.variableGroups, ';') }}:
   - group: '${{ varGroup }}'
-
+- name: PSHelperDirectory
+  value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
 steps:  
   - checkout: ADOPipelineCommon
     path: s/ADO-Pipeline-Common
@@ -33,7 +34,7 @@ steps:
     - template: ../steps/secrets-import-kv.yaml
       parameters:
         workingDirectory: '$(Pipeline.Workspace)/s'
-        PSHelperDirectory: ${{ parameters.PSHelperDirectory }}
+        PSHelperDirectory: ${{ variables.PSHelperDirectory }}
         secretName: ${{ secret }}
         serviceConnection: ${{ parameters.ServiceConnection }}
         appKeyVault: ${{ parameters.appKeyVault }}  
