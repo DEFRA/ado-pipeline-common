@@ -1,3 +1,5 @@
+name: $(Build.SourceVersion)-${{ parameters.appKeyVault }}-${{ Build.variableGroups }}
+
 parameters:
 - name: secretNames
   type: string  
