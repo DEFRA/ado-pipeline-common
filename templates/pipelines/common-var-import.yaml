@@ -26,19 +26,21 @@ variables:
   - group: '${{ varGroup }}'
 - name: PSHelperDirectory
   value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
-
-pool:
-  name: ${{ parameters.privateAgentName }}  
   
-steps:  
-  - checkout: ADOPipelineCommon
-    path: s/ADO-Pipeline-Common
-    clean: true
-  - ${{ each secret in split(parameters.secretNames, ';') }} :
-    - template: ../steps/secrets-import-kv.yaml
-      parameters:
-        workingDirectory: '$(Pipeline.Workspace)/s'
-        PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-        secretName: ${{ secret }}
-        serviceConnection: ${{ parameters.ServiceConnection }}
-        appKeyVault: ${{ parameters.appKeyVault }}  
+stages:
+- stage: ImportSecrets
+  pool: ${{ parameters.privateAgentName }}  
+  jobs:
+  - job: Import
+    steps:
+      - checkout: ADOPipelineCommon
+        path: s/ADO-Pipeline-Common
+        clean: true
+      - ${{ each secret in split(parameters.secretNames, ';') }} :
+        - template: ../steps/secrets-import-kv.yaml
+          parameters:
+            workingDirectory: '$(Pipeline.Workspace)/s'
+            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+            secretName: ${{ secret }}
+            serviceConnection: ${{ parameters.ServiceConnection }}
+            appKeyVault: ${{ parameters.appKeyVault }}  
