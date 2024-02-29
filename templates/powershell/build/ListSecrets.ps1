@@ -157,7 +157,9 @@ try {
                 if ($variablesArray.Length -gt 0) {
                     $variablesArrayString = $variablesArray -join ';'  
                     Write-Debug "variablesArrayString :$variablesArrayString"
-                    $buildQueue = Invoke-CommandLine -Command "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName'  | ConvertFrom-Json" 
+                    $command = "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch"
+                    $prameters = " --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName' 'buildNumber=$(Build.BuildNumber)'"
+                    $buildQueue = Invoke-CommandLine -Command " $command $prameters  | ConvertFrom-Json" 
                     Write-Debug "buildQueue :$buildQueue"
                     Write-Host $buildQueue.url
                     GetPipelineBuildStatus -buildQueueId $buildQueue.id -organization $ENV:DevOpOrganization -project $ENV:DevOpsProject
