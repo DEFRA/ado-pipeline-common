@@ -41,7 +41,7 @@ stages:
   - job: ${{ parameters.appKeyVault }}
     steps:
       - script: | 
-          "${{ parameters.organization }}${{ parameters.project }}/_build/results?buildId=${{ parameters.buildNumber }}"
+          echo "${{ parameters.organization }}${{ parameters.project }}/_build/results?buildId=${{ parameters.buildNumber }}"
         displayName: 'Source Build URL'
       - ${{ each secret in split(parameters.secretNames, ';') }} :
         - template: ../steps/secrets-import-kv.yaml
