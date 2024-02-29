@@ -40,6 +40,9 @@ stages:
   jobs:
   - job: ${{ parameters.appKeyVault }}
     steps:
+      - checkout: ADOPipelineCommon
+        path: s/ADO-Pipeline-Common
+        clean: true
       - script: | 
           echo "${{ parameters.organization }}${{ parameters.project }}/_build/results?buildId=${{ parameters.buildNumber }}"
         displayName: 'Source Build URL'
