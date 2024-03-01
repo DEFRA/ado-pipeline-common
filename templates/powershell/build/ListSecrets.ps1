@@ -141,7 +141,7 @@ try {
     }  
     foreach ($VariableGroup in $VariableGroupsArray) {
         if ($VariableGroup -like $ProgrammeName) {        
-            if ($VariableGroup -like '<environment>') {
+            if ($VariableGroup.Contains('<environment>')) {
                 $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
             }
             if ($VariableGroup -like $EnvName) {
