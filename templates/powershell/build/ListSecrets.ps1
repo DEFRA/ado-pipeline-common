@@ -7,7 +7,7 @@ List all variables from provided list of groups
 .PARAMETER VariableGroups
 Mandatory. SemiColon seperated variable groups
 .PARAMETER ProgrammeName
-Mandatory. ProgrammeName Name
+Optional. ProgrammeName Name
 .PARAMETER EnvName
 Mandatory. Environment Name
 .PARAMETER VarFilter
@@ -34,7 +34,6 @@ param(
     [Parameter(Mandatory)]
     [string]$EnvName,     
     [Parameter(Mandatory)]
-    [string]$ProgrammeName,   
     [Parameter(Mandatory)]  
     [string]$ServiceConnection,         
     [Parameter(Mandatory)]
