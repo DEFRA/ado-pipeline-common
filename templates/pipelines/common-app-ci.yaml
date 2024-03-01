@@ -342,13 +342,7 @@ stages:
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD: ${{ deploymentEnv.name }}'
-        variables:       
-        - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
-          - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-            - ${{ if contains(varGroup, deploymentEnv.name) }}:
-              - group: '${{ varGroup }}'
-            - ${{ elseif contains(varGroup, '<environment>') }}:
-              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}     
+        variables:         
         - name: serviceName
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
