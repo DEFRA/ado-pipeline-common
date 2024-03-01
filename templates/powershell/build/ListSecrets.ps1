@@ -131,18 +131,21 @@ try {
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpOrganization"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
-    if ( $varFilter.Length -eq 0) {
+    if ([string]::IsNullOrEmpty($VarFilter)) {
         $VarFilter = "*"
     }
     else {
         $VarFilter = $VarFilter -split ";"
-    }   
+    } 
+    if ([string]::IsNullOrEmpty($ProgrammeName)) {
+        $ProgrammeName = "*"
+    }  
     foreach ($VariableGroup in $VariableGroupsArray) {
-        if ($VariableGroup.contains($ProgrammeName)) {        
-            if ($VariableGroup.contains('<environment>')) {
+        if ($VariableGroup -like $ProgrammeName) {        
+            if ($VariableGroup -like '<environment>') {
                 $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
             }
-            if ($VariableGroup.contains($EnvName)) {
+            if ($VariableGroup -like $EnvName) {
                 Write-Host "${functionName} :$VariableGroup"                  
                 $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
                 $groupId = $group.id
