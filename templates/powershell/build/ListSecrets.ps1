@@ -140,11 +140,11 @@ try {
         $ProgrammeName = "*"
     }  
     foreach ($VariableGroup in $VariableGroupsArray) {
-        if ($VariableGroup -like $ProgrammeName) {        
+        if ($VariableGroup -like $ProgrammeName -or $VariableGroup -match $ProgrammeName) {        
             if ($VariableGroup.Contains('<environment>')) {
                 $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
             }
-            if ($VariableGroup -like $EnvName) {
+            if ($VariableGroup.Contains($EnvName)) {
                 Write-Host "${functionName} :$VariableGroup"                  
                 $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
                 $groupId = $group.id
@@ -153,7 +153,7 @@ try {
                 Write-Host "variables :$variables" 
                 foreach ($variable in $variables) {
                     foreach ($filter in $VarFilter) {
-                        if ($variable -like $filter) {
+                        if ($variable -like $filter -or $variable -match $filter) {
                             $variablesArray += $variable
                             continue
                         }
