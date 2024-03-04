@@ -132,6 +132,7 @@ try {
     $VariableGroupsArray = $VariableGroups -split ";"
     if (![string]::IsNullOrEmpty($VarFilter)) {
         $VarFilter = $VarFilter -split ";"
+        Write-Host "VarFilter :$VarFilter" 
     } 
     foreach ($VariableGroup in $VariableGroupsArray) {
         if ([string]::IsNullOrEmpty($ProgrammeName) -or $VariableGroup -like $ProgrammeName -or $VariableGroup -match $ProgrammeName) {        
@@ -150,7 +151,10 @@ try {
                         foreach ($filter in $VarFilter) {
                             if ($variable -like $filter -or $variable -match $filter) {
                                 $variablesArray += $variable
+                                Write-Debug "variablesArray :$variablesArray" 
                                 continue
+                            }else {
+                                Write-Debug "Variable :$variable does not match with filter :$filter"  
                             }
                         }
                     }else{
