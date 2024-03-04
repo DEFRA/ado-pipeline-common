@@ -145,7 +145,7 @@ try {
                 $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
             }
             if ($VariableGroup.Contains($EnvName)) {
-                Write-Host "${functionName} :$VariableGroup"                  
+                Write-Host "VariableGroup :$VariableGroup"                  
                 $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
                 $groupId = $group.id
                 $variable_group = Invoke-CommandLine -Command "az pipelines variable-group variable list --group-id $groupId --detect true  | ConvertFrom-Json"  
@@ -169,11 +169,14 @@ try {
                     Write-Debug "buildQueue :$buildQueue"
                     Write-Host $buildQueue.url
                     GetPipelineBuildStatus -buildQueueId $buildQueue.id -organization $ENV:DevOpOrganization -project $ENV:DevOpsProject
+                    $variablesArray = @()
                 }
             }
             else {
                 Write-Host "${functionName} :$VariableGroup not related to env: $EnvName"        
             }
+        }else{
+            Write-Host "VariableGroup :$VariableGroup does not match with ProgrammeName :$ProgrammeName"  
         }
     }  
     $exitCode = 0
