@@ -24,14 +24,16 @@ C[/common-app-ci.yaml/] -->|ListSecrets.ps1| Defra.Import-Variables[/common-var-
 
 ### 1. Pipeline
 
-Project Collection Build Service (defragovuk) needs Queue builds permissions for build pipeline 6174:Defra.Import-Variables in team project DEFRA-FFC 
+Project Collection Build Service (defragovuk) needs "Queue builds" permissions for build pipeline Defra.Import-Variables in team project DEFRA-FFC.
 
 ### 2. Variable Groups
 
 #### 2.1 Security
+
 Project Collection Build Service (defragovuk) - Reader
 
 #### 2.2 Pipeline Permission
+
 Variable groups should have access to the Defra.import-variables pipeline
 
 ### Run Pipeline
