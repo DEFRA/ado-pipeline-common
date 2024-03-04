@@ -419,3 +419,28 @@ stages:
                         - template: /templates/steps/post-deployment-tests.yaml
                           parameters:
                             url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
+          - job: WaitForFluxRelease
+            dependsOn: PublishTo${{ deploymentEnv.name }}
+            pool: server
+            variables:
+              - group: aa-test-callback
+            timeoutInMinutes: 10
+            steps:
+                  
+              - task: AzureFunction@1
+                inputs:
+                  function: 'https://aatestfuncapp.azurewebsites.net/api/callBackTest'
+                  key: '$(callBackKey)'
+                  method: 'POST'
+                  body: |
+                    {
+                    "Content-Type":"application/json",
+                    "helmReleaseName": "${{ parameters.serviceName }}",
+                    "helmReleaseVersion": "1.19.26"  
+                    }
+                  waitForCompletion: 'true'
+          
+          - job: PostDeploymentTests
+            dependsOn: WaitForFluxRelease
+            steps:
+            - bash: echo "Running Post Deployment Tests"
