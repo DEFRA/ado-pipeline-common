@@ -130,17 +130,11 @@ try {
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpOrganization"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
-    if ([string]::IsNullOrEmpty($VarFilter)) {
-        $VarFilter = "*"
-    }
-    else {
+    if (![string]::IsNullOrEmpty($VarFilter)) {
         $VarFilter = $VarFilter -split ";"
     } 
-    if ([string]::IsNullOrEmpty($ProgrammeName)) {
-        $ProgrammeName = "*"
-    }  
     foreach ($VariableGroup in $VariableGroupsArray) {
-        if ($VariableGroup -like $ProgrammeName -or $VariableGroup -match $ProgrammeName) {        
+        if ([string]::IsNullOrEmpty($ProgrammeName) -or $VariableGroup -like $ProgrammeName -or $VariableGroup -match $ProgrammeName) {        
             if ($VariableGroup.Contains('<environment>')) {
                 $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
             }
@@ -152,11 +146,15 @@ try {
                 $variables = $variable_group.psobject.Properties.Name
                 Write-Host "variables :$variables" 
                 foreach ($variable in $variables) {
-                    foreach ($filter in $VarFilter) {
-                        if ($variable -like $filter -or $variable -match $filter) {
-                            $variablesArray += $variable
-                            continue
+                    if (![string]::IsNullOrEmpty($VarFilter)) {
+                        foreach ($filter in $VarFilter) {
+                            if ($variable -like $filter -or $variable -match $filter) {
+                                $variablesArray += $variable
+                                continue
+                            }
                         }
+                    }else{
+                        $variablesArray += $variable
                     }
                 }
                 if ($variablesArray.Length -gt 0) {
@@ -175,7 +173,8 @@ try {
             else {
                 Write-Host "${functionName} :$VariableGroup not related to env: $EnvName"        
             }
-        }else{
+        }
+        else {
             Write-Host "VariableGroup :$VariableGroup does not match with ProgrammeName :$ProgrammeName"  
         }
     }  
