@@ -17,8 +17,9 @@ parameters:
   type: string 
 - name: organization
   type: string     
-trigger:
-- none
+
+trigger: none
+pr: none
 
 resources:
   repositories:
