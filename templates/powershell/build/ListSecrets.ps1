@@ -131,8 +131,8 @@ try {
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
     if (![string]::IsNullOrEmpty($VarFilter)) {
-        $VarFilter = $VarFilter -split ";"
-        Write-Host "VarFilter :$VarFilter" 
+        $VarFilterArray = $VarFilter -split ";"
+        Write-Host "VarFilter :$VarFilterArray" 
     } 
     foreach ($VariableGroup in $VariableGroupsArray) {
         if ([string]::IsNullOrEmpty($ProgrammeName) -or $VariableGroup -like $ProgrammeName -or $VariableGroup -match $ProgrammeName) {        
@@ -147,8 +147,8 @@ try {
                 $variables = $variable_group.psobject.Properties.Name
                 Write-Host "variables :$variables" 
                 foreach ($variable in $variables) {
-                    if (![string]::IsNullOrEmpty($VarFilter)) {
-                        foreach ($filter in $VarFilter) {
+                    if (![string]::IsNullOrEmpty($VarFilterArray)) {
+                        foreach ($filter in $VarFilterArray) {
                             if ($variable -like $filter -or $variable -match $filter) {
                                 $variablesArray += $variable
                                 Write-Debug "variablesArray :$variablesArray" 
