@@ -342,7 +342,13 @@ stages:
       - stage: ${{ deploymentEnv.name }}
         dependsOn: ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD: ${{ deploymentEnv.name }}'
-        variables:         
+        variables:       
+        - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
+          - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
+            - ${{ if contains(varGroup, deploymentEnv.name) }}:
+              - group: '${{ varGroup }}'
+            - ${{ elseif contains(varGroup, '<environment>') }}:
+              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}    
         - name: serviceName
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
@@ -384,26 +390,21 @@ stages:
                           displayName: 'List and Import Variables'
                           name: ListImportVariables
                           env:
-                            AZURE_DEVOPS_EXT_PAT: ${{ parameters.appDeployConfig.variablesImport.PipelinePAT }}
+                            AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
                             DevOpOrganization: $(System.CollectionURI)
-                            DevOpsProject: ${{ parameters.appDeployConfig.variablesImport.DevOpsProject }}
-                            ImportPipelineName: ${{ parameters.appDeployConfig.variablesImport.PipelineName }}
-                            ImportPipelineBranch: ${{ parameters.appDeployConfig.variablesImport.PipelineBranch }}
+                            DevOpsProject: $(System.TeamProject)
                           inputs:
                             azureSubscription: ${{ deploymentEnv.serviceConnection }}
                             scriptType: pscore
                             scriptLocation: scriptPath
-                            scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ListSecrets.ps1'
+                            scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ListAndImportSecretsToKV.ps1'
                             arguments: >
                               -VariableGroups  "${{ join(';', parameters.appDeployConfig.variableGroups) }}"                              
                               -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"                                                            
                               -EnvName ${{ deploymentEnv.name }} 
                               -ProgrammeName "${{ parameters.appDeployConfig.variablesImport.ProgrammeName }}"
                               -AppKeyVault ${{ deploymentEnv.appKeyVault }}                              
-                              -ServiceConnection ${{ deploymentEnv.serviceConnection }}
-                              -PrivateAgentName ${{ deploymentEnv.privateAgentName }}
                               -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-                              -BuildNumber $(Build.BuildID)
                             addSpnToEnvironment: true          
                             failOnStandardError: false
                             workingDirectory: '$(Pipeline.Workspace)/s'     

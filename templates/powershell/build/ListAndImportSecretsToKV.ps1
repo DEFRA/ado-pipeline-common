@@ -14,17 +14,13 @@ Mandatory. Environment Name
 Optional. SemiColon seperated variable filters defaults to *
 .PARAMETER AppKeyVault
 Mandatory. appKeyVault Name
-.PARAMETER ServiceConnection
-Mandatory. serviceConnection Name
-.PARAMETER PrivateAgentName
-Mandatory. PrivateAgent Name
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
-.PARAMETER BuildNumber
+
 
 .EXAMPLE
-.\ListSecrets.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName> -ProgrammeName <ProgrammeName> -ServiceConnection <ServiceConnection> 
-    -AppKeyVault <AppKeyVault> -VarFilter <VarFilter>  -PrivateAgentName <PrivateAgentName> -PSHelperDirectory <PSHelperDirectory> -BuildNumber <BuildNumber>
+.\ListAndImportSecretsToKV.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName> -ProgrammeName <ProgrammeName> 
+    -AppKeyVault <AppKeyVault> -VarFilter <VarFilter>  -PSHelperDirectory <PSHelperDirectory> 
 #> 
 
 [CmdletBinding()]
@@ -33,61 +29,50 @@ param(
     [string]$VariableGroups,
     [Parameter(Mandatory)]
     [string]$EnvName,     
-    [string]$ProgrammeName,   
-    [Parameter(Mandatory)]  
-    [string]$ServiceConnection,         
+    [string]$ProgrammeName,         
     [Parameter(Mandatory)]
     [string]$AppKeyVault,        
     [string]$VarFilter,    
     [Parameter(Mandatory)]
-    [string]$PSHelperDirectory,
-    [Parameter(Mandatory)]
-    [string]$PrivateAgentName,
-    [Parameter(Mandatory)]
-    [string]$BuildNumber
+    [string]$PSHelperDirectory
 )
 
 
-function GetPipelineBuildStatus {
+function ImportSecretsToKV {
     param(
         [Parameter(Mandatory)]
-        [string]$buildQueueId,
+        [string]$KeyVault,
         [Parameter(Mandatory)]
-        [string]$organization,
-        [Parameter(Mandatory)]
-        [string]$project
+        [string]$secretName
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
-        Write-Debug "${functionName}:buildQueueId=$buildQueueId"
-        Write-Debug "${functionName}:organization=$organization"
-        Write-Debug "${functionName}:project=$project"
+        Write-Debug "${functionName}:KeyVault=$KeyVault"
+        Write-Debug "${functionName}:secretName=$secretName"
     }
     process {
-        if ($null -ne $buildQueueId) {
-            # Get the status of triggered build
-            $buildDetails = Invoke-CommandLine -Command "(az pipelines build show --id $buildQueueId --detect true --organization $organization --project $project) | ConvertFrom-Json"   
 
-            while ($buildDetails.status -ne "completed") {
-                Start-Sleep -Seconds 10
-                if ($buildDetails.status -eq "notStarted") {
-                    Write-Host $buildDetails.status -ForegroundColor Green
-                }
-                if ($buildDetails.status -eq "canceled") {
-                    Write-Error "The build number $buildQueueId is $buildDetails.status"
-                }
-                # Get the status of the triggered build again
-                $buildDetails = Invoke-CommandLine -Command "(az pipelines build show --id $buildQueueId --detect true --organization $organization --project $project) | ConvertFrom-Json"   
-                if ($buildDetails.status -eq "failed") {
-                    Write-Error "The build number $buildQueueId is $buildDetails.status"   
-                    throw "Import Secrets Build Failed"
-                }
-            }		
-           
+        $pipelineVarEnc = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($secretName)"))
+        write-output $pipelineVarEnc
+        write-output [System.Text.Encoding]::UTF8.GetBytes("$($secretName)")
+
+        $decodedValue = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($pipelineVarEnc))
+
+        try {
+
+            Write-Host "Get the secret($secretName) from KeyVault $KeyVault"
+            $oldValue = Invoke-CommandLine -Command "az keyvault secret show --name $secretName --vault-name $KeyVault | convertfrom-json"
+            Write-Host "Secret($secretName) length:$($oldValue.Length)"
         }
-        
-        return $buildDetails
+        catch {
+            $oldValue = $null
+        }        
+
+        if (($null -eq $oldValue) -or ($oldValue.value -ne $decodedValue)) {
+            Write-Host "Set the secret($secretName) to KeyVault $KeyVault"
+            Invoke-CommandLine -Command "az keyvault secret set --name $secretName --vault-name $KeyVault --value '$decodedValue'" -IsSensitive > $null
+        }
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -118,29 +103,19 @@ Write-Debug "${functionName}:ProgrammeName=$ProgrammeName"
 Write-Debug "${functionName}:AppKeyVault=$AppKeyVault"
 Write-Debug "${functionName}:VarFilter=$VarFilter"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
-Write-Debug "${functionName}:ServiceConnection=$ServiceConnection"
-Write-Debug "${functionName}:privateAgentName=$PrivateAgentName"
 
 try {
 
     Import-Module $PSHelperDirectory -Force
 
-    $variablesArray = @()
-
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpOrganization"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
-    if ([string]::IsNullOrEmpty($VarFilter)) {
-        $VarFilter = "*"
-    }
-    else {
+    if (![string]::IsNullOrEmpty($VarFilter)) {
         $VarFilter = $VarFilter -split ";"
     } 
-    if ([string]::IsNullOrEmpty($ProgrammeName)) {
-        $ProgrammeName = "*"
-    }  
     foreach ($VariableGroup in $VariableGroupsArray) {
-        if ($VariableGroup -like $ProgrammeName -or $VariableGroup -match $ProgrammeName) {        
+        if ([string]::IsNullOrEmpty($ProgrammeName) -or $VariableGroup -like $ProgrammeName -or $VariableGroup -match $ProgrammeName) {        
             if ($VariableGroup.Contains('<environment>')) {
                 $VariableGroup = $VariableGroup -replace '<environment>', $EnvName
             }
@@ -152,30 +127,25 @@ try {
                 $variables = $variable_group.psobject.Properties.Name
                 Write-Host "variables :$variables" 
                 foreach ($variable in $variables) {
-                    foreach ($filter in $VarFilter) {
-                        if ($variable -like $filter -or $variable -match $filter) {
-                            $variablesArray += $variable
-                            continue
+                    if (![string]::IsNullOrEmpty($VarFilter)) {
+                        foreach ($filter in $VarFilter) {
+                            if ($variable -like $filter -or $variable -match $filter) {                   
+                                ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
+                                continue
+                            }
                         }
                     }
+                    else {                  
+                        ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
+                    }
                 }
-                if ($variablesArray.Length -gt 0) {
-                    $variablesArrayString = $variablesArray -join ';'  
-                    Write-Debug "variablesArrayString :$variablesArrayString"
-                    $command = "az pipelines run --project $ENV:DevOpsProject --name $ENV:ImportPipelineName --branch $ENV:ImportPipelineBranch"
-                    $prameters = " --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName' "
-                    $prameters = $prameters + " 'buildNumber=$BuildNumber' 'project=$ENV:DevOpsProject' 'organization=$ENV:DevOpOrganization'"
-                    $buildQueue = Invoke-CommandLine -Command " $command $prameters  | ConvertFrom-Json" 
-                    Write-Debug "buildQueue :$buildQueue"
-                    Write-Host $buildQueue.url
-                    GetPipelineBuildStatus -buildQueueId $buildQueue.id -organization $ENV:DevOpOrganization -project $ENV:DevOpsProject
-                    $variablesArray = @()
-                }
+                
             }
             else {
                 Write-Host "${functionName} :$VariableGroup not related to env: $EnvName"        
             }
-        }else{
+        }
+        else {
             Write-Host "VariableGroup :$VariableGroup does not match with ProgrammeName :$ProgrammeName"  
         }
     }  
