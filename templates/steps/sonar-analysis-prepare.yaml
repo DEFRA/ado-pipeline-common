@@ -34,6 +34,13 @@ steps:
       projectKey: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
       projectName: ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
       projectVersion: ${{ parameters.appVersion}}
+      ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+        extraProperties: |
+          sonar.cs.opencover.reportsPaths=**/coverage.opencover.xml
+          sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
+          sonar.cs.vscoveragexml.reportsPaths=$(Agent.TempDirectory)/**/*.coverage
+          sonar.exclusions=**/obj/**,**/*.Tests.csproj,**/Migrations/*
+          sonar.qualitygate.wait=true
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
