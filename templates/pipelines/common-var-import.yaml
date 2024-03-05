@@ -17,6 +17,8 @@ parameters:
   type: string 
 - name: organization
   type: string     
+- name: branch
+  type: string  
 
 trigger: none
 pr: none
@@ -27,7 +29,7 @@ resources:
       name: DEFRA/ADO-Pipeline-Common
       endpoint: DEFRA
       type: github
-      ref: refs/heads/rv/323021-importvariables
+      ref: ${{ parameters.branch }}
 
 variables:
 - ${{ each varGroup in split(parameters.variableGroups, ';') }}:

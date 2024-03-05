@@ -42,7 +42,7 @@ Variable groups should have access to the Defra.import-variables pipeline
 # Example of abstracting the CI pipeline from dev team
 $DevOpsProject = "FFC"
 $ImportPipelineName = "Defra.Import-Variables"
-$ImportPipelineBranch = "main"
+$ImportPipelineBranch = "ADO Pipeline Branch"
 $variablesArrayString = "variable1;variable2"
 $VariableGroup = "variable group1"
 $serviceConnection = "name of the service connection"
@@ -52,7 +52,7 @@ $BuildNumber = "Current Build Number"
 
 $command = "az pipelines run --project $DevOpsProject --name $ImportPipelineName --branch $ImportPipelineBranch"
 $prameters = " --parameters 'secretNames=$variablesArrayString' 'variableGroups=$VariableGroup' 'serviceConnection=$ServiceConnection' 'appKeyVault=$AppKeyVault' 'privateAgentName=$PrivateAgentName' "
-$prameters = $prameters + " 'buildNumber=$BuildNumber' 'project=$DevOpsProject' 'organization=$DevOpOrganization'"
+$prameters = $prameters + " 'buildNumber=$BuildNumber' 'project=$DevOpsProject' 'organization=$DevOpOrganization' 'branch=$ImportPipelineBranch'"
 $buildQueue = Invoke-CommandLine -Command " $command $prameters  | ConvertFrom-Json" 
 Write-Debug "buildQueue :$buildQueue"
 Write-Host $buildQueue.url
