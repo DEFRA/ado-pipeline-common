@@ -37,48 +37,6 @@ param(
     [string]$PSHelperDirectory
 )
 
-
-function ImportSecretsToKV {
-    param(
-        [Parameter(Mandatory)]
-        [string]$KeyVault,
-        [Parameter(Mandatory)]
-        [string]$secretName
-    )
-    begin {
-        [string]$functionName = $MyInvocation.MyCommand
-        Write-Debug "${functionName}:Entered"
-        Write-Debug "${functionName}:KeyVault=$KeyVault"
-        Write-Debug "${functionName}:secretName=$secretName"
-    }
-    process {
-
-        $pipelineVarEnc = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes("$($secretName)"))
-        write-output $pipelineVarEnc
-        write-output [System.Text.Encoding]::UTF8.GetBytes("$($secretName)")
-
-        $decodedValue = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($pipelineVarEnc))
-
-        try {
-
-            Write-Host "Get the secret($secretName) from KeyVault $KeyVault"
-            $oldValue = Invoke-CommandLine -Command "az keyvault secret show --name $secretName --vault-name $KeyVault | convertfrom-json"
-            Write-Host "Secret($secretName) length:$($oldValue.Length)"
-        }
-        catch {
-            $oldValue = $null
-        }        
-
-        if (($null -eq $oldValue) -or ($oldValue.value -ne $decodedValue)) {
-            Write-Host "Set the secret($secretName) to KeyVault $KeyVault"
-            Invoke-CommandLine -Command "az keyvault secret set --name $secretName --vault-name $KeyVault --value '$decodedValue'" -IsSensitive > $null
-        }
-    }
-    end {
-        Write-Debug "${functionName}:Exited"
-    }
-}
-
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
