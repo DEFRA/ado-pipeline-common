@@ -392,7 +392,7 @@ stages:
                             appKeyVault:  ${{ deploymentEnv.appKeyVault }}
                             VariableGroups: "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
                             VarFilter: "${{ join(';', parameters.appDeployConfig.variables) }}"
-                            ProgrammeName: "${{ parameters.appDeployConfig.variablesImport.ProgrammeName }}"
+                            ProgrammeName: "${{ parameters.appDeployConfig.programmeName }}"
                             EnvName: ${{ deploymentEnv.name }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                                   
