@@ -22,13 +22,10 @@ Mandatory. Directory Path of PSHelper module
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
     [string]$VariableGroups,
-    [Parameter(Mandatory)]
     [string]$EnvName,
     [string]$ProgrammeName,
     [string]$VarFilter,
-    [Parameter(Mandatory)]
     [string]$PSHelperDirectory
 )
 
