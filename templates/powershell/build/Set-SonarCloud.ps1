@@ -46,9 +46,13 @@ try {
     }
 
     Write-Debug "Checking existence of the project '$RepositoryName'..."
-    [Object]$response = Invoke-RestMethod -Method Get -Uri "$sonarUrl/api/components/search_projects?organization=$SonarOrganisation&filter=query+%3D+%22$RepositoryName%22" -Headers $headers
-
-    if ($response -and $response.components.Count -le 0) {
+    [Object]$response = Invoke-RestMethod -Method Get -Uri "$sonarUrl/api/components/tree?component=$RepositoryName&qualifiers=TRK" -Headers $headers -SkipHttpErrorCheck
+    
+    Write-Debug $($response | ConvertTo-Json)
+    if ($response -and (
+            ($response.PSobject.Properties.name -contains "components" -and $response.components.Count -le 0) -or 
+            ($response.PSobject.Properties.name -contains "errors" -and $response.errors.msg -match "'$RepositoryName' not found")
+        )) {
         Write-Output "Creating project '$RepositoryName' on '$SonarOrganisation' organisation."
         Invoke-RestMethod -Method Post -Uri "$sonarUrl/api/projects/create" -Headers $headers -Body "name=$RepositoryName&project=$RepositoryName&organization=$SonarOrganisation&visibility=public&newCodeDefinitionType=previous_version&newCodeDefinitionValue=previous_version"
 
