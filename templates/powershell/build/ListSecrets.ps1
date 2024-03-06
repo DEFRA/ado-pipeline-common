@@ -63,7 +63,7 @@ try {
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpOrganization"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
-    if (![string]::IsNullOrEmpty($VarFilter)) {
+    if (-not [string]::IsNullOrEmpty($VarFilter)) {
         $VarFilterArray = $VarFilter -split ";"
     } 
     foreach ($VariableGroup in $VariableGroupsArray) {
@@ -79,7 +79,7 @@ try {
                 $variables = $variable_group.psobject.Properties.Name
                 Write-Host "variables :$variables" 
                 foreach ($variable in $variables) {
-                    if (![string]::IsNullOrEmpty($VarFilterArray)) {
+                    if (-not [string]::IsNullOrEmpty($VarFilterArray)) {
                         foreach ($filter in $VarFilterArray) {
                             if ($variable -like $filter -or $variable -match $filter) {      
                                 $variablesArray += $variable             
