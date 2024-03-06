@@ -385,42 +385,17 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
-                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}: 
-                        - task: AzureCLI@2
-                          displayName: 'List and Import Variables'
-                          name: ListImportVariables
-                          env:
-                            AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-                            DevOpOrganization: $(System.CollectionURI)
-                            DevOpsProject: $(System.TeamProject)
-                          inputs:
-                            azureSubscription: ${{ deploymentEnv.serviceConnection }}
-                            scriptType: pscore
-                            scriptLocation: scriptPath
-                            scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ListSecrets.ps1'
-                            arguments: >
-                              -VariableGroups  "${{ join(';', parameters.appDeployConfig.variableGroups) }}"                              
-                              -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"                                                            
-                              -EnvName ${{ deploymentEnv.name }} 
-                              -ProgrammeName "${{ parameters.appDeployConfig.variablesImport.ProgrammeName }}"
-                              -AppKeyVault ${{ deploymentEnv.appKeyVault }}                              
-                              -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-                            addSpnToEnvironment: true          
-                            failOnStandardError: false
-                            workingDirectory: '$(Pipeline.Workspace)/s'  
-                        - task: AzureCLI@2
-                          displayName: 'Import Secrets'
-                          env:
-                            secretVariablesJsonObj: $(secretVariablesJsonObj)
-                          inputs:
-                            azureSubscription: ${{ deploymentEnv.serviceConnection }}
-                            scriptType: pscore
-                            scriptLocation: scriptPath
-                            scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ImportSecretsToKV.ps1'
-                            arguments: -KeyVault ${{ deploymentEnv.appKeyVault }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-                            addSpnToEnvironment: true
-                            failOnStandardError: false
-                            workingDirectory: '$(Pipeline.Workspace)/s'
+                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
+                        - template: /templates/steps/secrets-import-kv.yaml	                          
+                          parameters:
+                            serviceConnection: ${{ deploymentEnv.serviceConnection }}
+                            appKeyVault:  ${{ deploymentEnv.appKeyVault }}
+                            VariableGroups: "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
+                            VarFilter: "${{ join(';', parameters.appDeployConfig.variables) }}"
+                            ProgrammeName: "${{ parameters.appDeployConfig.variablesImport.ProgrammeName }}"
+                            EnvName: ${{ deploymentEnv.name }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                                  
                       - template: /templates/steps/appconfig-import.yaml
                         parameters:
                           dryRun: false

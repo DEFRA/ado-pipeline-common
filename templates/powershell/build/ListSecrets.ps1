@@ -12,15 +12,13 @@ Mandatory. ProgrammeName Name
 Mandatory. Environment Name
 .PARAMETER VarFilter
 Optional. SemiColon seperated variable filters defaults to *
-.PARAMETER AppKeyVault
-Mandatory. appKeyVault Name
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 
 
 .EXAMPLE
 .\ListAndImportSecretsToKV.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName> -ProgrammeName <ProgrammeName> 
-    -AppKeyVault <AppKeyVault> -VarFilter <VarFilter>  -PSHelperDirectory <PSHelperDirectory> 
+ -VarFilter <VarFilter>  -PSHelperDirectory <PSHelperDirectory> 
 #> 
 
 [CmdletBinding()]
@@ -30,8 +28,6 @@ param(
     [Parameter(Mandatory)]
     [string]$EnvName,     
     [string]$ProgrammeName,         
-    [Parameter(Mandatory)]
-    [string]$AppKeyVault,        
     [string]$VarFilter,    
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory
@@ -58,7 +54,6 @@ Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:VariableGroups=$VariableGroups"
 Write-Debug "${functionName}:EnvName=$EnvName"
 Write-Debug "${functionName}:ProgrammeName=$ProgrammeName"
-Write-Debug "${functionName}:AppKeyVault=$AppKeyVault"
 Write-Debug "${functionName}:VarFilter=$VarFilter"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
@@ -89,7 +84,6 @@ try {
                         foreach ($filter in $VarFilterArray) {
                             if ($variable -like $filter -or $variable -match $filter) {      
                                 $variablesArray += $variable             
-                                #ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
                                 continue
                             }
                             else {
@@ -99,7 +93,6 @@ try {
                     }
                     else {                  
                         $variablesArray += $variable
-                        #ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
                     }
                 }
                 
