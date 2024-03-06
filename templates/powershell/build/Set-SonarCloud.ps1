@@ -50,7 +50,7 @@ try {
     
     Write-Debug $($response | ConvertTo-Json)
     if ($response -and (
-            ($response.PSobject.Properties.name -contains "components" -and $response.components.Count -le 0) -or 
+            -not ($response.PSobject.Properties.name -match "baseComponent") -or 
             ($response.PSobject.Properties.name -contains "errors" -and $response.errors.msg -match "'$RepositoryName' not found")
         )) {
         Write-Output "Creating project '$RepositoryName' on '$SonarOrganisation' organisation."
