@@ -45,11 +45,11 @@ try {
 
     Import-Module $PSHelperDirectory -Force
 
-    $var1 = $env:variables   
-    $vars2 = $env:variables | ConvertFrom-Json 
-    foreach ($var in $vars2) {
-        $value = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($var.value))
-        Write-Host "Name:$($var.name),Value:$value"
+    $var1 = $env:secretVariablesJsonObj   
+    $secretVariables = $env:secretVariablesJsonObj | ConvertFrom-Json 
+    foreach ($secretVariable in $secretVariables) {
+        $value = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($secretVariable.value))
+        Write-Host "Name:$($secretVariable.name),Value:$value"
     }
  
     $result = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($var1))
