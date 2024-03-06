@@ -20,18 +20,6 @@ param(
     [string]$PSHelperDirectory
 )
 
-function GetDecodedValue {
-    param(
-        [Parameter(Mandatory)]
-        $secret
-    )
-    process {
-        $encodedValue = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($secret))
-        $decodedValue = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($encodedValue))
-        return $decodedValue    
-    }
-}
-
 
 Set-StrictMode -Version 3.0
 
