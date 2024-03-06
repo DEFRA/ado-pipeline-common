@@ -79,7 +79,7 @@ try {
                 $variables = $variable_group.psobject.Properties.Name
                 Write-Host "variables :$variables" 
                 foreach ($variable in $variables) {
-                    if (-not [string]::IsNullOrEmpty($VarFilterArray)) {
+                    if (-not [string]::IsNullOrEmpty($VarFilter)) {
                         foreach ($filter in $VarFilterArray) {
                             if ($variable -like $filter -or $variable -match $filter) {      
                                 $variablesArray += $variable             
