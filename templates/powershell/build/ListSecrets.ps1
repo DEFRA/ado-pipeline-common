@@ -121,7 +121,7 @@ try {
             }
             if ($VariableGroup.Contains($EnvName)) {
                 Write-Host "VariableGroup :$VariableGroup"                  
-                $group = Invoke-CommandLine -Command "az pipelines variable-group list  --group-name $VariableGroup --detect true | ConvertFrom-Json"            
+                $group = Invoke-CommandLine -Command "az pipelines variable-group list --group-name $VariableGroup --detect true | ConvertFrom-Json"            
                 $groupId = $group.id
                 $variable_group = Invoke-CommandLine -Command "az pipelines variable-group variable list --group-id $groupId --detect true  | ConvertFrom-Json"  
                 $variables = $variable_group.psobject.Properties.Name
@@ -129,16 +129,23 @@ try {
                 foreach ($variable in $variables) {
                     if (![string]::IsNullOrEmpty($VarFilterArray)) {
                         foreach ($filter in $VarFilterArray) {
-                            if ($variable -like $filter -or $variable -match $filter) {                   
-                                ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
+                            if ($variable -like $filter -or $variable -match $filter) {      
+                                $variablesArray += $variable             
+                                #ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
                                 continue
+                            }
+                            else {
+                                Write-Debug "Variable :$variable does not match with filter :$filter"  
                             }
                         }
                     }
                     else {                  
-                        ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
+                        $variablesArray += $variable
+                        #ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
                     }
                 }
+
+                Write-Host "variablesArray :$variablesArray" 
                 
             }
             else {
