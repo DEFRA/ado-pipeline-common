@@ -113,7 +113,7 @@ try {
         $body.variables += @([ordered]@{name = $var; value = "`$($var)" })
     }
     $json = $body.variables | ConvertTo-Json -Compress 
-    Write-Host "##vso[task.setvariable variable=secretVariablesJsonObj;]$json"
+    Write-Host "##vso[task.setvariable variable=secretVariablesJson;]$json"
 
     $exitCode = 0
 }

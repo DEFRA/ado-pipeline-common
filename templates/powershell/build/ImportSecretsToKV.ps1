@@ -57,10 +57,10 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
 
     Import-Module $PSHelperDirectory -Force
-    $secretVariables = $env:secretVariablesJsonObj | ConvertFrom-Json 
+    $secretVariables = $env:secretVariablesJson | ConvertFrom-Json 
     foreach ($secretVariable in $secretVariables) {
-        $secretName = GetDecodedValue($secretVariable.name)
-        $secretValue = GetDecodedValue($secretVariable.value)
+        $secretName = $secretVariable.name        
+        $secretValue = $secretVariable.value
         try {
             Write-Host "Get the secret($secretName) from KeyVault $KeyVault"
             $oldValue = Invoke-CommandLine -Command "az keyvault secret show --name $secretName --vault-name $KeyVault | convertfrom-json"
