@@ -17,8 +17,7 @@ Mandatory. Directory Path of PSHelper module
 
 
 .EXAMPLE
-.\ListAndImportSecretsToKV.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName> -ProgrammeName <ProgrammeName> 
- -VarFilter <VarFilter>  -PSHelperDirectory <PSHelperDirectory> 
+.\ListAndImportSecretsToKV.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName> -ProgrammeName <ProgrammeName> -VarFilter <VarFilter>  -PSHelperDirectory <PSHelperDirectory> 
 #> 
 
 [CmdletBinding()]
@@ -26,9 +25,9 @@ param(
     [Parameter(Mandatory)]
     [string]$VariableGroups,
     [Parameter(Mandatory)]
-    [string]$EnvName,     
-    [string]$ProgrammeName,         
-    [string]$VarFilter,    
+    [string]$EnvName,
+    [string]$ProgrammeName,
+    [string]$VarFilter,
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory
 )
