@@ -65,7 +65,7 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
 
     Import-Module $PSHelperDirectory -Force
-
+    $variablesArray = @()
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpOrganization"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
@@ -102,8 +102,7 @@ try {
                         #ImportSecretsToKV -KeyVault $AppKeyVault -secretName $variable
                     }
                 }
-
-                Write-Host "variablesArray :$variablesArray" 
+                
                 
             }
             else {
@@ -114,6 +113,16 @@ try {
             Write-Host "VariableGroup :$VariableGroup does not match with ProgrammeName :$ProgrammeName"  
         }
     }  
+
+    Write-Host "variablesArray :$variablesArray" 
+    [hashtable]$body = @{}
+    $body.variables = @()
+    foreach ($var in $variablesArray) {
+        $body.variables += @([ordered]@{name = $var; value = "`$($var)" })
+    }
+    $json = $body.variables | ConvertTo-Json -Compress 
+    Write-Host "##vso[task.setvariable variable=secretVariablesJsonObj;]$json"
+
     $exitCode = 0
 }
 catch {

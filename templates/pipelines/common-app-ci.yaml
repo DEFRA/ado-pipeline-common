@@ -407,7 +407,20 @@ stages:
                               -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                             addSpnToEnvironment: true          
                             failOnStandardError: false
-                            workingDirectory: '$(Pipeline.Workspace)/s'     
+                            workingDirectory: '$(Pipeline.Workspace)/s'  
+                        - task: AzureCLI@2
+                          displayName: '${{ Import Secrets }}'
+                          env:
+                            secretVariablesJsonObj: $(secretVariablesJsonObj)
+                          inputs:
+                            azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                            scriptType: pscore
+                            scriptLocation: scriptPath
+                            scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ImportSecretsToKV.ps1'
+                            arguments: -KeyVault ${{ deploymentEnv.appKeyVault }} -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                            addSpnToEnvironment: true
+                            failOnStandardError: false
+                            workingDirectory: '$(Pipeline.Workspace)/s'
                       - template: /templates/steps/appconfig-import.yaml
                         parameters:
                           dryRun: false
