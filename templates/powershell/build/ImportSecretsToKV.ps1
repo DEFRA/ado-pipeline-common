@@ -20,6 +20,19 @@ param(
     [string]$PSHelperDirectory
 )
 
+function GetDecodedValue {
+    param(
+        [Parameter(Mandatory)]
+        $secret
+    )
+    process {
+        $encodedValue = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($secret))
+        $decodedValue = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($encodedValue))
+        return $decodedValue    
+    }
+}
+
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -44,30 +57,23 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
 
     Import-Module $PSHelperDirectory -Force
-
-    $var1 = $env:secretVariablesJsonObj   
     $secretVariables = $env:secretVariablesJsonObj | ConvertFrom-Json 
     foreach ($secretVariable in $secretVariables) {
-        $value = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($secretVariable.value))
-        Write-Host "Name:$($secretVariable.name),Value:$value"
+        $secretName = GetDecodedValue($secretVariable.name)
+        $secretValue = GetDecodedValue($secretVariable.value)
+        try {
+            Write-Host "Get the secret($secretName) from KeyVault $KeyVault"
+            $oldValue = Invoke-CommandLine -Command "az keyvault secret show --name $secretName --vault-name $KeyVault | convertfrom-json"
+            Write-Host "Secret($secretName) length:$($oldValue.Length)"
+        }
+        catch {
+            $oldValue = $null
+        }        
+        if (($null -eq $oldValue) -or ($oldValue.value -ne $secretValue)) {
+            Write-Host "Set the secret($secretName) to KeyVault $KeyVault"
+            Invoke-CommandLine -Command "az keyvault secret set --name $secretName --vault-name $KeyVault --value '$secretValue'" -IsSensitive > $null
+        }
     }
- 
-    $result = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($var1))
-    Write-Host $result
-
-    # try {
-    #     Write-Host "Get the secret($env:secretName) from KeyVault $KeyVault"
-    #     $oldValue = Invoke-CommandLine -Command "az keyvault secret show --name $env:secretName --vault-name $KeyVault | convertfrom-json"
-    #     Write-Host "Secret($env:secretName) length:$($oldValue.Length)"
-    # }
-    # catch {
-    #     $oldValue = $null
-    # }        
-
-    # if (($null -eq $oldValue) -or ($oldValue.value -ne $env:secretValue)) {
-    #     Write-Host "Set the secret($env:secretName) to KeyVault $KeyVault"
-    #     Invoke-CommandLine -Command "az keyvault secret set --name $env:secretName --vault-name $KeyVault --value '$env:secretValue'" -IsSensitive > $null
-    # }
 
     $exitCode = 0
 }
