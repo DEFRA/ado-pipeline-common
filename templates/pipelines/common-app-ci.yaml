@@ -409,7 +409,7 @@ stages:
                             failOnStandardError: false
                             workingDirectory: '$(Pipeline.Workspace)/s'  
                         - task: AzureCLI@2
-                          displayName: '${{ Import Secrets }}'
+                          displayName: 'Import Secrets'
                           env:
                             secretVariablesJsonObj: $(secretVariablesJsonObj)
                           inputs:
