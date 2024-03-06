@@ -100,6 +100,10 @@ Following pipeline `common-app-build.yaml` code snippet is an example of how to 
 # Example of abstracting the CI pipeline from dev team
 
 parameters:
+  - name: programmeName
+    displayName: programme name
+    type: string
+    default: ""
   - name: serviceName
     displayName: Project name
     type: string
