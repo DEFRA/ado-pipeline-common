@@ -7,11 +7,11 @@ List all variables from provided list of groups
 .PARAMETER VariableGroups
 Mandatory. SemiColon seperated variable groups
 .PARAMETER ProgrammeName
-Mandatory. ProgrammeName Name
+Optional. ProgrammeName Name
 .PARAMETER EnvName
 Mandatory. Environment Name
 .PARAMETER VarFilter
-Optional. SemiColon seperated variable filters defaults to *
+Optional. SemiColon seperated variable filters
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 
