@@ -299,7 +299,7 @@ try {
                 'lintandbuild' {
 
                     if ($chartDirectory.DirectoryName.Contains($InfraChartDirName)) {                
-                        Write-Host "Adding 'keyvault-secrets-role-assignment.yaml' file to $InfraChartHomeDir\templates folder"
+                        Write-Host "Adding 'keyvault-secrets-role-assignment.yaml' file to $chartHomeDir\$InfraChartDirName\templates folder"
                         '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$chartHomeDir\$InfraChartDirName\templates\keyvault-secrets-role-assignment.yaml"
                     }
 
