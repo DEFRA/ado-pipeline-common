@@ -227,58 +227,6 @@ stages:
               cacheHitVar: CACHE_RESTORED
 
           - task: PowerShell@2
-            displayName: 'Helm Lint'
-            inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: > 
-                -Command 'lint' 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              failOnStderr: false
-              pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s'               
-
-          - task: PowerShell@2
-            displayName: 'List Variables'
-            name: ListVariables
-            env:
-              AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-              DevOpOrganization: $(System.CollectionURI)
-              DevOpsProject: $(System.TeamProject)
-            inputs:
-              pwsh: true
-              azurePowerShellVersion: latestVersion
-              targetType: 'filePath'
-              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ListSecrets.ps1'
-              arguments: >
-                -VariableGroups "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
-                -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"
-                -EnvName "snd3"
-                -ProgrammeName ""
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-              workingDirectory: '$(Pipeline.Workspace)/s'  
-
-          - script: |         
-              echo "$(secretVariableNamesJson)"
-
-          - task: PowerShell@2
-            displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
-            env:
-              secretVariableNamesJson: $(secretVariableNamesJson)
-            inputs:
-              pwsh: true
-              azurePowerShellVersion: latestVersion
-              targetType: 'filePath'
-              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Build-Helm-KVSecretsRoleAssignments.ps1'
-              arguments: >
-                -KeyVaultVSecretNames '$(secretVariableNamesJson)' 
-                -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-                -ServiceName ${{ parameters.serviceName }}
-              workingDirectory: $(Pipeline.Workspace)/s
-
-          - task: PowerShell@2
             displayName: 'Helm Lint & Build'
             inputs:
               targetType: filePath
@@ -434,6 +382,7 @@ stages:
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
                         parameters:
+                            serviceName: ${{ parameters.serviceName }}
                             environmentObj: ${{ deploymentEnv }}
                             appBuildConfig: ${{ parameters.appBuildConfig }}
                             appDeployConfig: ${{ parameters.appDeployConfig }}

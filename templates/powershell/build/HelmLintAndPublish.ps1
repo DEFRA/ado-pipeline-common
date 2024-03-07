@@ -15,8 +15,14 @@ Optional. Command to run, lint, lintandbuild, build or publish or Default = lint
 Mandatory. Directory Path of PSHelper module
 .PARAMETER chartHomeDir
 Mandatory. Directory Path of all helm charts
+.PARAMETER KeyVaultVSecretNames
+Optional. Keyvault Secret Names in string format
+.PARAMETER ServiceName
+Optional. Service Name
+
 .EXAMPLE
-.\HelmLintAndPublish.ps1  AcrName <AcrName> ChartVersion <ChartVersion> ChartCachePath <ChartCachePath> Command <Command>  PSHelperDirectory <PSHelperDirectory> chartHomeDir <chartHomeDir>
+.\HelmLintAndPublish.ps1  AcrName <AcrName> ChartVersion <ChartVersion> ChartCachePath <ChartCachePath> Command <Command>  PSHelperDirectory <PSHelperDirectory> chartHomeDir <chartHomeDir> 
+-KeyVaultVSecretNames <KeyVaultVSecretNames> -ServiceName <ServiceName>
 #> 
 
 [CmdletBinding()]
@@ -28,8 +34,84 @@ param(
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [Parameter(Mandatory)]
-    [string]$chartHomeDir
+    [string]$chartHomeDir,
+    [string]$KeyVaultVSecretNames,
+    [string]$ServiceName
 )
+
+
+function Update-KVSecretValues {
+    param(
+        [Parameter(Mandatory)]
+        [string]$InfraChartHomeDir,
+        [Parameter(Mandatory)]
+        [string]$ServiceName,
+        [Parameter(Mandatory)]
+        [string]$KeyVaultVSecretNames
+    )
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+    }
+    process {
+        if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
+            Write-Host "powershell-yaml Module does not exists. Installing now.."
+            Install-Module powershell-yaml -Force
+            Write-Host "powershell-yaml Installed Successfully."
+        } 
+        else {
+            Write-Host "powershell-yaml Module exist"
+        }
+
+        $kvSecretNames = $KeyVaultVSecretNames | ConvertFrom-Json
+
+        Write-Debug "${functionName}:kvSecretNames:$kvSecretNames"
+    
+        $valuesYamlPath = "$InfraChartHomeDir\values.yaml"
+        [string]$content = Get-Content -Raw -Path $valuesYamlPath
+        Write-Debug "$valuesYamlPath content before: $content"
+        if ($content) {
+            $valuesObject = ConvertFrom-YAML $content -Ordered
+        }
+        else {
+            $valuesObject = [ordered]@{}
+        }
+
+        $keyVaultSecrets = [System.Collections.Generic.List[hashtable]]@()
+        foreach ($secret in $kvSecretNames) {
+                
+            #Logic to remove servicename from the secretname
+            #for e.g. "ffc-demo-payment-web-COOKIE-PASSWORD" will get replace with "COOKIE-PASSWORD"
+            if ($secret -like "$ServiceName*") {
+                $NoOfStartingCharsToTrunk = $ServiceName.Length + 1
+                $secretWithoutServiceName = $secret.subString($NoOfStartingCharsToTrunk, ($secret.Length - $NoOfStartingCharsToTrunk) )
+            }
+            else {
+                $secretWithoutServiceName = $secret
+            }
+
+            $roleAssignments = [System.Collections.Generic.List[hashtable]]@()
+            $roleAssignments.Add(@{
+                    roleName = "keyvaultsecretuser"
+                })
+
+            $keyVaultSecrets.Add(@{
+                    name            = $secretWithoutServiceName
+                    roleAssignments = $roleAssignments
+                })
+        }
+
+        $valuesObject.Add("keyVaultSecrets", $keyVaultSecrets)
+
+        Write-Host "Converting valuesObject to yaml and writing it to file : $valuesYamlPath"
+        $output = Convertto-yaml $valuesObject
+        Write-Debug "$valuesYamlPath content after: $output"
+        $output | Out-File $valuesYamlPath
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
 
 function Invoke-HelmLint {
     param(
@@ -138,23 +220,13 @@ function Invoke-Publish {
         Write-Host "Publishing Helm chart $HelmChartName"
         $acrHelmPath = "oci://$AcrName.azurecr.io/helm"
         if (Test-Path $PathToSaveChart -PathType Leaf) { 
+
             Write-Host "Publising cached chart $acrHelmPath from $PathToSaveChart"
             Invoke-CommandLine -Command "helm push $PathToSaveChart $acrHelmPath"
         }
-        else {    
-            try {
-                Invoke-CommandLine -Command "helm dependency build"
-            }
-            catch {
-                Invoke-CommandLine -Command "helm dependency update"
-            }
-            Invoke-CommandLine -Command "helm package . --version $ChartVersion"
-
-            Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $PathToSaveChart"
-            Copy-Item "$HelmChartName-$ChartVersion.tgz" -Destination $PathToSaveChart -Force          
-            
-            Write-Host "Publising chart $acrHelmPath from $PathToSaveChart"
-            Invoke-CommandLine -Command "helm push $chartCacheFilePath $acrHelmPath"
+        else {                                   
+            Write-Host "Chart does not exist in cache. Publishing chart $acrHelmPath from current directory" 
+            throw "Chart does not exist in cache"         
         }
     }
     end {
@@ -186,11 +258,15 @@ Write-Debug "${functionName}:ChartCachePath=$ChartCachePath"
 Write-Debug "${functionName}:Command=$Command"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:chartHomeDir=$chartHomeDir"
+Write-Debug "${functionName}:KeyVaultVSecretNames=$KeyVaultVSecretNames"
+Write-Debug "${functionName}:ServiceName=$ServiceName"
 
 try {
 
     Import-Module $PSHelperDirectory -Force
-    
+
+    $InfraChartDirName = "$serviceName-infra"
+
     $helmChartsDirList = Get-ChildItem -Path $chartHomeDir
 
     $helmChartsDirList | ForEach-Object {
@@ -221,9 +297,26 @@ try {
                     Invoke-HelmBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
                 }
                 'lintandbuild' {
+
+                    if ($chartDirectory.DirectoryName.Contains($InfraChartDirName)) {                
+                        Write-Host "Adding 'keyvault-secrets-role-assignment.yaml' file to $InfraChartHomeDir\templates folder"
+                        '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$chartHomeDir\$InfraChartDirName\templates\keyvault-secrets-role-assignment.yaml"
+                    }
+
                     Invoke-HelmLintAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
                 }
                 'publish' {
+
+                    if ($chartDirectory.DirectoryName.Contains($InfraChartDirName)) {  
+                        #Update KeyVault Secret Values in values.yaml file of infrastruture helm chart
+                        if (Test-Path $chartCacheFilePath -PathType Leaf) { 
+                            tar zxf $chartCacheFilePath -C $ChartCachePath
+                            Remove-Item $chartCacheFilePath
+                            Update-KVSecretValues -InfraChartHomeDir "$ChartCachePath\$InfraChartDirName" -ServiceName $ServiceName -KeyVaultVSecretNames $KeyVaultVSecretNames
+                            tar cvf $chartCacheFilePath "$ChartCachePath\$InfraChartDirName"
+                        }                                                
+                    }
+
                     Invoke-CommandLine -Command "az acr login --name $AcrName"
                     Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
                 }
