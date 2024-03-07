@@ -60,6 +60,7 @@ try {
 
     Import-Module $PSHelperDirectory -Force
     $variablesArray = @()
+    $VarFilterArray = ""
     Invoke-CommandLine -Command "az devops configure --defaults organization=$ENV:DevOpOrganization"
     Invoke-CommandLine -Command "az devops configure --defaults project=$ENV:DevOpsProject"
     $VariableGroupsArray = $VariableGroups -split ";"
@@ -79,7 +80,7 @@ try {
                 $variables = $variable_group.psobject.Properties.Name
                 Write-Host "variables :$variables" 
                 foreach ($variable in $variables) {
-                    if (-not [string]::IsNullOrEmpty($VarFilter)) {
+                    if (-not [string]::IsNullOrEmpty($VarFilterArray)) {
                         foreach ($filter in $VarFilterArray) {
                             if ($variable -like $filter -or $variable -match $filter) {      
                                 $variablesArray += $variable             
