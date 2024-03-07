@@ -308,12 +308,12 @@ try {
                 'publish' {
 
                     if ($chartDirectory.DirectoryName.Contains($InfraChartDirName)) {  
-                        #Update KeyVault Secret Values in values.yaml file of infrastruture helm chart
+                        #Update KeyVault Secret Names in values.yaml file of infrastruture helm chart
                         if (Test-Path $chartCacheFilePath -PathType Leaf) { 
                             tar zxf $chartCacheFilePath -C $ChartCachePath
                             Remove-Item $chartCacheFilePath
                             Update-KVSecretValues -InfraChartHomeDir "$ChartCachePath\$InfraChartDirName" -ServiceName $ServiceName -KeyVaultVSecretNames $KeyVaultVSecretNames
-                            tar cvf $chartCacheFilePath "$ChartCachePath\$InfraChartDirName"
+                            tar czf $chartCacheFilePath "$ChartCachePath\$InfraChartDirName"
                         }                                                
                     }
 
