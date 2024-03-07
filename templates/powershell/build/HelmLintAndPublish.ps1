@@ -299,8 +299,8 @@ try {
                 'lintandbuild' {
 
                     if ($chartDirectory.DirectoryName.Contains($InfraChartDirName)) {                
-                        Write-Host "Adding 'keyvault-secrets-role-assignment.yaml' file to $chartHomeDir\$InfraChartDirName\templates folder"
-                        '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$chartHomeDir\$InfraChartDirName\templates\keyvault-secrets-role-assignment.yaml"
+                        Write-Host "Adding 'keyvault-secrets-role-assignment.yaml' file to $chartHomeDir\$InfraChartDirName/templates folder"
+                        '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$chartHomeDir/$InfraChartDirName/templates/keyvault-secrets-role-assignment.yaml"
                     }
 
                     Invoke-HelmLintAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
@@ -312,8 +312,9 @@ try {
                         if (Test-Path $chartCacheFilePath -PathType Leaf) { 
                             tar zxf $chartCacheFilePath -C $ChartCachePath
                             Remove-Item $chartCacheFilePath
-                            Update-KVSecretValues -InfraChartHomeDir "$ChartCachePath\$InfraChartDirName" -ServiceName $ServiceName -KeyVaultVSecretNames $KeyVaultVSecretNames
-                            tar czf $chartCacheFilePath "$ChartCachePath\$InfraChartDirName"
+                            Update-KVSecretValues -InfraChartHomeDir "$ChartCachePath/$InfraChartDirName" -ServiceName $ServiceName -KeyVaultVSecretNames $KeyVaultVSecretNames
+                            Push-Location $ChartCachePath
+                            tar czf $chartCacheFilePath $InfraChartDirName
                         }                                                
                     }
 
