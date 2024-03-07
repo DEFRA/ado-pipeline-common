@@ -255,7 +255,7 @@ stages:
                 -VariableGroups "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
                 -VarFilter "${{ join(';', parameters.appDeployConfig.variables) }}"
                 -EnvName "snd3"
-                -ProgrammeName "${{ parameters.ProgrammeName }}"
+                -ProgrammeName ""
                 -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
               workingDirectory: '$(Pipeline.Workspace)/s'  
 
