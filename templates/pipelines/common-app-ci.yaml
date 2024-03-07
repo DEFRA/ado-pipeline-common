@@ -264,6 +264,8 @@ stages:
 
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
+            env:
+              secretVariableNamesJson: $(secretVariableNamesJson)
             inputs:
               pwsh: true
               azurePowerShellVersion: latestVersion

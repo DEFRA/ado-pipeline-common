@@ -108,7 +108,7 @@ try {
     }  
 
     Write-Host "variablesArray :$variablesArray" 
-    $secretVariableNamesJson = $VarFilterArray | ConvertTo-Json -Compress 
+    $secretVariableNamesJson = $variablesArray | ConvertTo-Json -Compress 
     [hashtable]$body = @{}
     $body.variables = @()
     foreach ($var in $variablesArray) {
