@@ -261,8 +261,8 @@ stages:
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'  
 
-          -script : |            
-            echo "$(secretVariableNamesJson)"
+          - script: |         
+              echo "$(secretVariableNamesJson)"
 
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
