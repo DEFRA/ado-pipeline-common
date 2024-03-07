@@ -107,6 +107,7 @@ try {
     }  
 
     Write-Host "variablesArray :$variablesArray" 
+    $secretVariableNamesJson = $VarFilterArray | ConvertTo-Json -Compress 
     [hashtable]$body = @{}
     $body.variables = @()
     foreach ($var in $variablesArray) {
@@ -114,6 +115,7 @@ try {
     }
     $json = $body.variables | ConvertTo-Json -Compress 
     Write-Host "##vso[task.setvariable variable=secretVariablesJson;]$json"
+    Write-Host "##vso[task.setvariable variable=secretVariableNamesJson;]$secretVariableNamesJson"
 
     $exitCode = 0
 }

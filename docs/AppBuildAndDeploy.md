@@ -79,7 +79,7 @@ dependsOn: Application_CI
     deployment: PublishTo<Env>
       steps:
         task: Download artificats (code version, docker image, helm chart)
-        task: List variables from variable group using az pipelines cli
+        task: Get variables from ADO variable group using az pipelines cli
         task: Push secrets from variable group to application keyvault
         task: Validate and Merge Azure App Configuration json or yaml file(s)
         task: Replace Tokens in Configuration json file
@@ -253,9 +253,9 @@ extends:
             filepath: "./appConfig"         #Optional: Folder path of app configuration files
             filetype: "yaml"                #Optional: default value json
             variableGroups:                 #Optional: List of variable groups which contain secrets
-              - variableGroup<environment>  #Optional: Variable Group name, if specified with <environment>, relevant env specific variables will be imported
-            variables:                      #Optional: List of variables used by the service, if not specified all variables will be imported
-              - servicename-variable1       #Optional: If specific variable is defined, only those variables will be imported
+              - variableGroup-<environment> #Optional: Variable Group name, if specified with <environment>, relevant env specific variables will be imported
+            variablesFilter:                #Optional: Variable filter, if not specified all variables will be imported, where specified matching variables will be imported
+              - servicename-variable1       #Optional: It is ok to specifiy the full variable name or a filter like the one below
               - servicename-*               #Optional: Filter will be applied by matching the variable name
             programmeName: "programmeName"  #Optional: Programme name - used in variable group
 ```

@@ -239,6 +239,31 @@ stages:
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'               
 
+          - task: AzureCLI@2
+            displayName: 'List Variables'
+            name: ListVariables
+            env:
+              AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+              DevOpOrganization: $(System.CollectionURI)
+              DevOpsProject: $(System.TeamProject)
+            inputs:
+              azureSubscription: ${{ parameters.serviceConnection }}
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ListSecrets.ps1'
+              arguments: >
+                -VariableGroups "${{ parameters.VariableGroups }}"
+                -VarFilter "${{ parameters.VarFilter }}"
+                -EnvName "snd3"
+                -ProgrammeName "${{ parameters.ProgrammeName }}"
+                -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
+              addSpnToEnvironment: true          
+              failOnStandardError: false
+              workingDirectory: '$(Pipeline.Workspace)/s'  
+
+          -script : |            
+            echo "$(secretVariableNamesJson)"
+
           - task: PowerShell@2
             displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
             inputs:
@@ -247,7 +272,7 @@ stages:
               targetType: 'filePath'
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Build-Helm-KVSecretsRoleAssignments.ps1'
               arguments: >
-                -KeyVaultVSecretNames '${{ convertToJson(parameters.appDeployConfig.variables) }}' 
+                -KeyVaultVSecretNames '$(secretVariableNamesJson)' 
                 -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                 -ServiceName ${{ parameters.serviceName }}
