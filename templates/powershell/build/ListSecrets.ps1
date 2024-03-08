@@ -108,15 +108,22 @@ try {
     }  
 
     Write-Host "variablesArray :$variablesArray" 
-    $secretVariableNamesJson = $variablesArray | ConvertTo-Json -Compress 
-    [hashtable]$body = @{}
-    $body.variables = @()
-    foreach ($var in $variablesArray) {
-        $body.variables += @([ordered]@{name = $var; value = "`$($var)" })
+    if ($variablesArray.Count -gt 0) {
+        $secretVariableNamesJson = $variablesArray | ConvertTo-Json -Compress 
+        [hashtable]$body = @{}
+        $body.variables = @()
+        foreach ($var in $variablesArray) {
+            $body.variables += @([ordered]@{name = $var; value = "`$($var)" })
+        }
+        $json = $body.variables | ConvertTo-Json -Compress 
+        Write-Host "##vso[task.setvariable variable=secretVariablesJson;]$json"
+        Write-Host "##vso[task.setvariable variable=secretVariableNamesJson;]$secretVariableNamesJson"
     }
-    $json = $body.variables | ConvertTo-Json -Compress 
-    Write-Host "##vso[task.setvariable variable=secretVariablesJson;]$json"
-    Write-Host "##vso[task.setvariable variable=secretVariableNamesJson;]$secretVariableNamesJson"
+    else {
+        Write-Host "##vso[task.setvariable variable=secretVariablesJson;]''"
+        Write-Host "##vso[task.setvariable variable=secretVariableNamesJson;]''"
+    }
+    
 
     $exitCode = 0
 }
