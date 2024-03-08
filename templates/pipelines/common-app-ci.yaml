@@ -237,7 +237,6 @@ stages:
                 -Command 'lintandbuild' 
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                 -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-                -KeyVaultVSecretNames '' 
                 -ServiceName ${{ parameters.serviceName }}
               failOnStderr: false
               pwsh: true
