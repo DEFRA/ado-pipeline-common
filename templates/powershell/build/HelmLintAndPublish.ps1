@@ -309,7 +309,7 @@ try {
 
                     if ($chartDirectory.DirectoryName.Contains($InfraChartDirName)) {  
                         #Update KeyVault Secret Names in values.yaml file of infrastruture helm chart
-                        if ((Test-Path $chartCacheFilePath -PathType Leaf) -and (-not $KeyVaultVSecretNames.Equals("[]")) { 
+                        if ((Test-Path $chartCacheFilePath -PathType Leaf) -and (-not $KeyVaultVSecretNames.Equals("[]"))) { 
                             Invoke-CommandLine -Command "tar zxf $chartCacheFilePath -C $ChartCachePath"
                             Remove-Item $chartCacheFilePath
                             Update-KVSecretValues -InfraChartHomeDir "$ChartCachePath/$InfraChartDirName" -ServiceName $ServiceName -KeyVaultVSecretNames $KeyVaultVSecretNames
