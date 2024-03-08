@@ -73,7 +73,7 @@ function Check-HasResourcesToProvision {
 			Write-Debug "$valuesYamlPath content: $content"
 			if ($content) {
 				$valuesObject = ConvertFrom-YAML $content -Ordered
-				$hasResourcesToProvision = $valuesObject.Contains('namespaceQueues') -or $valuesObject.Contains('namespaceTopics')
+				$hasResourcesToProvision = ($valuesObject) -and ($valuesObject.Contains('namespaceQueues') -or $valuesObject.Contains('namespaceTopics'))
 			}
 		}
 

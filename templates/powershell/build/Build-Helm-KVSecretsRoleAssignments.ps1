@@ -52,8 +52,7 @@ Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 try {
-
-    if (Test-Path $InfraChartHomeDir) {
+    if (Test-Path "$($InfraChartHomeDir)\templates") {
         if (!([string]::IsNullOrEmpty($KeyVaultVSecretNames)) -and ($KeyVaultVSecretNames -ne "null")) {
             Import-Module $PSHelperDirectory -Force
 
@@ -75,6 +74,10 @@ try {
             Write-Debug "$valuesYamlPath content before: $content"
             if($content) {
                 $valuesObject = ConvertFrom-YAML $content -Ordered
+                # This condition is to initialize '$valuesObject' when values.yaml files contains only comments and not any values(Possible scenario).
+                if(-not $valuesObject) {
+                    $valuesObject = [ordered]@{}
+                }
             }
             else {
                 $valuesObject = [ordered]@{}
@@ -119,7 +122,7 @@ try {
         }
     }
     else {
-        Write-Host "Helm Infra chart path '$InfraChartHomeDir' does not exit. Skipped creation of Keyvault roleassignments"
+        Write-Host "Helm Infra chart path '$InfraChartHomeDir\templates' does not exit. Skipped creation of Keyvault roleassignments"
     }
     
     $exitCode = 0
