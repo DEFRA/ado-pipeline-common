@@ -266,7 +266,10 @@ try {
     Import-Module $PSHelperDirectory -Force
 
     $InfraChartDirName = "$serviceName-infra"
-
+    #If there are no variable groups for given service the KeyVaultVSecretNames value will be "$(secretVariableNamesJson)"
+    if ($KeyVaultVSecretNames.Equals("$(secretVariableNamesJson)")){
+            $KeyVaultVSecretNames = "[]"
+    }
     $helmChartsDirList = Get-ChildItem -Path $chartHomeDir
 
     $helmChartsDirList | ForEach-Object {
