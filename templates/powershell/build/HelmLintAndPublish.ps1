@@ -35,7 +35,7 @@ param(
     [string]$PSHelperDirectory,
     [Parameter(Mandatory)]
     [string]$chartHomeDir,
-    [string]$KeyVaultVSecretNames,
+    [string]$KeyVaultVSecretNames = "",
     [string]$ServiceName
 )
 
