@@ -83,7 +83,7 @@ steps:
         -Command "publish" 
         -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
         -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-        -KeyVaultVSecretNames $(secretVariableNamesJson) 
+        -KeyVaultVSecretNames '$(secretVariableNamesJson)' 
         -ServiceName ${{ parameters.serviceName }}
       addSpnToEnvironment: true          
       failOnStandardError: false

@@ -120,8 +120,8 @@ try {
         Write-Host "##vso[task.setvariable variable=secretVariableNamesJson;]$secretVariableNamesJson"
     }
     else {
-        Write-Host "##vso[task.setvariable variable=secretVariablesJson;]''"
-        Write-Host "##vso[task.setvariable variable=secretVariableNamesJson;]''"
+        Write-Host "##vso[task.setvariable variable=secretVariablesJson;]'[]'"
+        Write-Host "##vso[task.setvariable variable=secretVariableNamesJson;]'[]'"
     }
     
 
