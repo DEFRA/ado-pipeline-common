@@ -227,33 +227,6 @@ stages:
               cacheHitVar: CACHE_RESTORED
 
           - task: PowerShell@2
-            displayName: 'Helm Lint'
-            inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: > 
-                -Command 'lint' 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
-              failOnStderr: false
-              pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s'               
-
-          - task: PowerShell@2
-            displayName: 'Add KV Roleassignment template to ASO Infra helm chart'
-            inputs:
-              pwsh: true
-              azurePowerShellVersion: latestVersion
-              targetType: 'filePath'
-              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Build-Helm-KVSecretsRoleAssignments.ps1'
-              arguments: >
-                -KeyVaultVSecretNames '${{ convertToJson(parameters.appDeployConfig.variables) }}' 
-                -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-                -ServiceName ${{ parameters.serviceName }}
-              workingDirectory: $(Pipeline.Workspace)/s
-
-          - task: PowerShell@2
             displayName: 'Helm Lint & Build'
             inputs:
               targetType: filePath
@@ -264,6 +237,7 @@ stages:
                 -Command 'lintandbuild' 
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                 -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+                -ServiceName ${{ parameters.serviceName }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'  
@@ -348,7 +322,7 @@ stages:
             - ${{ if contains(varGroup, deploymentEnv.name) }}:
               - group: '${{ varGroup }}'
             - ${{ elseif contains(varGroup, '<environment>') }}:
-              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}     
+              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}    
         - name: serviceName
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
@@ -385,18 +359,17 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
-                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}: 
-                        - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
-                          - ${{ if or( contains(varGroup, deploymentEnv.name), contains(varGroup, '<environment>')) }}:
-                            - ${{ each secret in parameters.appDeployConfig.variables }} :
-                              - template: /templates/steps/secrets-import-kv.yaml
-                                parameters:
-                                  environmentObj: ${{ deploymentEnv }} 
-                                  appDeployConfig: ${{ parameters.appDeployConfig }} 
-                                  workingDirectory: '$(Pipeline.Workspace)/s'
-                                  serviceName: ${{ parameters.serviceName }}
-                                  PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                                  secretName: ${{ secret }}
+                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
+                        - template: /templates/steps/secrets-import-kv.yaml	                          
+                          parameters:
+                            serviceConnection: ${{ deploymentEnv.serviceConnection }}
+                            appKeyVault:  ${{ deploymentEnv.appKeyVault }}
+                            VariableGroups: "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
+                            VarFilter: "${{ join(';', parameters.appDeployConfig.variables) }}"
+                            ProgrammeName: "${{ parameters.appDeployConfig.programmeName }}"
+                            EnvName: ${{ deploymentEnv.name }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                                  
                       - template: /templates/steps/appconfig-import.yaml
                         parameters:
                           dryRun: false
@@ -410,6 +383,7 @@ stages:
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
                         parameters:
+                            serviceName: ${{ parameters.serviceName }}
                             environmentObj: ${{ deploymentEnv }}
                             appBuildConfig: ${{ parameters.appBuildConfig }}
                             appDeployConfig: ${{ parameters.appDeployConfig }}

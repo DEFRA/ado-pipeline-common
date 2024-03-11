@@ -1,4 +1,6 @@
 parameters:
+- name: serviceName
+  type: string
 - name: agentImage
   type: string
   default: 'ubuntu-latest'
@@ -81,6 +83,8 @@ steps:
         -Command "publish" 
         -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
         -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+        -KeyVaultVSecretNames '$(secretVariableNamesJson)' 
+        -ServiceName ${{ parameters.serviceName }}
       addSpnToEnvironment: true          
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'
