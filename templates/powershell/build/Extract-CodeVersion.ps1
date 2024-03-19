@@ -121,9 +121,9 @@ try {
         #Check if the version is upgraded
         if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
             Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
-            #uppend build number to version for feature branches which will be deployed to snd env
-            $buildNumber = $Env:BUILD_BUILDNUMBER
-            $appVersion = "$appVersion+$buildNumber"   
+            #uppend build id to version for feature branches which will be deployed to snd env
+            $buildId = $Env:BUILD_BUILDID
+            $appVersion = "$appVersion+$buildId"   
         }
         else {
             Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
