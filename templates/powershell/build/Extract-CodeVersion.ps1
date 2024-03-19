@@ -116,20 +116,28 @@ try {
         Write-Debug "${functionName}: Error identifying version"     
         $exitCode = -2
     }
-
+    $buildId = $Env:BUILD_BUILDID
     if ($IsDefaultBranchBuild -eq "False") {
-        #Check if the version is upgraded
-        if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
-            Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
-            #uppend build id to version for feature branches which will be deployed to snd env
-            $buildId = $Env:BUILD_BUILDID
-            $appVersion = "$appVersion-alpha.$buildId"   
+        $buildReason = $Env:BUILD_REASON
+        if ($buildReason -eq "PullRequest") {
+            #Check if the version is upgraded
+            if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
+                Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
+                #uppend build id to version for feature branches which will be deployed to snd env                
+                $appVersion = "$appVersion-alpha.$buildId"   
+            }
+            else {
+                Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
+                Write-Host "##vso[task.logissue type=error]${functionName}:Version increment is invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process. Check logs for further details."
+                $exitCode = -2
+            }
+            
         }
         else {
-            Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
-            Write-Host "##vso[task.logissue type=error]${functionName}:Version increment is invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process. Check logs for further details."
-            $exitCode = -2
-        }
+            $newVersion = [version]$oldAppVersion + [version]"0.0.1"
+            Write-Output "${functionName}:Version incremented by 0.0.1 '$oldAppVersion' -> '$newVersion'." 
+            $appVersion = "$newVersion-alpha.$buildId"   
+        }        
     }
 
     Write-Output "${functionName}:IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName"    
