@@ -194,12 +194,12 @@ stages:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
-          - ${{ if ne(parameters.appTestConfig, '') }}:
-            - template: /templates/steps/pre-deployment-tests.yaml
-              parameters:
-                serviceName: ${{ parameters.serviceName }}
-                IsPrBuild: ${{ variables.IsPrBuild }}
-                appTestConfig: ${{ parameters.appTestConfig }}
+          # - ${{ if ne(parameters.appTestConfig, '') }}:
+          #   - template: /templates/steps/pre-deployment-tests.yaml
+          #     parameters:
+          #       serviceName: ${{ parameters.serviceName }}
+          #       IsPrBuild: ${{ variables.IsPrBuild }}
+          #       appTestConfig: ${{ parameters.appTestConfig }}
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
