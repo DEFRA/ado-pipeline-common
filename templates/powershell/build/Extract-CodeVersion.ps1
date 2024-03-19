@@ -122,7 +122,7 @@ try {
         if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
             Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
             #uppend build number to version for feature branches which will be deployed to snd env
-            $buildNumber = Env:BUILD_BUILDNUMBER
+            $buildNumber = $Env:BUILD_BUILDNUMBER
             $appVersion = "$appVersion+$buildNumber"   
         }
         else {
