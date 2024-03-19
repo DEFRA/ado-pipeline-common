@@ -134,9 +134,11 @@ try {
             
         }
         else {
-            $newVersion = [version]$oldAppVersion + [version]"0.0.1"
-            Write-Output "${functionName}:Version incremented by 0.0.1 '$oldAppVersion' -> '$newVersion'." 
-            $appVersion = "$newVersion-alpha.$buildId"   
+            $majorVersion = ([version]$oldAppVersion).Major
+            $minorVersion = ([version]$oldAppVersion).Minor
+            $patchVersion = ([version]$oldAppVersion).Build + 1            
+            $appVersion = "$majorVersion.$minorVersion.$patchVersion-alpha.$buildId"   
+            Write-Output "${functionName}:Version incremented by 0.0.1 '$oldAppVersion' -> '$appVersion'." 
         }        
     }
 
