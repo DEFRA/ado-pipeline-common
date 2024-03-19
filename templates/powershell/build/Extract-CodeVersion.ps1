@@ -123,7 +123,7 @@ try {
             Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
             #uppend build id to version for feature branches which will be deployed to snd env
             $buildId = $Env:BUILD_BUILDID
-            $appVersion = "$appVersion-prerelease$buildId"   
+            $appVersion = "$appVersion.$buildId"   
         }
         else {
             Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
