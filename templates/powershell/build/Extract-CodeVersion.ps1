@@ -125,6 +125,7 @@ try {
                 Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
                 #uppend build id to version for feature branches which will be deployed to snd env                
                 $appVersion = "$appVersion-alpha.$buildId"   
+                Write-Output "${functionName}: PR Build Version Tagged with alpha and build id :-> '$appVersion'." 
             }
             else {
                 Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
@@ -134,6 +135,7 @@ try {
             
         }
         else {
+            #Increment version by 0.0.1 for feature branches using default branch (main/master) version e.g 4.32.33-alpha.506788
             $majorVersion = ([version]$oldAppVersion).Major
             $minorVersion = ([version]$oldAppVersion).Minor
             $patchVersion = ([version]$oldAppVersion).Build + 1            
