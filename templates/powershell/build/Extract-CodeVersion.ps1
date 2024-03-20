@@ -125,9 +125,9 @@ try {
             #Check if the version is upgraded
             if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
                 Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
-                #uppend rc and build id to version for feature branches which will be deployed to snd env   e.g 4.32.33-rc.506789             
-                $appVersion = "$appVersion-rc.$buildId"   
-                Write-Output "${functionName}: PR Build Version Tagged with rc and build id :-> '$appVersion'." 
+                #uppend alpha and build id to version for feature branches which will be deployed to snd env   e.g 4.32.33-alpha.506789             
+                $appVersion = "$appVersion-alpha.$buildId"   
+                Write-Output "${functionName}: PR Build Version Tagged with alpha and build id :-> '$appVersion'." 
             }
             else {
                 Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
@@ -138,18 +138,17 @@ try {
         }
         #Non PR builds
         else {
-            # if the user has updated version in the feature branch, then use the updated version
+            #Check if the version is upgraded
             if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
+                Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
+                #uppend alpha and build id to version for feature branches which will be deployed to snd env   e.g 4.32.33-alpha.506789
                 $appVersion = "$appVersion-alpha.$buildId" 
                 Write-Output "${functionName}: Feature Branch Build Version Tagged with alpha and build id :-> '$appVersion'." 
             }
             else {
-                #Increment version by 0.0.1 for feature branches using default branch (main/master) version e.g 4.32.33-alpha.506788
-                $majorVersion = ([version]$oldAppVersion).Major
-                $minorVersion = ([version]$oldAppVersion).Minor
-                $patchVersion = ([version]$oldAppVersion).Build + 1            
-                $appVersion = "$majorVersion.$minorVersion.$patchVersion-alpha.$buildId"   
-                Write-Output "${functionName}:Feature Branch Build version incremented by 0.0.1 and Tagged with alpha and build id : '$oldAppVersion' -> '$appVersion'." 
+                Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
+                Write-Host "##vso[task.logissue type=error]${functionName}:Version increment is invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process. Check logs for further details."
+                $exitCode = -2
             }
         }        
     }
