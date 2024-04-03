@@ -72,6 +72,10 @@ function Update-KVSecretValues {
         Write-Debug "$valuesYamlPath content before: $content"
         if ($content) {
             $valuesObject = ConvertFrom-YAML $content -Ordered
+            # if there are no values except some comments in the file
+            if (!$valuesObject) {
+                $valuesObject = [ordered]@{}
+            }
         }
         else {
             $valuesObject = [ordered]@{}
@@ -267,8 +271,8 @@ try {
 
     $InfraChartDirName = "$serviceName-infra"
     #If there are no variable groups for given service the KeyVaultVSecretNames value will be "$(secretVariableNamesJson)"
-    if ($KeyVaultVSecretNames.Contains("secretVariableNamesJson")){
-            $KeyVaultVSecretNames = "[]"
+    if ($KeyVaultVSecretNames.Contains("secretVariableNamesJson")) {
+        $KeyVaultVSecretNames = "[]"
     }
     $helmChartsDirList = Get-ChildItem -Path $chartHomeDir
 
