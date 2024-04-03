@@ -71,10 +71,10 @@ try {
     Import-Module $AppConfigModuleDirectory -Force
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         if ($ConfigFilePath.EndsWith(".json")) {        
-            Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -BuildId $BuildId        
+            Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -BuildId $BuildId        
         }
         else {
-            Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -DeleteEntriesNotInFile -KeyVaultName $KeyVault -BuildId $BuildId        
+            Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId        
         }
         Write-Host "${functionName} : App config file import completed successfully"
     }

@@ -574,26 +574,26 @@ function Import-AppConfigValues {
 			$outputs += @($delta.Remove | Remove-AppConfigValue -ConfigStore $ConfigStore)
 		}
 
-		#If there are any changes in config values, update sentinelItem to build id.
-		if ($outputs) {
-			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
-			[string]$sentinelKey = 'Sentinel'
-			if ([string]::IsNullOrWhiteSpace($BuildId)) {
-				$BuildId = Get-Date -Format "dd/MM/yyyyHH:mm"
-			}
-			if ($existingAppConfig.ContainsKey($sentinelKey)) {
-				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
-				$SentinelItem.value = $BuildId
-			}
-			else {
-				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
-				$SentinelItem.Key = $sentinelKey
-				$SentinelItem.value = $BuildId
-				$SentinelItem.Label = $Label
-				$SentinelItem.ContentType = $null
-			}
-			$SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore
-		}
+		# #If there are any changes in config values, update sentinelItem to build id.
+		# if ($outputs) {
+		# 	[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
+		# 	[string]$sentinelKey = 'Sentinel'
+		# 	if ([string]::IsNullOrWhiteSpace($BuildId)) {
+		# 		$BuildId = Get-Date -Format "dd/MM/yyyyHH:mm"
+		# 	}
+		# 	if ($existingAppConfig.ContainsKey($sentinelKey)) {
+		# 		[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
+		# 		$SentinelItem.value = $BuildId
+		# 	}
+		# 	else {
+		# 		[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
+		# 		$SentinelItem.Key = $sentinelKey
+		# 		$SentinelItem.value = $BuildId
+		# 		$SentinelItem.Label = $Label
+		# 		$SentinelItem.ContentType = $null
+		# 	}
+		# 	$SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore
+		# }
 
 		Write-Debug "${functionName}:process:End"
 	}
