@@ -71,13 +71,10 @@ function Update-KVSecretValues {
         [string]$content = Get-Content -Raw -Path $valuesYamlPath
         Write-Debug "$valuesYamlPath content before: $content"
         if ($content) {
-            $valuesObject = ConvertFrom-YAML $content -Ordered
-            # if there are no values except some comments in the file
-            if (!$valuesObject) {
-                $valuesObject = [ordered]@{}
-            }
+            $valuesObject = ConvertFrom-YAML $content -Ordered            
         }
-        else {
+        # if there are no values except some comments in the file
+        if (!$valuesObject) {
             $valuesObject = [ordered]@{}
         }
 
