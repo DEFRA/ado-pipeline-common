@@ -663,14 +663,23 @@ function New-AppConfigDifference {
 				[string]$sourceContentType = $sourceItem.ContentType
 				[string]$destinationValue = $destinationItem.Value
 				[string]$destinationContentType = $destinationItem.ContentType
-				[bool]$same = `
-				($sourceValue -ceq $destinationValue) `
-					-and `
-				(
+				# [bool]$same = `
+				# ($sourceValue -ceq $destinationValue) `
+				# 	-and `
+				# (
+                #         ([string]::IsNullOrWhiteSpace($sourceContentType) -and [string]::IsNullOrWhiteSpace($destinationContentType)) `
+				# 		-or 
+                #         ($sourceContentType -ceq $destinationContentType)
+				# )
+				[bool]$same = ($sourceValue -ceq $destinationValue)
+				if (-not $sourceItem.IsKeyVault()) {
+					$same &= `
+					(
                         ([string]::IsNullOrWhiteSpace($sourceContentType) -and [string]::IsNullOrWhiteSpace($destinationContentType)) `
 						-or 
                         ($sourceContentType -ceq $destinationContentType)
-				)
+					)
+				}
 				Write-Debug "${functionName}:process:${same}:sourceValue/destinationValue=${sourceValue}/${destinationValue}"
 
 				if (-not $same) {
@@ -847,7 +856,7 @@ function Set-AppConfigValue {
 			[void]$commandBuilder.Append(" set ")
 			[void]$commandBuilder.Append(" --value `"$($InputObject.Value)`" ")
 			if ([string]::IsNullOrWhiteSpace($contentType)) {
-				[void]$commandBuilder.Append(" --content-type '`"`"' ")
+				# [void]$commandBuilder.Append(" --content-type '`"`"' ")
 			}
 			else {
 				[void]$commandBuilder.Append(" --content-type `"$contentType`" ")
