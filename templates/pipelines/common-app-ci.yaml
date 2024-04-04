@@ -71,11 +71,11 @@ stages:
               arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
-            displayName: GetAppVersion            
+            displayName: Get App Version            
             name: GetAppVersion
 
           - task: PowerShell@2
-            displayName: UpdateBuildNumber
+            displayName: Update App Version Number
             inputs:
               targetType: 'inline'
               script: |
