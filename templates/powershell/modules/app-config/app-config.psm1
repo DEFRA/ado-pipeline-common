@@ -855,7 +855,7 @@ function Set-AppConfigValue {
 		else {
 			[void]$commandBuilder.Append(" set ")
 			[void]$commandBuilder.Append(" --value `"$($InputObject.Value)`" ")
-			if ([string]::IsNullOrWhiteSpace($contentType)) {
+			if ([string]::IsNullOrWhiteSpace($contentType) -or $contentType -eq '""') {
 				[void]$commandBuilder.Append(" --content-type '`"`"' ")
 			}
 			else {
