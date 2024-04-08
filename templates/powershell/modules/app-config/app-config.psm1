@@ -673,7 +673,7 @@ function New-AppConfigDifference {
 				# )
 				[bool]$same = ($sourceValue -ceq $destinationValue)
 				if (-not $sourceItem.IsKeyVault()) {
-					$same &= `
+					$same = $same -and `
 					(
                         ([string]::IsNullOrWhiteSpace($sourceContentType) -and [string]::IsNullOrWhiteSpace($destinationContentType)) `
 						-or 
