@@ -75,7 +75,7 @@ function ConvertTo-AppConfigEntry {
 			$entry.Value = $InputObject.value
 			$entry.Label = $InputObject.label
 			if ([string]::IsNullOrWhiteSpace($InputObject.contentType)) {
-				$entry.ContentType = $null
+				$entry.ContentType = '`"`"'
 			}
 			else {
 				$entry.ContentType = $InputObject.contentType
@@ -856,7 +856,7 @@ function Set-AppConfigValue {
 			[void]$commandBuilder.Append(" set ")
 			[void]$commandBuilder.Append(" --value `"$($InputObject.Value)`" ")
 			if ([string]::IsNullOrWhiteSpace($contentType)) {
-				# [void]$commandBuilder.Append(" --content-type '`"`"' ")
+				[void]$commandBuilder.Append(" --content-type '`"`"' ")
 			}
 			else {
 				[void]$commandBuilder.Append(" --content-type `"$contentType`" ")
