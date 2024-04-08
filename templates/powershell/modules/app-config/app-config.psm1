@@ -75,7 +75,7 @@ function ConvertTo-AppConfigEntry {
 			$entry.Value = $InputObject.value
 			$entry.Label = $InputObject.label
 			if ([string]::IsNullOrWhiteSpace($InputObject.contentType)) {
-				$entry.ContentType = $null
+				$entry.ContentType = '""'
 			}
 			else {
 				$entry.ContentType = $InputObject.contentType
