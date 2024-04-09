@@ -76,7 +76,7 @@ steps:
           -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
-          -Version $(Version)
+          -Version ${{ parameters.Version }}
           -FullBuild ${{ parameters.FullBuild }}
         addSpnToEnvironment: true          
         failOnStandardError: false
