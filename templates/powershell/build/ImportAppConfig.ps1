@@ -16,10 +16,12 @@ Mandatory. Application Keyvault
 Mandatory. Directory Path of PSHelper module
 .PARAMETER AppConfigModuleDirectory
 Mandatory. Directory Path of App-Config module
-.PARAMETER BuildId
-Mandatory. Build ID
+.PARAMETER Version
+Mandatory. Version
+.PARAMETER FullBuild
+Mandatory. Flag to update correct Sentinel key value.
 .EXAMPLE
-.\ImportYamlAppConfig.ps1 -AppConfig <AppConfig> -ServiceName <ServiceName> -ConfigFilePath <ConfigFilePath> -KeyVault <KeyVault> -PSHelperDirectory <PSHelperDirectory> -AppConfigModuleDirectory <AppConfigModuleDirectory> -BuildId <BuildId>
+.\ImportYamlAppConfig.ps1 -AppConfig <AppConfig> -ServiceName <ServiceName> -ConfigFilePath <ConfigFilePath> -KeyVault <KeyVault> -PSHelperDirectory <PSHelperDirectory> -AppConfigModuleDirectory <AppConfigModuleDirectory> -BuildId <Version> -FullBuild <bool>
 #> 
 
 [CmdletBinding()]
@@ -37,7 +39,9 @@ param(
     [Parameter(Mandatory)]
     [string]$AppConfigModuleDirectory,
     [Parameter(Mandatory)]
-    [string]$BuildId
+    [string]$Version,
+    [Parameter(Mandatory)]
+    [bool]$FullBuild
 )
 
 Set-StrictMode -Version 3.0
@@ -64,18 +68,15 @@ Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
 Write-Debug "${functionName}:KeyVault=$KeyVault"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
+Write-Debug "${functionName}:Version=$Version"
+Write-Debug "${functionName}:FullBuild=$FullBuild"
 
 try {
 
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
     if (Test-Path $ConfigFilePath -PathType Leaf) {
-        if ($ConfigFilePath.EndsWith(".json")) {        
-            Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -BuildId $BuildId        
-        }
-        else {
-            Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId        
-        }
+        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $Version -FullBuild $FullBuild
         Write-Host "${functionName} : App config file import completed successfully"
     }
     else {

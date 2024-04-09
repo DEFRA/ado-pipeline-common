@@ -17,6 +17,11 @@ parameters:
   type: string
 - name: AppConfigModuleDirectory
   type: string
+- name: Version
+  type: string
+- name: FullBuild
+  type: boolean
+  default: false
 - name: configFileType
   type: string
   default: 'json'
@@ -41,7 +46,7 @@ steps:
          -SchemaFilePath '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/config/schema.${{ parameters.configFileType }}'
          -CommonConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.configFileType }}'
          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
-         -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
+         -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }}
         failOnStderr: true
         pwsh: true
         workingDirectory: '$(Pipeline.Workspace)/s'
@@ -71,7 +76,8 @@ steps:
           -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
-          -BuildId $(Build.BuildId) 
+          -Version $(Version)
+          -FullBuild ${{ parameters.FullBuild }}
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'  
