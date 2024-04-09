@@ -328,7 +328,7 @@ stages:
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
         - name: appVersion
-          value: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          value: $[ stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.appVersion'] ]
   
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
