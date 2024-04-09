@@ -298,11 +298,11 @@ stages:
               targetPath: '$(Pipeline.Workspace)/docker'
               artifact: docker
           
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish helm'
-            inputs:
-              targetPath: '$(Pipeline.Workspace)/helm'
-              artifact: helm
+          # - task: PublishPipelineArtifact@1
+          #   displayName: 'Publish helm'
+          #   inputs:
+          #     targetPath: '$(Pipeline.Workspace)/helm'
+          #     artifact: helm
           
           # - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
           #   - template: /templates/steps/tag-and-release.yaml
