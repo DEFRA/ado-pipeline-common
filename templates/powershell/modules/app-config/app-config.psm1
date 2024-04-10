@@ -600,7 +600,7 @@ function Import-AppConfigValues {
 				}
 				$SentinelItem.ContentType = $null
 			}
-			$SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore
+			$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 		}
 
 		Write-Debug "${functionName}:process:End"
