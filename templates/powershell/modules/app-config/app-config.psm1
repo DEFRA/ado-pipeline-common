@@ -492,8 +492,11 @@ function Get-AppConfigValuesFromYamlFile {
   .PARAMETER KeyVaultName
     The name of the keyvault to be used for objects while importing from yaml file
 
+  .PARAMETER BuildId
+  Build Id to update the sentinel value
+
   .PARAMETER Version
-    Version to update the sentinel value
+    Version to create the sentinel label
 
   .NOTES
     The file format is json.  
