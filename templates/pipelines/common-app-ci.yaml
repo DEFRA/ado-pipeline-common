@@ -45,7 +45,7 @@ variables:
 - name: Revision
   value: $[counter(variables['RunDate'], 0)]
 
-stages:         
+stages:
   - stage: Application_CI
     displayName: 'Application CI'
     ${{ if ne(parameters.privateAgentName, '') }}:
@@ -314,7 +314,9 @@ stages:
   - ${{ each deploymentEnv in parameters.environments }}:  
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:
       - stage: ${{ deploymentEnv.name }}
-        dependsOn: ${{ deploymentEnv.dependsOn }}
+        dependsOn:
+          - Application_CI
+          - ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD: ${{ deploymentEnv.name }}'
         variables:       
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
