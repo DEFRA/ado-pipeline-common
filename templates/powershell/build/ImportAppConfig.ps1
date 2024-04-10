@@ -76,7 +76,7 @@ try {
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
     if (Test-Path $ConfigFilePath -PathType Leaf) {
-        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $Version -FullBuild $FullBuild
+        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -Version $Version -FullBuild $FullBuild
         Write-Host "${functionName} : App config file import completed successfully"
     }
     else {
