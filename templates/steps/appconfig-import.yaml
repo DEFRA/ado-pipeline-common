@@ -77,7 +77,7 @@ steps:
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
           -Version ${{ parameters.Version }}
-          -FullBuild ${{ parameters.FullBuild }}
+          -FullBuild $${{ parameters.FullBuild }}
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'  
