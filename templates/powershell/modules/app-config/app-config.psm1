@@ -561,7 +561,7 @@ function Import-AppConfigValues {
 			if ($_.Label -ne $Label) {
 				throw [System.IO.InvalidDataException]::new("Invalid Label for $item.key ")
 			}
-		}			
+		}
 		
 		[AppConfigDifferences]$delta = New-AppConfigDifference -Source $desiredItems -Destination $existingItems
         
@@ -594,7 +594,8 @@ function Import-AppConfigValues {
 				$SentinelItem.value = $Version
 				if ($FullBuild) {
 					$SentinelItem.Label = "$Label-$Version"
-				} else {
+				}
+				else {
 					$SentinelItem.Label = $Label
 				}
 				$SentinelItem.ContentType = $null
@@ -677,7 +678,7 @@ function New-AppConfigDifference {
 						$same = $same -and `
 						(
 							([string]::IsNullOrWhiteSpace($sourceContentType) -and [string]::IsNullOrWhiteSpace($destinationContentType)) `
-							-or 
+								-or 
 							($sourceContentType -ceq $destinationContentType)
 						)
 					}
