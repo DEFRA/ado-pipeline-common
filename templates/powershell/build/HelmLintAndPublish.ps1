@@ -286,6 +286,9 @@ try {
         
             Write-Host "Working on Chart: $helmChartName in directory: $chartDirectory"
             $chartCacheFilePath = Join-Path -Path $ChartCachePath -ChildPath "$helmChartName-$ChartVersion.tgz"
+            Write-Host "case path: $chartCacheFilePath in directory: $chartDirectory"
+            Write-Host "chart path: $ChartCachePath in directory: $chartDirectory"
+            Write-Host "Worchart version: $ChartVersion in directory: $chartDirectory"
             Write-Debug "${functionName}:chartCacheFilePath=$chartCacheFilePath"
     
             if (!(Test-Path $ChartCachePath -PathType Container)) {
