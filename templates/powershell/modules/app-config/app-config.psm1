@@ -519,6 +519,7 @@ function Import-AppConfigValues {
 		[string]$Label,
 		[switch]$DeleteEntriesNotInFile,
 		[string]$KeyVaultName,
+		[string]$BuildId,
 		[string]$Version,
 		[bool]$FullBuild = $false
 	)
@@ -530,6 +531,7 @@ function Import-AppConfigValues {
 		Write-Debug "${functionName}:begin:Label=$Label"
 		Write-Debug "${functionName}:begin:Path=$Path"
 		Write-Debug "${functionName}:begin:KeyVaultName=$KeyVaultName"
+		Write-Debug "${functionName}:begin:BuildId=$BuildId"
 		Write-Debug "${functionName}:begin:Version=$Version"
 		Write-Debug "${functionName}:begin:FullBuild=$FullBuild"
 
@@ -581,17 +583,14 @@ function Import-AppConfigValues {
 		if ($outputs) {
 			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
 			[string]$sentinelKey = 'Sentinel'
-			if ([string]::IsNullOrWhiteSpace($Version)) {
-				$Version = Get-Date -Format "dd/MM/yyyyHH:mm"
-			}
 			if ($existingAppConfig.ContainsKey($sentinelKey) -and (-not $FullBuild)) {
 				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
-				$SentinelItem.value = $Version
+				$SentinelItem.value = $BuildId
 			}
 			else {
 				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
 				$SentinelItem.Key = $sentinelKey
-				$SentinelItem.value = $Version
+				$SentinelItem.value = $BuildId
 				if ($FullBuild) {
 					$SentinelItem.Label = "$Label-$Version"
 				}

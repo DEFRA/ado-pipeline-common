@@ -77,6 +77,7 @@ steps:
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
           -Version ${{ parameters.Version }}
+          -BuildId $(Build.BuildId)
           -FullBuild $${{ parameters.FullBuild }}
         addSpnToEnvironment: true          
         failOnStandardError: false
