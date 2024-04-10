@@ -327,6 +327,8 @@ stages:
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
+        - name: appVersion
+          value: $[ stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.appVersion'] ]
   
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
@@ -380,6 +382,8 @@ stages:
                           configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
                           PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                           AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
+                          Version: $(appVersion)
+                          FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
                         parameters:

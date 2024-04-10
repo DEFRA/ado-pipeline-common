@@ -75,7 +75,7 @@ function ConvertTo-AppConfigEntry {
 			$entry.Value = $InputObject.value
 			$entry.Label = $InputObject.label
 			if ([string]::IsNullOrWhiteSpace($InputObject.contentType)) {
-				$entry.ContentType = $null
+				$entry.ContentType = '""'
 			}
 			else {
 				$entry.ContentType = $InputObject.contentType
@@ -493,7 +493,10 @@ function Get-AppConfigValuesFromYamlFile {
     The name of the keyvault to be used for objects while importing from yaml file
 
   .PARAMETER BuildId
-    Build Id to update the sentinel value
+  Build Id to update the sentinel value
+
+  .PARAMETER Version
+    Version to create the sentinel label
 
   .NOTES
     The file format is json.  
@@ -519,7 +522,9 @@ function Import-AppConfigValues {
 		[string]$Label,
 		[switch]$DeleteEntriesNotInFile,
 		[string]$KeyVaultName,
-		[string]$BuildId
+		[string]$BuildId,
+		[string]$Version,
+		[bool]$FullBuild = $false
 	)
 
 	begin {
@@ -529,6 +534,9 @@ function Import-AppConfigValues {
 		Write-Debug "${functionName}:begin:Label=$Label"
 		Write-Debug "${functionName}:begin:Path=$Path"
 		Write-Debug "${functionName}:begin:KeyVaultName=$KeyVaultName"
+		Write-Debug "${functionName}:begin:BuildId=$BuildId"
+		Write-Debug "${functionName}:begin:Version=$Version"
+		Write-Debug "${functionName}:begin:FullBuild=$FullBuild"
 
 		[array]$outputs = @()
 		[System.IO.FileInfo]$importFile = $Path
@@ -558,7 +566,7 @@ function Import-AppConfigValues {
 			if ($_.Label -ne $Label) {
 				throw [System.IO.InvalidDataException]::new("Invalid Label for $item.key ")
 			}
-		}			
+		}
 		
 		[AppConfigDifferences]$delta = New-AppConfigDifference -Source $desiredItems -Destination $existingItems
         
@@ -574,14 +582,11 @@ function Import-AppConfigValues {
 			$outputs += @($delta.Remove | Remove-AppConfigValue -ConfigStore $ConfigStore)
 		}
 
-		#If there are any changes in config values, update sentinelItem to build id.
+		#If there are any changes in config values, update sentinel key.
 		if ($outputs) {
 			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
 			[string]$sentinelKey = 'Sentinel'
-			if ([string]::IsNullOrWhiteSpace($BuildId)) {
-				$BuildId = Get-Date -Format "dd/MM/yyyyHH:mm"
-			}
-			if ($existingAppConfig.ContainsKey($sentinelKey)) {
+			if ($existingAppConfig.ContainsKey($sentinelKey) -and (-not $FullBuild)) {
 				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
 				$SentinelItem.value = $BuildId
 			}
@@ -589,10 +594,15 @@ function Import-AppConfigValues {
 				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
 				$SentinelItem.Key = $sentinelKey
 				$SentinelItem.value = $BuildId
-				$SentinelItem.Label = $Label
+				if ($FullBuild) {
+					$SentinelItem.Label = "$Label-$Version"
+				}
+				else {
+					$SentinelItem.Label = $Label
+				}
 				$SentinelItem.ContentType = $null
 			}
-			$SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore
+			$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 		}
 
 		Write-Debug "${functionName}:process:End"
@@ -653,34 +663,38 @@ function New-AppConfigDifference {
 
 	process {
 		Write-Debug "${functionName}:process:Start"
+		[string]$sentinelKey = 'Sentinel'
 
 		$sourceAppConfig.Keys | ForEach-Object {
 			Write-Debug "${functionName}:process:sourceKey=$_"
 			[AppConfigEntry]$sourceItem = $SourceAppConfig[$_]
-			if ($destinationAppConfig.ContainsKey($_)) {
-				[AppConfigEntry]$destinationItem = $destinationAppConfig[$_]
-				[string]$sourceValue = $sourceItem.Value
-				[string]$sourceContentType = $sourceItem.ContentType
-				[string]$destinationValue = $destinationItem.Value
-				[string]$destinationContentType = $destinationItem.ContentType
-				[bool]$same = `
-				($sourceValue -ceq $destinationValue) `
-					-and `
-				(
-                        ([string]::IsNullOrWhiteSpace($sourceContentType) -and [string]::IsNullOrWhiteSpace($destinationContentType)) `
-						-or 
-                        ($sourceContentType -ceq $destinationContentType)
-				)
-				Write-Debug "${functionName}:process:${same}:sourceValue/destinationValue=${sourceValue}/${destinationValue}"
-
-				if (-not $same) {
-					Write-Debug "${functionName}:process:$_ differs - needs updated"
-					$updateEntries.Add($_, $sourceItem)
+			if ($_.Key -ne $sentinelKey) {
+				if ($destinationAppConfig.ContainsKey($_)) {
+					[AppConfigEntry]$destinationItem = $destinationAppConfig[$_]
+					[string]$sourceValue = $sourceItem.Value
+					[string]$sourceContentType = $sourceItem.ContentType
+					[string]$destinationValue = $destinationItem.Value
+					[string]$destinationContentType = $destinationItem.ContentType
+					[bool]$same = ($sourceValue -ceq $destinationValue)
+					if (-not $sourceItem.IsKeyVault()) {
+						$same = $same -and `
+						(
+							([string]::IsNullOrWhiteSpace($sourceContentType) -and [string]::IsNullOrWhiteSpace($destinationContentType)) `
+								-or 
+							($sourceContentType -ceq $destinationContentType)
+						)
+					}
+					Write-Debug "${functionName}:process:${same}:sourceValue/destinationValue=${sourceValue}/${destinationValue}"
+	
+					if (-not $same) {
+						Write-Debug "${functionName}:process:$_ differs - needs updated"
+						$updateEntries.Add($_, $sourceItem)
+					}
 				}
-			}
-			else {
-				Write-Debug "${functionName}:process:$_ not found in destination"
-				$addEntries.Add($_, $sourceItem)
+				else {
+					Write-Debug "${functionName}:process:$_ not found in destination"
+					$addEntries.Add($_, $sourceItem)
+				}
 			}
 		}
 
@@ -688,7 +702,7 @@ function New-AppConfigDifference {
 			[bool]$exists = $sourceAppConfig.ContainsKey($_)
 			Write-Debug "${functionName}:process:${exists}:destinationKey=$_"
 
-			if (-not $exists) {
+			if (-not $exists -and $_.Key -ne $sentinelKey) {
 				Write-Verbose "$_ surplus - needs removed"
 				$removeEntries.Add($_, $destinationAppConfig[$_])
 			}
@@ -846,7 +860,7 @@ function Set-AppConfigValue {
 		else {
 			[void]$commandBuilder.Append(" set ")
 			[void]$commandBuilder.Append(" --value `"$($InputObject.Value)`" ")
-			if ([string]::IsNullOrWhiteSpace($contentType)) {
+			if ([string]::IsNullOrWhiteSpace($contentType) -or $contentType -eq '""') {
 				[void]$commandBuilder.Append(" --content-type '`"`"' ")
 			}
 			else {
@@ -940,11 +954,5 @@ function Test-Yaml {
 	end {
 		$steppablePipeline.End()
 
-	}
-	# clean {
-	# 	if ($null -ne $steppablePipeline) {
-	# 		$steppablePipeline.Clean()
-	# 	}
-	# }
-	
+	}	
 }
