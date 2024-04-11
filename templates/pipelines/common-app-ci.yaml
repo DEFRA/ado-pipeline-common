@@ -239,7 +239,8 @@ stages:
                 -ChartCachePath '$(Pipeline.Workspace)/helm' 
                 -Command 'lintandbuild' 
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
+                
+                -chartHomeDir '$(Pipeline.Workspace)/s/source'
                 -ServiceName ${{ parameters.serviceName }}
               failOnStderr: false
               pwsh: true
