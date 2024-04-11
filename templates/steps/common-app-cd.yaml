@@ -40,35 +40,38 @@ steps:
       pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'  
 
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download Docker image' 
-    inputs:
-      artifactName: 'docker'
-      targetPath: '$(Pipeline.Workspace)/docker'
+  - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Docker image' 
+      inputs:
+        artifactName: 'docker'
+        targetPath: '$(Pipeline.Workspace)/docker'
 
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download Helm Chart' 
-    inputs:
-      artifactName: 'helm'
-      targetPath: '$(Pipeline.Workspace)/helm'   
-
-  - task: AzureCLI@2                   
-    inputs:
-      azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
-      scriptType: pscore
-      scriptLocation: scriptPath
-      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
-      arguments: > 
-        -AcrName ${{ parameters.environmentObj.acrName }} 
-        -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
-        -ImageVersion  $(GetAppVersion.appVersion) 
-        -ImageCachePath $(Pipeline.Workspace)/docker 
-        -Command "push" 
-        -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
-      addSpnToEnvironment: true          
-      failOnStandardError: false
-      workingDirectory: '$(Pipeline.Workspace)/s'
-    displayName: 'Docker Push Image'
+  - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Helm Chart' 
+      inputs:
+        artifactName: 'helm'
+        targetPath: '$(Pipeline.Workspace)/helm'   
+        
+  - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
+    - task: AzureCLI@2                   
+      inputs:
+        azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
+        scriptType: pscore
+        scriptLocation: scriptPath
+        scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
+        arguments: > 
+          -AcrName ${{ parameters.environmentObj.acrName }} 
+          -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
+          -ImageVersion  $(GetAppVersion.appVersion) 
+          -ImageCachePath $(Pipeline.Workspace)/docker 
+          -Command "push" 
+          -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
+        addSpnToEnvironment: true          
+        failOnStandardError: false
+        workingDirectory: '$(Pipeline.Workspace)/s'
+      displayName: 'Docker Push Image'
       
   - task: AzureCLI@2
     inputs:
