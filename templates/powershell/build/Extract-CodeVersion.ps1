@@ -124,8 +124,13 @@ try {
         $appVersion = (Get-Content $ProjectPath | ConvertFrom-Yaml).version
         if ($IsDefaultBranchBuild -eq "False") {  
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
+            Write-Debug "1: $DefaultBranchName"     
             if (Test-Path $ProjectPath -PathType Leaf) {
+                Write-Debug "2: $ProjectPath"    
                 $oldAppVersion = (Get-Content $ProjectPath | ConvertFrom-Yaml).version
+                Write-Debug "3: $oldAppVersion"   
+            }else{
+                Write-Debug "4: File not found"    
             }        
         } 
     }
