@@ -24,13 +24,10 @@ parameters:
   type: object
 - name: snykConfig
   type: object
-  default: null
 - name: npmConfig
   type: object
-  default: null
 - name: sonarConfig
   type: object
-  default: null
 - name: appDeployConfig
   type: object
   default: null
@@ -89,7 +86,8 @@ stages:
         condition: |
           and(
             succeeded('Initialise'),
-            ${{ eq(parameters.deployConfigOnly, false) }}
+            ${{ eq(parameters.deployConfigOnly, false) }},
+            ${{ not(contains(parameters.appBuildConfig.stepsToSkip, 'Build')) }}
           )
         dependsOn: Initialise
         variables:
@@ -136,73 +134,75 @@ stages:
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}  
 
-      # - job: BuildDockerImage
-      #   displayName: 'Build Docker Image'
-      #   condition:  |
-      #     and(
-      #       succeeded('Initialise'),
-      #       ${{ eq(parameters.deployConfigOnly, false) }}    
-      #     )
-      #   dependsOn: [Initialise]
-      #   variables:
-      #     appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-      #     dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
-      #   steps:
-      #     - checkout: self
-      #       path: s/
-      #     - checkout: PipelineCommon
-      #       path: s/ADO-Pipeline-Common
+      - job: BuildDockerImage
+        displayName: 'Build Docker Image'
+        condition:  |
+          and(
+            succeeded('Initialise'),
+            ${{ eq(parameters.deployConfigOnly, false) }},
+            ${{ not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}   
+          )
+        dependsOn: [Initialise]
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
-      #     - task: Cache@2
-      #       displayName: Cache docker
-      #       inputs:
-      #         key: $(dockerCacheKey)
-      #         path: $(Pipeline.Workspace)/docker
-      #         cacheHitVar: CACHE_RESTORED
+          - task: Cache@2
+            displayName: Cache docker
+            inputs:
+              key: $(dockerCacheKey)
+              path: $(Pipeline.Workspace)/docker
+              cacheHitVar: CACHE_RESTORED
 
-      #     - task: PowerShell@2
-      #       displayName: 'Docker Build Image'
-      #       inputs:
-      #         targetType: filePath
-      #         filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
-      #         arguments: >
-      #            -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-      #            -ImageVersion  $(appVersion) 
-      #            -ImageCachePath '$(Pipeline.Workspace)/docker' 
-      #            -Command 'build'
-      #            -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-      #         failOnStderr: false
-      #         pwsh: true
-      #         workingDirectory: '$(Pipeline.Workspace)/s'
-      #     - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
-      #       - template: /templates/steps/security-scan-container.yaml
-      #         parameters:
-      #           snykConnection: ${{ parameters.snykConfig.snykConnection }}
-      #           snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
-      #           acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
-      #           acrRepoTagVersion: $(appVersion)
-      #           failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
+          - task: PowerShell@2
+            displayName: 'Docker Build Image'
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
+              arguments: >
+                 -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
+                 -ImageVersion  $(appVersion) 
+                 -ImageCachePath '$(Pipeline.Workspace)/docker' 
+                 -Command 'build'
+                 -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              failOnStderr: false
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s'
+          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+            - template: /templates/steps/security-scan-container.yaml
+              parameters:
+                snykConnection: ${{ parameters.snykConfig.snykConnection }}
+                snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
+                acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
+                acrRepoTagVersion: $(appVersion)
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
-      # - job: PreDeploymentTests
-      #   displayName: 'Pre Deployment Tests'  
-      #   condition: |
-      #     and(
-      #       succeeded('BuildDockerImage'),
-      #       ${{ eq(parameters.deployConfigOnly, false) }}
-      #     )
-      #   dependsOn: [Initialise, BuildDockerImage]
-      #   steps:
-      #     - checkout: self
-      #       path: s/  
-      #     - checkout: PipelineCommon
-      #       path: s/ADO-Pipeline-Common
+      - job: PreDeploymentTests
+        displayName: 'Pre Deployment Tests'  
+        condition: |
+          and(
+            succeeded('BuildDockerImage'),
+            ${{ eq(parameters.deployConfigOnly, false) }},
+            ${{ not(contains(parameters.appBuildConfig.stepsToSkip, 'PreDeploymentTests')) }} 
+          )
+        dependsOn: [Initialise, BuildDockerImage]
+        steps:
+          - checkout: self
+            path: s/  
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
-      #     - ${{ if ne(parameters.appTestConfig, '') }}:
-      #       - template: /templates/steps/pre-deployment-tests.yaml
-      #         parameters:
-      #           serviceName: ${{ parameters.serviceName }}
-      #           IsPrBuild: ${{ variables.IsPrBuild }}
-      #           appTestConfig: ${{ parameters.appTestConfig }}
+          - ${{ if ne(parameters.appTestConfig, '') }}:
+            - template: /templates/steps/pre-deployment-tests.yaml
+              parameters:
+                serviceName: ${{ parameters.serviceName }}
+                IsPrBuild: ${{ variables.IsPrBuild }}
+                appTestConfig: ${{ parameters.appTestConfig }}
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
@@ -239,7 +239,7 @@ stages:
                 -ChartCachePath '$(Pipeline.Workspace)/helm' 
                 -Command 'lintandbuild' 
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
-                -chartHomeDir '$(Pipeline.Workspace)/s'
+                -chartHomeDir '$(Pipeline.Workspace)/s/helm'
                 -ServiceName ${{ parameters.serviceName }}
               failOnStderr: false
               pwsh: true
@@ -247,7 +247,7 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        #dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
         dependsOn: [BuildHelmChart]
         condition: |
           and(
@@ -260,18 +260,18 @@ stages:
           )
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-          #dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
           helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
         steps:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
-          # - task: Cache@2
-          #   displayName: Restore Cached docker image
-          #   inputs:
-          #     key: $(dockerCacheKey)
-          #     path: $(Pipeline.Workspace)/docker
-          #     cacheHitVar: CACHE_RESTORED  
+          - task: Cache@2
+            displayName: Restore Cached docker image
+            inputs:
+              key: $(dockerCacheKey)
+              path: $(Pipeline.Workspace)/docker
+              cacheHitVar: CACHE_RESTORED  
 
           - task: Cache@2
             displayName: Restore Cached helm chart
@@ -296,11 +296,11 @@ stages:
               targetPath: '$(System.ArtifactsDirectory)/version'
               artifact: appversion
 
-          # - task: PublishPipelineArtifact@1
-          #   displayName: 'Publish docker'
-          #   inputs:
-          #     targetPath: '$(Pipeline.Workspace)/docker'
-          #     artifact: docker
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish docker'
+            inputs:
+              targetPath: '$(Pipeline.Workspace)/docker'
+              artifact: docker
           
           # - task: PublishPipelineArtifact@1
           #   displayName: 'Publish helm'
@@ -393,7 +393,7 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
-                      - ${{ if eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest) }}:
+                      - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.appBuildConfig.stepsToSkip, 'PostDeploymentTests'))) }}:
                         - template: /templates/steps/post-deployment-tests.yaml
                           parameters:
                             url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
