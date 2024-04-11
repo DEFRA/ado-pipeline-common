@@ -219,7 +219,7 @@ function Invoke-Publish {
     }
     process {
         Write-Host "Publishing Helm chart $HelmChartName"
-        $acrHelmPath = "oci://$AcrName.azurecr.io/sfd-helm-ingress"
+        $acrHelmPath = "oci://$AcrName.azurecr.io/helm"
         if (Test-Path $PathToSaveChart -PathType Leaf) { 
 
             Write-Host "Publising cached chart $acrHelmPath from $PathToSaveChart"
