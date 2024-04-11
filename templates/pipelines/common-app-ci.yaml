@@ -372,18 +372,18 @@ stages:
                             ProgrammeName: "${{ parameters.appDeployConfig.programmeName }}"
                             EnvName: ${{ deploymentEnv.name }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                                  
-                      - template: /templates/steps/appconfig-import.yaml
-                        parameters:
-                          dryRun: false
-                          environmentObj: ${{ deploymentEnv }} 
-                          appDeployConfig: ${{ parameters.appDeployConfig }}
-                          workingDirectory: '$(Pipeline.Workspace)/s'
-                          serviceName: ${{ parameters.serviceName }}
-                          configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
-                          PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                          AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
-                    - ${{ if and(eq(parameters.deployConfigOnly, false ),not(contains(parameters.appDeployConfig.stepsToSkip, 'AppConfigImport')) )}}:
+                      - ${{ if not(contains(parameters.appDeployConfig.stepsToSkip, 'AppConfigImport')) }}:
+                        - template: /templates/steps/appconfig-import.yaml
+                          parameters:
+                            dryRun: false
+                            environmentObj: ${{ deploymentEnv }} 
+                            appDeployConfig: ${{ parameters.appDeployConfig }}
+                            workingDirectory: '$(Pipeline.Workspace)/s'
+                            serviceName: ${{ parameters.serviceName }}
+                            configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                            AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
+                    - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
                         parameters:
                             serviceName: ${{ parameters.serviceName }}
