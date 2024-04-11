@@ -47,11 +47,11 @@ steps:
         artifactName: 'docker'
         targetPath: '$(Pipeline.Workspace)/docker'
 
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download Helm Chart' 
-      inputs:
-        artifactName: 'helm'
-        targetPath: '$(Pipeline.Workspace)/helm'   
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download Helm Chart' 
+    inputs:
+      artifactName: 'helm'
+      targetPath: '$(Pipeline.Workspace)/helm'   
         
   - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
     - task: AzureCLI@2                   
