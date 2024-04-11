@@ -250,7 +250,7 @@ stages:
         dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
         condition: |
           and(
-            or(succeeded(), ${{ not(contains(parameters.appBuildConfig.stepsToSkip, 'PreDeploymentTests')) }}),
+            or(succeeded(), ${{ eq(parameters.appBuildConfig.appFrameworkType, 'helm') }}),
             or(
               eq( variables.IsDefaultBranchBuild , true),
               eq( variables.IsPrBuild , true),
