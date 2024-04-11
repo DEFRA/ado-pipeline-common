@@ -250,7 +250,7 @@ stages:
         dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
         condition: |
           and(
-            succeeded(), 
+            or(succeeded(),skipped()), 
             or(
               eq( variables.IsDefaultBranchBuild , true),
               eq( variables.IsPrBuild , true),
