@@ -6,7 +6,7 @@ Extract code version based on the framework type
 .PARAMETER AppFrameworkType
 Mandatory. Application Framework Type. dotnet or nodejs
 .PARAMETER ProjectPath
-Mandatory. relative project file path. For DotNet csproj file path, For NodeJS path of package.json
+Mandatory. relative project file path. For DotNet csproj file path, For NodeJS path of package.json and for helm chart path of Chart.yaml
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 
@@ -49,6 +49,14 @@ Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
     
     Import-Module $PSHelperDirectory -Force
+    if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
+        Write-Host "powershell-yaml Module does not exists. Installing now.."
+        Install-Module powershell-yaml -Force -Scope CurrentUser
+        Write-Host "powershell-yaml Installed Successfully."
+    } 
+    else {
+        Write-Host "powershell-yaml Module exist"
+    }
     $appVersion = ""    
     $oldAppVersion = "0.1.0" #Assume version 0.1.0 for initial main branch
     $exitCode = 0
@@ -109,6 +117,15 @@ try {
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $oldAppVersion = node -p "require('$ProjectPath').version" 
+            }        
+        } 
+    }
+    elseif ( $AppFrameworkType.ToLower() -eq 'helm' ) {
+        $appVersion = (Get-Content $ProjectPath | ConvertFrom-Yaml).version
+        if ($IsDefaultBranchBuild -eq "False") {  
+            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
+            if (Test-Path $ProjectPath -PathType Leaf) {
+                $oldAppVersion = (Get-Content $ProjectPath | ConvertFrom-Yaml).version
             }        
         } 
     }
