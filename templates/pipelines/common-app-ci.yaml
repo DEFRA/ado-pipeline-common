@@ -383,7 +383,7 @@ stages:
                           configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
                           PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                           AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
-                    - ${{ if eq(parameters.deployConfigOnly, false )}}:
+                    - ${{ if and(eq(parameters.deployConfigOnly, false ),not(contains(parameters.appDeployConfig.stepsToSkip, 'AppConfigImport')) )}}:
                       - template: /templates/steps/common-app-cd.yaml
                         parameters:
                             serviceName: ${{ parameters.serviceName }}
