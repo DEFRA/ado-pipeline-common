@@ -122,14 +122,10 @@ try {
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'helm' ) {
         $appVersion = (Get-Content $ProjectPath | ConvertFrom-Yaml).version
-        Write-Debug "1: $appVersion"   
         if ($IsDefaultBranchBuild -eq "False") {  
-            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"           
-            if (Test-Path $ProjectPath -PathType Leaf) {
-                Write-Debug "2: $ProjectPath"    
-                $oldAppVersion = (Get-Content $ProjectPath | ConvertFrom-Yaml).version
-                Write-Debug "3: $oldAppVersion"   
-            }      
+            $result = Invoke-CommandLine -Command "git show origin/main:$ProjectPath"                       
+            $oldAppVersion = ($result | ConvertFrom-Yaml).version
+                  
         } 
     }
     else {
