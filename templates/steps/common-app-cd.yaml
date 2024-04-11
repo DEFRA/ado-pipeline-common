@@ -47,7 +47,6 @@ steps:
         artifactName: 'docker'
         targetPath: '$(Pipeline.Workspace)/docker'
 
-  - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download Helm Chart' 
       inputs:
