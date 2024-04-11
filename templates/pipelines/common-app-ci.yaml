@@ -24,10 +24,13 @@ parameters:
   type: object
 - name: snykConfig
   type: object
+  default: null
 - name: npmConfig
   type: object
+  default: null
 - name: sonarConfig
   type: object
+  default: null
 - name: appDeployConfig
   type: object
   default: null
