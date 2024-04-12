@@ -87,7 +87,7 @@ stages:
           and(
             succeeded('Initialise'),
             ${{ eq(parameters.deployConfigOnly, false) }},
-            ${{ not(contains(parameters.appBuildConfig.stepsToSkip, 'Build')) }}
+            ${{ not(contains(parameters.stepsToSkip, 'Build')) }}
           )
         dependsOn: Initialise
         variables:
@@ -140,7 +140,7 @@ stages:
           and(
             succeeded('Initialise'),
             ${{ eq(parameters.deployConfigOnly, false) }},
-            ${{ not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}   
+            ${{ not(contains(parameters.stepsToSkip, 'BuildDockerImage')) }}   
           )
         dependsOn: [Initialise]
         variables:
@@ -188,7 +188,7 @@ stages:
           and(
             succeeded('BuildDockerImage'),
             ${{ eq(parameters.deployConfigOnly, false) }},
-            ${{ not(contains(parameters.appBuildConfig.stepsToSkip, 'PreDeploymentTests')) }} 
+            ${{ not(contains(parameters.stepsToSkip, 'PreDeploymentTests')) }} 
           )
         dependsOn: [Initialise, BuildDockerImage]
         steps:
@@ -281,7 +281,7 @@ stages:
               targetPath: '$(System.ArtifactsDirectory)/version'
               artifact: appversion
 
-          - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
+          - ${{ if not(contains(parameters.stepsToSkip, 'BuildDockerImage')) }}:
             - task: Cache@2
               displayName: Restore Cached docker image
               inputs:
@@ -372,7 +372,7 @@ stages:
                             ProgrammeName: "${{ parameters.appDeployConfig.programmeName }}"
                             EnvName: ${{ deploymentEnv.name }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                      - ${{ if not(contains(parameters.appDeployConfig.stepsToSkip, 'AppConfigImport')) }}:
+                      - ${{ if not(contains(parameters.stepsToSkip, 'AppConfigImport')) }}:
                         - template: /templates/steps/appconfig-import.yaml
                           parameters:
                             dryRun: false
@@ -392,7 +392,7 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
-                      - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.appDeployConfig.stepsToSkip, 'PostDeploymentTests'))) }}:
+                      - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
                         - template: /templates/steps/post-deployment-tests.yaml
                           parameters:
                             url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"

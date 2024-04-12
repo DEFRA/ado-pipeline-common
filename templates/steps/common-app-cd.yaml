@@ -36,11 +36,10 @@ steps:
       targetType: filePath
       filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/GetSet-CodeVersion.ps1'
       arguments: -Command "Get" -ArtifactFilePath  $(System.ArtifactsDirectory)/version
-      failOnStderr: false
-      pwsh: true
+      failOnStderr: false      pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'  
 
-  - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
+  - ${{ if not(contains(parameters.stepsToSkip, 'BuildDockerImage')) }}:
     - task: DownloadPipelineArtifact@2
       displayName: 'Download Docker image' 
       inputs:
@@ -53,7 +52,7 @@ steps:
       artifactName: 'helm'
       targetPath: '$(Pipeline.Workspace)/helm'   
         
-  - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
+  - ${{ if not(contains(parameters.stepsToSkip, 'BuildDockerImage')) }}:
     - task: AzureCLI@2                   
       inputs:
         azureSubscription: ${{ parameters.environmentObj.serviceConnection }}
