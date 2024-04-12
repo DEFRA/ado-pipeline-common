@@ -294,12 +294,13 @@ stages:
             inputs:
               targetPath: '$(System.ArtifactsDirectory)/version'
               artifact: appversion
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish docker'
-            inputs:
-              targetPath: '$(Pipeline.Workspace)/docker'
-              artifact: docker
+              
+          - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
+            - task: PublishPipelineArtifact@1
+              displayName: 'Publish docker'
+              inputs:
+                targetPath: '$(Pipeline.Workspace)/docker'
+                artifact: docker
           
           - task: PublishPipelineArtifact@1
             displayName: 'Publish helm'
