@@ -15,7 +15,11 @@ parameters:
   type: object
   default: null
 - name: PSHelperDirectory
-  type: string  
+  type: string 
+- name: stepsToSkip
+  type: string   
+  default: ''
+
 steps:
 
   - checkout: Self
