@@ -396,6 +396,7 @@ stages:
                             appBuildConfig: ${{ parameters.appBuildConfig }}
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                            stepsToSkip: ${{ parameters.stepsToSkip }}
 
                       - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
                         - template: /templates/steps/post-deployment-tests.yaml
