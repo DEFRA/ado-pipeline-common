@@ -264,21 +264,6 @@ stages:
         steps:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
-            
-          - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
-            - task: Cache@2
-              displayName: Restore Cached docker image
-              inputs:
-                key: $(dockerCacheKey)
-                path: $(Pipeline.Workspace)/docker
-                cacheHitVar: CACHE_RESTORED  
-
-          - task: Cache@2
-            displayName: Restore Cached helm chart
-            inputs:
-              key: $(helmCacheKey)
-              path: $(Pipeline.Workspace)/helm
-              cacheHitVar: CACHE_RESTORED  
 
           - task: PowerShell@2
             displayName: 'Set App Version'   
@@ -297,12 +282,25 @@ stages:
               artifact: appversion
 
           - ${{ if not(contains(parameters.appBuildConfig.stepsToSkip, 'BuildDockerImage')) }}:
+            - task: Cache@2
+              displayName: Restore Cached docker image
+              inputs:
+                key: $(dockerCacheKey)
+                path: $(Pipeline.Workspace)/docker
+                cacheHitVar: CACHE_RESTORED            
             - task: PublishPipelineArtifact@1
               displayName: 'Publish docker'
               inputs:
                 targetPath: '$(Pipeline.Workspace)/docker'
                 artifact: docker
-          
+                
+          - task: Cache@2
+            displayName: Restore Cached helm chart
+            inputs:
+              key: $(helmCacheKey)
+              path: $(Pipeline.Workspace)/helm
+              cacheHitVar: CACHE_RESTORED  
+
           - task: PublishPipelineArtifact@1
             displayName: 'Publish helm'
             inputs:
