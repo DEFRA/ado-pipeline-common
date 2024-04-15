@@ -50,7 +50,7 @@ variables:
 - name: Revision
   value: $[counter(variables['RunDate'], 0)]
 
-stages:         
+stages:
   - stage: Application_CI
     displayName: 'Application CI'
     ${{ if ne(parameters.privateAgentName, '') }}:
@@ -312,17 +312,19 @@ stages:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
           
-          # - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
-          #   - template: /templates/steps/tag-and-release.yaml
-          #     parameters:
-          #       appBuildConfig: ${{ parameters.appBuildConfig }}
-          #       appVersion: $(appVersion)
-          #       PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+          - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
+            - template: /templates/steps/tag-and-release.yaml
+              parameters:
+                appBuildConfig: ${{ parameters.appBuildConfig }}
+                appVersion: $(appVersion)
+                PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
   - ${{ each deploymentEnv in parameters.environments }}:  
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:
       - stage: ${{ deploymentEnv.name }}
-        dependsOn: ${{ deploymentEnv.dependsOn }}
+        dependsOn:
+          - Application_CI
+          - ${{ deploymentEnv.dependsOn }}
         displayName: 'Application CD: ${{ deploymentEnv.name }}'
         variables:       
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
@@ -335,6 +337,8 @@ stages:
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
+        - name: appVersion
+          value: $[ stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.appVersion'] ]
   
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
@@ -388,6 +392,9 @@ stages:
                             configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
+                            Version: $(appVersion)
+                            FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
+
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
                         parameters:
