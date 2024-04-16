@@ -200,6 +200,13 @@ stages:
             inputs:
               targetPath: '$(Pipeline.Workspace)/docker'
               artifact: docker
+
+          - ${{ if eq(variables.IsDefaultBranchBuild, false) }}:
+            - template: /templates/steps/tag-and-release.yaml
+              parameters:
+                appBuildConfig: ${{ parameters.appBuildConfig }}
+                appVersion: $(appVersion)
+                PSHelperDirectory: ${{ variables.PSHelperDirectory }}
           
   - ${{ if or( eq(variables.IsDefaultBranchBuild, true), eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true) ) }}:              
     - ${{ each deploymentEnv in parameters.environments }}:      
