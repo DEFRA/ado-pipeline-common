@@ -19,7 +19,7 @@ parameters:
   type: string
 - name: Version
   type: string
-- name: FullBuild
+- name: DeployConfigOnly
   type: boolean
   default: false
 - name: configFileType
@@ -78,7 +78,7 @@ steps:
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
           -Version ${{ parameters.Version }}
           -BuildId $(Build.BuildId)
-          -FullBuild $${{ parameters.FullBuild }}
+          -ConfigOnly $${{ parameters.DeployConfigOnly }}
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'  

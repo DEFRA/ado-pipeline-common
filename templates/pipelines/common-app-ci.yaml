@@ -393,7 +393,7 @@ stages:
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
                             Version: $(appVersion)
-                            FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
+                            DeployConfigOnly: ${{ eq(parameters.deployConfigOnly, false) }}
 
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml

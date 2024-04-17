@@ -524,7 +524,7 @@ function Import-AppConfigValues {
 		[string]$KeyVaultName,
 		[string]$BuildId,
 		[string]$Version,
-		[bool]$FullBuild = $false
+		[switch]$ConfigOnly
 	)
 
 	begin {
@@ -536,7 +536,7 @@ function Import-AppConfigValues {
 		Write-Debug "${functionName}:begin:KeyVaultName=$KeyVaultName"
 		Write-Debug "${functionName}:begin:BuildId=$BuildId"
 		Write-Debug "${functionName}:begin:Version=$Version"
-		Write-Debug "${functionName}:begin:FullBuild=$FullBuild"
+		Write-Debug "${functionName}:begin:ConfigOnly=$ConfigOnly"
 
 		[array]$outputs = @()
 		[System.IO.FileInfo]$importFile = $Path
@@ -586,7 +586,7 @@ function Import-AppConfigValues {
 		if ($outputs) {
 			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
 			[string]$sentinelKey = 'Sentinel'
-			if ($existingAppConfig.ContainsKey($sentinelKey) -and (-not $FullBuild)) {
+			if ($existingAppConfig.ContainsKey($sentinelKey) -and (-not $ConfigOnly)) {
 				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
 				$SentinelItem.value = $BuildId
 			}
@@ -594,7 +594,7 @@ function Import-AppConfigValues {
 				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
 				$SentinelItem.Key = $sentinelKey
 				$SentinelItem.value = $BuildId
-				if ($FullBuild) {
+				if ($ConfigOnly) {
 					$SentinelItem.Label = "$Label-$Version"
 				}
 				else {

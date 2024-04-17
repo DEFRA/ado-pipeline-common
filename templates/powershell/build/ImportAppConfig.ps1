@@ -45,7 +45,7 @@ param(
     [Parameter(Mandatory)]
     [string]$Version,
     [Parameter(Mandatory)]
-    [bool]$FullBuild
+    [switch]$ConfigOnly
 )
 
 Set-StrictMode -Version 3.0
@@ -74,14 +74,14 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 Write-Debug "${functionName}:BuildId=$BuildId"
 Write-Debug "${functionName}:Version=$Version"
-Write-Debug "${functionName}:FullBuild=$FullBuild"
+Write-Debug "${functionName}:ConfigOnly=$ConfigOnly"
 
 try {
 
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
     if (Test-Path $ConfigFilePath -PathType Leaf) {
-        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId -Version $Version -FullBuild $FullBuild
+        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId -Version $Version -ConfigOnly $ConfigOnly
         Write-Host "${functionName} : App config file import completed successfully"
     }
     else {
