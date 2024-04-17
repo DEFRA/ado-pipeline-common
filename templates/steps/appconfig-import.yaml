@@ -78,7 +78,7 @@ steps:
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
           -Version ${{ parameters.Version }}
           -BuildId $(Build.BuildId)
-          -ConfigOnly ${{ parameters.DeployConfigOnly }}
+          -ConfigOnly
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'  
