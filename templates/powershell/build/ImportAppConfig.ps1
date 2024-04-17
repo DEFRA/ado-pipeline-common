@@ -44,7 +44,6 @@ param(
     [string]$BuildId,
     [Parameter(Mandatory)]
     [string]$Version,
-    [Parameter(Mandatory)]
     [switch]$ConfigOnly
 )
 
