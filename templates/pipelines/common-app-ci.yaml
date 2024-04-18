@@ -49,6 +49,8 @@ variables:
   value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
 - name: Revision
   value: $[counter(variables['RunDate'], 0)]
+- name: initialVersion
+  value: '0.1.0'
 
 stages:
   - stage: Application_CI
@@ -73,18 +75,38 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Extract-CodeVersion.ps1'
-              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              arguments: >
+                  -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} 
+                  -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" 
+                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
-            displayName: GetAppVersion            
+            displayName: Get App Version            
             name: GetAppVersion
 
           - task: PowerShell@2
-            displayName: UpdateBuildNumber
+            displayName: Update Build Number
+            name: UpdateBuildNumber
             inputs:
               targetType: 'inline'
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
+
+          - ${{ if and(eq(variables.IsDefaultBranchBuild, true), eq($(GetAppVersion.appVersion), variables.initialVersion))) }}:
+            - task: PowerShell@2
+              inputs:
+                targetType: filePath
+                filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1'
+                arguments: > 
+                    -KeyVaultName "SSVADPINFVT3401" 
+                    -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken" 
+                    -GitHubOrganisation "Defra" 
+                    -AppInstallationSlug "Azure-Pipelines" 
+                    -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                pwsh: true
+                workingDirectory: '$(Pipeline.Workspace)/s/source'
+              displayName: Setup Azure Pipelines GitHub App            
+              name: SetupAzurePipelinesApp  
 
       - job: Build
         displayName: 'Build'  
