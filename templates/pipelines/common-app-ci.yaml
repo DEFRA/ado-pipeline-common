@@ -109,7 +109,7 @@ stages:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
-          - ${{ if eq(variables['appVersion'], variables['initialVersion']) }}:
+          - ${{ if eq(variables['appVersion'], '0.1.0') }}:
             - task: AzurePowerShell@5
               displayName: Setup Azure Pipelines Github App            
               name: SetupAzurePipelinesApp  
