@@ -109,6 +109,14 @@ stages:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
+          - task: PowerShell@2
+            displayName: output
+            name: output
+            inputs:
+              targetType: 'inline'
+              script: |
+                Write-Host "OUTPUT IT $(appVersion) $(initialVersion)"
+
           - ${{ if eq(variables.appVersion, variables.initialVersion) }}:
             - task: AzurePowerShell@5
               displayName: Setup Azure Pipelines Github App            
