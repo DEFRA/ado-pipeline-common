@@ -112,7 +112,7 @@ stages:
           - task: AzurePowerShell@5
             condition:
             and(
-                $[eq(variables['appVersion'], variables['initialVersion'])],
+                eq(variables['appVersion'], variables['initialVersion']),
                 eq(variables.IsDefaultBranchBuild, true)   
                 )
             displayName: Setup Azure Pipelines Github App            
