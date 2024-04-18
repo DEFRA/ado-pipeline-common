@@ -109,24 +109,28 @@ stages:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
-          - ${{ if eq(variables.appVersion, '0.1.0') }}:
-            - task: AzurePowerShell@5
-              displayName: Setup Azure Pipelines Github App            
-              name: SetupAzurePipelinesApp  
-              inputs:
-                azureSubscription: ${{ parameters.sonarConfig.keyVaultServiceConnection }}
-                ScriptType: filePath
-                ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
-                ScriptArguments: > 
-                    -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }} 
-                    -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken" 
-                    -GitHubOrganisation "Defra" 
-                    -AppInstallationSlug "Azure-Pipelines" 
-                    -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-                FailOnStandardError: true
-                azurePowerShellVersion: 'LatestVersion'
-                workingDirectory: '$(System.DefaultWorkingDirectory)'
-                pwsh: true
+          - task: AzurePowerShell@5
+            condition:
+            and(
+                $[eq(variables['appVersion'], variables['initialVersion'])],
+                eq(variables.IsDefaultBranchBuild, true)   
+                )
+            displayName: Setup Azure Pipelines Github App            
+            name: SetupAzurePipelinesApp  
+            inputs:
+              azureSubscription: ${{ parameters.sonarConfig.keyVaultServiceConnection }}
+              ScriptType: filePath
+              ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
+              ScriptArguments: > 
+                  -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }} 
+                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken" 
+                  -GitHubOrganisation "Defra" 
+                  -AppInstallationSlug "Azure-Pipelines" 
+                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              FailOnStandardError: true
+              azurePowerShellVersion: 'LatestVersion'
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
+              pwsh: true
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
