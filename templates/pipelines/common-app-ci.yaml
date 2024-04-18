@@ -121,7 +121,7 @@ stages:
                   -AppInstallationSlug "Azure-Pipelines" 
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s/source'
+              workingDirectory: '$(Pipeline.Workspace)/s'
             displayName: Setup Azure Pipelines GitHub App            
             name: SetupAzurePipelinesApp  
 
