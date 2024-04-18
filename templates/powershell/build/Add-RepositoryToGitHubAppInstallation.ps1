@@ -22,12 +22,12 @@
 param(
     [Parameter(Mandatory)]
     [string]$KeyVaultName,
-    [Parameter()]
-    [string]$KeyVaultSecretName = 'ADP-PLATFORM-GITHUB-PatToken',
-    [Parameter()]
-    [string]$GitHubOrganisation = 'Defra',
-    [Parameter()]
-    [string]$AppInstallationSlug = 'Azure-Pipelines',
+    [Parameter(Mandatory)]
+    [string]$KeyVaultSecretName,
+    [Parameter(Mandatory)]
+    [string]$GitHubOrganisation,
+    [Parameter(Mandatory)]
+    [string]$AppInstallationSlug,
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory
 )
@@ -56,7 +56,7 @@ Write-Debug "${functionName}:GitHubOrganisation=$GitHubOrganisation"
 Write-Debug "${functionName}:AppInstallationSlug=$AppInstallationSlug"
 
 try {
-    
+
     Import-Module $PSHelperDirectory -Force  
     Write-Debug "Get PAT from Keyvault to authenticate"
     [string]$githubPat = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName -AsPlainText -ErrorAction Stop
@@ -71,8 +71,6 @@ try {
     Write-Debug "Get Git repository name"
     [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
     [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
-
-    $gitRepoName = "adp-flux-services"
     
     Write-Debug "Get the repository ID..."
     [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}" -f $GitHubOrganisation, $gitRepoName) -Headers $headers
