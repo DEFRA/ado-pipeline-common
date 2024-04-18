@@ -109,7 +109,7 @@ stages:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
-          - ${{ if and(eq(variables.IsDefaultBranchBuild, true), eq($(appVersion), variables.initialVersion)) }}:
+          - ${{ if and(eq(variables.IsDefaultBranchBuild, true), eq(variables.appVersion, variables.initialVersion)) }}:
             - task: PowerShell@2
               inputs:
                 targetType: filePath
