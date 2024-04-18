@@ -109,21 +109,21 @@ stages:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
-          - ${{ if and(eq(variables.IsDefaultBranchBuild, true), eq(variables.appVersion, variables.initialVersion)) }}:
-            - task: PowerShell@2
-              inputs:
-                targetType: filePath
-                filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1'
-                arguments: > 
-                    -KeyVaultName "SSVADPINFVT3401" 
-                    -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken" 
-                    -GitHubOrganisation "Defra" 
-                    -AppInstallationSlug "Azure-Pipelines" 
-                    -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-                pwsh: true
-                workingDirectory: '$(Pipeline.Workspace)/s/source'
-              displayName: Setup Azure Pipelines GitHub App            
-              name: SetupAzurePipelinesApp  
+          #- ${{ if and(eq(variables.IsDefaultBranchBuild, true), eq(variables.appVersion, variables.initialVersion)) }}:
+          - task: PowerShell@2
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1'
+              arguments: > 
+                  -KeyVaultName "SSVADPINFVT3401" 
+                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken" 
+                  -GitHubOrganisation "Defra" 
+                  -AppInstallationSlug "Azure-Pipelines" 
+                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s/source'
+            displayName: Setup Azure Pipelines GitHub App            
+            name: SetupAzurePipelinesApp  
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
