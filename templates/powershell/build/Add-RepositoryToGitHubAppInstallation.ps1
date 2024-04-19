@@ -55,6 +55,10 @@ Write-Debug "${functionName}:KeyVaultSecretName=$KeyVaultSecretName"
 Write-Debug "${functionName}:AppInstallationSlug=$AppInstallationSlug"
 
 try {
+    Import-Module $PSHelperDirectory -Force  
+    Write-Debug "Get PAT from Keyvault to authenticate"
+    [string]$githubPat = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName -AsPlainText -ErrorAction Stop
+
     Write-Debug "Get Github Org & Repo name"
     [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
     [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
@@ -62,10 +66,6 @@ try {
     [string]$gitOrgName = $giturl.split("/")[0] -replace "/$gitRepoName.git", ""
 
     Write-Output $gitOrgName
-
-    Import-Module $PSHelperDirectory -Force  
-    Write-Debug "Get PAT from Keyvault to authenticate"
-    [string]$githubPat = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName -AsPlainText -ErrorAction Stop
 
     $headers = @{
         "Authorization"        = "Bearer " + $githubPat
