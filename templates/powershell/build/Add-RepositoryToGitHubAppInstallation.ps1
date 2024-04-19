@@ -24,8 +24,8 @@ param(
     [string]$KeyVaultName,
     [Parameter(Mandatory)]
     [string]$KeyVaultSecretName,
-    [Parameter(Mandatory)]
-    [string]$GitHubOrganisation,
+    [Parameter()]
+    [string]$GitHubOrganisation = "",
     [Parameter(Mandatory)]
     [string]$AppInstallationSlug,
     [Parameter(Mandatory)]
@@ -52,10 +52,14 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
 Write-Debug "${functionName}:KeyVaultSecretName=$KeyVaultSecretName"
-Write-Debug "${functionName}:GitHubOrganisation=$GitHubOrganisation"
 Write-Debug "${functionName}:AppInstallationSlug=$AppInstallationSlug"
 
 try {
+    Write-Debug "Get Github Org & Repo name"
+    [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
+    [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
+
+    [string]$gitOrgName = $giturl.split("/")[0] -replace "/$gitRepoName.git", ""
 
     Import-Module $PSHelperDirectory -Force  
     Write-Debug "Get PAT from Keyvault to authenticate"
@@ -67,17 +71,13 @@ try {
         "ContentType"          = "application/json"
         "X-GitHub-Api-Version" = "2022-11-28"
     }
-
-    Write-Debug "Get Git repository name"
-    [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
-    [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
     
     Write-Debug "Get the repository ID..."
-    [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}" -f $GitHubOrganisation, $gitRepoName) -Headers $headers
+    [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}" -f $gitOrgName, $gitRepoName) -Headers $headers
     [string]$repoId = $repo.id
 
     Write-Debug "Get App Installation ID..."
-    [Object]$apps = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/orgs/{0}/installations" -f $GitHubOrganisation) -Headers $headers
+    [Object]$apps = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/orgs/{0}/installations" -f $gitOrgName) -Headers $headers
     [Object]$installation = $apps.installations | 
                     Where-Object {$_.app_slug -eq $AppInstallationSlug}
     [string]$installationId = $installation.id
