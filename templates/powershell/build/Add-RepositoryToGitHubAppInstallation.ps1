@@ -62,10 +62,7 @@ try {
     Write-Debug "Get Github Org & Repo name"
     [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
     [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
-
     [string]$gitOrgName = $giturl.split("/")[3] -replace "/$gitRepoName.git", ""
-
-    Write-Output $gitOrgName
 
     $headers = @{
         "Authorization"        = "Bearer " + $githubPat
