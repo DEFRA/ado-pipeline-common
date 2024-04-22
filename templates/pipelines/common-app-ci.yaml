@@ -49,6 +49,8 @@ variables:
   value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
 - name: Revision
   value: $[counter(variables['RunDate'], 0)]
+- name: initialVersion
+  value: 0.1.0
 
 stages:
   - stage: Application_CI
@@ -73,14 +75,18 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Extract-CodeVersion.ps1'
-              arguments: -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              arguments: >
+                  -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} 
+                  -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" 
+                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
-            displayName: GetAppVersion            
+            displayName: Get App Version            
             name: GetAppVersion
 
           - task: PowerShell@2
-            displayName: UpdateBuildNumber
+            displayName: Update Build Number
+            name: UpdateBuildNumber
             inputs:
               targetType: 'inline'
               script: |
@@ -102,6 +108,29 @@ stages:
             path: s/
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
+
+          - task: AzurePowerShell@5
+            condition:  |
+              and(
+                  eq(variables['appVersion'], variables['initialVersion']),
+                  eq(variables.IsDefaultBranchBuild, true)   
+                  )
+            displayName: Setup Azure Pipelines Github App            
+            name: SetupAzurePipelinesApp  
+            inputs:
+              azureSubscription: ${{ parameters.sonarConfig.keyVaultServiceConnection }}
+              ScriptType: filePath
+              ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
+              ScriptArguments: > 
+                  -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }} 
+                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken" 
+                  -GitHubOrganisation "Defra" 
+                  -AppInstallationSlug "Azure-Pipelines" 
+                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+              FailOnStandardError: true
+              azurePowerShellVersion: 'LatestVersion'
+              workingDirectory: '$(System.DefaultWorkingDirectory)'
+              pwsh: true
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
