@@ -81,7 +81,7 @@ stages:
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
-            displayName: Get App Version            
+            displayName: Get App Version           
             name: GetAppVersion
 
           - task: PowerShell@2
@@ -91,23 +91,7 @@ stages:
               targetType: 'inline'
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
-
-      - job: Build
-        displayName: 'Build'  
-        condition: |
-          and(
-            succeeded('Initialise'),
-            ${{ eq(parameters.deployConfigOnly, false) }},
-            ${{ not(contains(parameters.stepsToSkip, 'Build')) }}
-          )
-        dependsOn: Initialise
-        variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-        steps:
-          - checkout: self
-            path: s/
-          - checkout: PipelineCommon
-            path: s/ADO-Pipeline-Common
+                Write-Host "##vso[task.setvariable variable=appVersion]$(GetAppVersion.appVersion)"
 
           - task: AzurePowerShell@5
             condition:  |
@@ -122,15 +106,31 @@ stages:
               ScriptType: filePath
               ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
               ScriptArguments: > 
-                  -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }} 
-                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken" 
-                  -GitHubOrganisation "Defra" 
-                  -AppInstallationSlug "Azure-Pipelines" 
+                  -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }}
+                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken"
+                  -AppInstallationSlug "Azure-Pipelines"
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               FailOnStandardError: true
               azurePowerShellVersion: 'LatestVersion'
-              workingDirectory: '$(System.DefaultWorkingDirectory)'
+              workingDirectory: '$(Pipeline.Workspace)/s/source'
               pwsh: true
+
+      - job: Build
+        displayName: 'Build'  
+        condition: |
+          and(
+            succeeded('Initialise'),
+            ${{ eq(parameters.deployConfigOnly, false) }},
+            ${{ not(contains(parameters.stepsToSkip, 'Build')) }}
+          )
+        dependsOn: Initialise
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion']]
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
@@ -178,7 +178,7 @@ stages:
           )
         dependsOn: [Initialise]
         variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion']]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
         steps:
           - checkout: self
