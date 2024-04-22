@@ -73,6 +73,7 @@ stages:
 
           - ${{ if ne(parameters.appBuildConfig.keyVaultName, '') }}:
             - task: AzureKeyVault@2
+              displayName: Read KV Variables
               inputs:
                 azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
                 KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
@@ -142,6 +143,7 @@ stages:
 
           - ${{ if ne(parameters.appBuildConfig.keyVaultName, '') }}:
             - task: AzureKeyVault@2
+              displayName: Read KV Variables
               inputs:
                 azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
                 KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
