@@ -81,7 +81,7 @@ stages:
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
-            displayName: Get App Version            
+            displayName: Get App Version           
             name: GetAppVersion
 
           - task: PowerShell@2
@@ -124,7 +124,7 @@ stages:
           )
         dependsOn: Initialise
         variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion']]
         steps:
           - checkout: self
             path: s/
