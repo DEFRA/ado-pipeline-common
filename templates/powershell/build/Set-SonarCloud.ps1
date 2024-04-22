@@ -3,7 +3,9 @@ param(
     [Parameter(Mandatory)]
     [string]$RepositoryName,
     [Parameter(Mandatory)]
-    [string]$SonarKey
+    [string]$SonarKey,
+    [Parameter()]
+    [string]$SonarOrganisation = 'defra'
 )
 
 Set-StrictMode -Version 3.0
@@ -26,6 +28,7 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:RepositoryName=$RepositoryName"
 Write-Debug "${functionName}:SonarKey=$SonarKey"
+Write-Debug "${functionName}:SonarOrganisation=$SonarOrganisation"
 
 try {
     $sonarUrl = "https://sonarcloud.io"
