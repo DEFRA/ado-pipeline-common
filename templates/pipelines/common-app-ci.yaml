@@ -103,24 +103,21 @@ stages:
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
                 Write-Host "##vso[task.setvariable variable=appVersion]$(GetAppVersion.appVersion)"
 
-          - task: AzurePowerShell@5
+          - task: PowerShell@2
             condition:  |
               and(
                   eq(variables['appVersion'], variables['initialVersion']),
                   eq(variables.IsDefaultBranchBuild, true)   
                   )
             displayName: Setup Azure Pipelines Github App
-            name: SetupAzurePipelinesApp  
+            name: SetupAzurePipelinesApp
             inputs:
-              azureSubscription: ${{ parameters.sonarConfig.keyVaultServiceConnection }}
-              ScriptType: filePath
-              ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
-              ScriptArguments: >
+              filePath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
+              arguments: >
                   -GithubPat $(ADP-PLATFORM-GITHUB-PatToken)
                   -AppInstallationSlug "Azure-Pipelines"
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-              FailOnStandardError: true
-              azurePowerShellVersion: 'LatestVersion'
+              failOnStderr: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
               pwsh: true
 
