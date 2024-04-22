@@ -122,10 +122,9 @@ stages:
               ScriptType: filePath
               ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
               ScriptArguments: > 
-                  -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }} 
-                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken" 
-                  -GitHubOrganisation "Defra" 
-                  -AppInstallationSlug "Azure-Pipelines" 
+                  -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }}
+                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken"
+                  -AppInstallationSlug "Azure-Pipelines"
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               FailOnStandardError: true
               azurePowerShellVersion: 'LatestVersion'
