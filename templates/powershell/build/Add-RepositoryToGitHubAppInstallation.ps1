@@ -3,7 +3,6 @@
      Adds the supplied GitHub Repository to an installed App Installation
 .DESCRIPTION
     Adds the supplied GitHub Repository to an installed App Installation. Used for when App Installations are selected repos only.
-
 .PARAMETER KeyVaultName
     Mandatory. Keyvault Name
 .PARAMETER KeyVaultSecretName
@@ -15,7 +14,7 @@
 .PARAMETER PSHelperDirectory
     Mandatory. Directory Path of PSHelper module
 .EXAMPLE
-.\Add-RepositoryToGitHubAppInstallation.ps1 -KeyVaultName <KeyVaultName> -PSHelperDirectory <KeyVaultName>
+    .\Add-RepositoryToGitHubAppInstallation.ps1 -KeyVaultName <KeyVaultName> -PSHelperDirectory <KeyVaultName>
 #> 
 
 [CmdletBinding()]
@@ -24,8 +23,6 @@ param(
     [string]$KeyVaultName,
     [Parameter(Mandatory)]
     [string]$KeyVaultSecretName,
-    [Parameter()]
-    [string]$GitHubOrganisation = "",
     [Parameter(Mandatory)]
     [string]$AppInstallationSlug,
     [Parameter(Mandatory)]
@@ -63,6 +60,7 @@ try {
     [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
     [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
     [string]$gitOrgName = $giturl.split("/")[3] -replace "/$gitRepoName.git", ""
+    Write-Debug "Git config URL: $giturl"
 
     $headers = @{
         "Authorization"        = "Bearer " + $githubPat
@@ -81,17 +79,17 @@ try {
                     Where-Object {$_.app_slug -eq $AppInstallationSlug}
     [string]$installationId = $installation.id
 
-    Write-Output "App Installation ID for App Name: $AppInstallationSlug is: $installationId for repository Name & Id: $gitRepoName / $repoId"
+    Write-Output "App Installation ID for App Name: $AppInstallationSlug is: $installationId for Github Organisation, Repository Name, and RepoId: $gitOrgName / $gitRepoName / $repoId"
 
     Write-Debug "Add Repository to App Installation..."
     $response = Invoke-WebRequest -Method Put -Uri ("https://api.github.com/user/installations/{0}/repositories/{1}" -f $installationId, $repoId) -Headers $headers    
 
     if ($response -and $response.StatusCode -eq "204") {
-        Write-Output "Status 204: The Repository: $gitRepoName has been added to the GitHub App Installation: $AppInstallationSlug"
+        Write-Output "Status 204: The Repository: $gitRepoName has been added successfully to the GitHub App Installation: $AppInstallationSlug for the Org: $gitOrgName"
         Write-Debug $response
     }
     else {
-        Write-Output "Error: Unable to Add Repo to App Installation"
+        Write-Output "Error: Unable to Add Repo to App Installation: Response code: $response.StatusCode"
         Write-Debug $response
     }
 
