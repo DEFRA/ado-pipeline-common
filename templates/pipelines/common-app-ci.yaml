@@ -112,7 +112,7 @@ stages:
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               FailOnStandardError: true
               azurePowerShellVersion: 'LatestVersion'
-              workingDirectory: '$(System.DefaultWorkingDirectory)'
+              workingDirectory: '$(Pipeline.Workspace)/s/source'
               pwsh: true
 
       - job: Build
