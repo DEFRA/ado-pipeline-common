@@ -104,11 +104,11 @@ stages:
                 Write-Host "##vso[task.setvariable variable=appVersion]$(GetAppVersion.appVersion)"
 
           - task: PowerShell@2
-            condition:  |
-              and(
-                  eq(variables['appVersion'], variables['initialVersion']),
-                  eq(variables.IsDefaultBranchBuild, true)   
-                  )
+            # condition:  |
+            #   and(
+            #       eq(variables['appVersion'], variables['initialVersion']),
+            #       eq(variables.IsDefaultBranchBuild, true)   
+            #       )
             displayName: Setup Azure Pipelines Github App
             name: SetupAzurePipelinesApp
             inputs:
