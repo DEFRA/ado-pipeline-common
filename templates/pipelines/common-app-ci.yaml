@@ -92,27 +92,10 @@ stages:
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
 
-      - job: Build
-        displayName: 'Build'  
-        condition: |
-          and(
-            succeeded('Initialise'),
-            ${{ eq(parameters.deployConfigOnly, false) }},
-            ${{ not(contains(parameters.stepsToSkip, 'Build')) }}
-          )
-        dependsOn: Initialise
-        variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-        steps:
-          - checkout: self
-            path: s/
-          - checkout: PipelineCommon
-            path: s/ADO-Pipeline-Common
-
           - task: AzurePowerShell@5
             condition:  |
               and(
-                  eq(variables['appVersion'], variables['initialVersion']),
+                  eq($(GetAppVersion.appVersion), variables['initialVersion']),
                   eq(variables.IsDefaultBranchBuild, true)   
                   )
             displayName: Setup Azure Pipelines Github App            
@@ -130,6 +113,23 @@ stages:
               azurePowerShellVersion: 'LatestVersion'
               workingDirectory: '$(System.DefaultWorkingDirectory)'
               pwsh: true
+
+      - job: Build
+        displayName: 'Build'  
+        condition: |
+          and(
+            succeeded('Initialise'),
+            ${{ eq(parameters.deployConfigOnly, false) }},
+            ${{ not(contains(parameters.stepsToSkip, 'Build')) }}
+          )
+        dependsOn: Initialise
+        variables:
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+        steps:
+          - checkout: self
+            path: s/
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
