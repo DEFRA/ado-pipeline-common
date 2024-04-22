@@ -71,6 +71,15 @@ stages:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
+          - ${{ if ne(parameters.appBuildConfig.keyVaultName, '') }}:
+            - task: AzureKeyVault@2
+              inputs:
+                azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
+                KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
+                ${{ if ne(parameters.appBuildConfig.keyVaultSecretFilter, '') }}:
+                  SecretsFilter: ${{ parameters.appBuildConfig.keyVaultSecretFilter }}
+                RunAsPreJob: false
+
           - task: PowerShell@2
             inputs:
               targetType: filePath
@@ -99,15 +108,14 @@ stages:
                   eq(variables['appVersion'], variables['initialVersion']),
                   eq(variables.IsDefaultBranchBuild, true)   
                   )
-            displayName: Setup Azure Pipelines Github App            
+            displayName: Setup Azure Pipelines Github App
             name: SetupAzurePipelinesApp  
             inputs:
               azureSubscription: ${{ parameters.sonarConfig.keyVaultServiceConnection }}
               ScriptType: filePath
               ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
-              ScriptArguments: > 
-                  -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }}
-                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken"
+              ScriptArguments: >
+                  -GithubPat $(ADP-PLATFORM-GITHUB-PatToken)
                   -AppInstallationSlug "Azure-Pipelines"
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               FailOnStandardError: true
@@ -131,6 +139,15 @@ stages:
             path: s/
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
+
+          - ${{ if ne(parameters.appBuildConfig.keyVaultName, '') }}:
+            - task: AzureKeyVault@2
+              inputs:
+                azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
+                KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
+                ${{ if ne(parameters.appBuildConfig.keyVaultSecretFilter, '') }}:
+                  SecretsFilter: ${{ parameters.appBuildConfig.keyVaultSecretFilter }}
+                RunAsPreJob: false
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml

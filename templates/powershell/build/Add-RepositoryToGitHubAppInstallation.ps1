@@ -3,26 +3,20 @@
      Adds the supplied GitHub Repository to an installed App Installation
 .DESCRIPTION
     Adds the supplied GitHub Repository to an installed App Installation. Used for when App Installations are selected repos only.
-.PARAMETER KeyVaultName
-    Mandatory. Keyvault Name
-.PARAMETER KeyVaultSecretName
-     Name of the required KV Secret
-.PARAMETER GitHubOrganisation
-     Name of the github org
+.PARAMETER GithubPat
+    Mandatory. Github Personel Access Token
 .PARAMETER AppInstallationSlug
      Name of the App Installation
 .PARAMETER PSHelperDirectory
     Mandatory. Directory Path of PSHelper module
 .EXAMPLE
-    .\Add-RepositoryToGitHubAppInstallation.ps1 -KeyVaultName <KeyVaultName> -PSHelperDirectory <KeyVaultName>
+    .\Add-RepositoryToGitHubAppInstallation.ps1 -GithubPat <GithubPat> -AppInstallationSlug <AppInstallationSlug> -PSHelperDirectory <PSHelperDirectory>
 #> 
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string]$KeyVaultName,
-    [Parameter(Mandatory)]
-    [string]$KeyVaultSecretName,
+    [string]$GithubPat,
     [Parameter(Mandatory)]
     [string]$AppInstallationSlug,
     [Parameter(Mandatory)]
@@ -47,15 +41,12 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
-Write-Debug "${functionName}:KeyVaultSecretName=$KeyVaultSecretName"
+Write-Debug "${functionName}:GithubPat=$GithubPat"
 Write-Debug "${functionName}:AppInstallationSlug=$AppInstallationSlug"
 
 try {
     Import-Module $PSHelperDirectory -Force  
-    Write-Debug "Get PAT from Keyvault to authenticate"
-    [string]$githubPat = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName -AsPlainText -ErrorAction Stop
-
+    
     Write-Debug "Get Github Org & Repo name"
     [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
     [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
@@ -63,7 +54,7 @@ try {
     Write-Debug "Git config URL: $giturl"
 
     $headers = @{
-        "Authorization"        = "Bearer " + $githubPat
+        "Authorization"        = "Bearer " + $GithubPat
         "Accept"               = "application/vnd.github+json"
         "ContentType"          = "application/json"
         "X-GitHub-Api-Version" = "2022-11-28"

@@ -17,8 +17,7 @@ steps:
     ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Set-SonarCloud.ps1
     ScriptArguments: >
       -RepositoryName ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
-      -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }}
-      -keyVaultSecretName ${{ parameters.sonarConfig.keyVaultSecretName }}
+      -SonarKey $(SONAR-API-KEY)
     FailOnStandardError: true
     azurePowerShellVersion: 'LatestVersion'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
