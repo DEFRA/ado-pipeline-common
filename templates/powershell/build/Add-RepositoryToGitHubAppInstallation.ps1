@@ -54,8 +54,7 @@ Write-Debug "${functionName}:AppInstallationSlug=$AppInstallationSlug"
 try {
     Import-Module $PSHelperDirectory -Force  
     Write-Debug "Get PAT from Keyvault to authenticate"
-    [string]$githubPat = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName -ErrorAction Stop
-    [string]$githubPatStd = ConvertFrom-SecureString $githubPat
+    [string]$githubPat = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $KeyVaultSecretName -AsPlainText -ErrorAction Stop
 
     Write-Debug "Get Github Org & Repo name"
     [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
@@ -64,7 +63,7 @@ try {
     Write-Debug "Git config URL: $giturl"
 
     $headers = @{
-        "Authorization"        = "Bearer " + $githubPatStd
+        "Authorization"        = "Bearer " + $githubPat
         "Accept"               = "application/vnd.github+json"
         "ContentType"          = "application/json"
         "X-GitHub-Api-Version" = "2022-11-28"
