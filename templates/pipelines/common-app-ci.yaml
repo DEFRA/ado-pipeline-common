@@ -91,11 +91,12 @@ stages:
               targetType: 'inline'
               script: |
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
+                Write-Host "##vso[task.setvariable variable=appVersion]$(GetAppVersion.appVersion)"
 
           - task: AzurePowerShell@5
             condition:  |
               and(
-                  eq($['GetAppVersion.appVersion'], variables['initialVersion']),
+                  eq(variables['appVersion'], variables['initialVersion']),
                   eq(variables.IsDefaultBranchBuild, true)   
                   )
             displayName: Setup Azure Pipelines Github App            
@@ -177,7 +178,7 @@ stages:
           )
         dependsOn: [Initialise]
         variables:
-          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
+          appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion']]
           dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
         steps:
           - checkout: self
