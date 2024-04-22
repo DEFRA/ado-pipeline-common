@@ -70,11 +70,14 @@ function Update-KVSecretValues {
         $valuesYamlPath = "$InfraChartHomeDir\values.yaml"
         [string]$content = Get-Content -Raw -Path $valuesYamlPath
         Write-Debug "$valuesYamlPath content before: $content"
-        if ($content) {
-            $valuesObject = ConvertFrom-YAML $content -Ordered            
+        if($content) {
+            $valuesObject = ConvertFrom-YAML $content -Ordered
+            # This condition is to initialize '$valuesObject' when values.yaml files contains only comments and not any values(Possible scenario).
+            if(-not $valuesObject) {
+                $valuesObject = [ordered]@{}
+            }
         }
-        # if there are no values except some comments in the file
-        if (!$valuesObject) {
+        else {
             $valuesObject = [ordered]@{}
         }
 
