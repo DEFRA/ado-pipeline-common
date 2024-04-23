@@ -9,18 +9,15 @@ parameters:
     type: string
 
 steps:
-- task: AzurePowerShell@5
+- task: PowerShell@2
   displayName: "Setup SonarCloud Project"
+  name: SetupSonarCloudProject
   inputs:
-    azureSubscription: ${{ parameters.sonarConfig.keyVaultServiceConnection }}
-    ScriptType: 'FilePath'
-    ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Set-SonarCloud.ps1
-    ScriptArguments: >
+    filePath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Set-SonarCloud.ps1
+    arguments: >
       -RepositoryName ${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
-      -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }}
-      -keyVaultSecretName ${{ parameters.sonarConfig.keyVaultSecretName }}
-    FailOnStandardError: true
-    azurePowerShellVersion: 'LatestVersion'
+      -SonarKey $(SONAR-API-KEY)
+    failOnStderr: true
     workingDirectory: '$(System.DefaultWorkingDirectory)'
     pwsh: true
 

@@ -3,9 +3,7 @@ param(
     [Parameter(Mandatory)]
     [string]$RepositoryName,
     [Parameter(Mandatory)]
-    [string]$KeyVaultName,
-    [Parameter()]
-    [string]$keyVaultSecretName = 'sonar-api-key',
+    [string]$SonarKey,
     [Parameter()]
     [string]$SonarOrganisation = 'defra'
 )
@@ -29,16 +27,13 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:RepositoryName=$RepositoryName"
-Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
+Write-Debug "${functionName}:SonarKey=$SonarKey"
 Write-Debug "${functionName}:SonarOrganisation=$SonarOrganisation"
 
 try {
     $sonarUrl = "https://sonarcloud.io"
-
-    Write-Debug "Reading SonarCloud API key from '$KeyVaultName' KeyVault..."
-    [string]$sonarKey = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $keyVaultSecretName -AsPlainText -ErrorAction Stop
-    $sonarKey += ":"
-    [string]$encodedText = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($sonarKey))
+    $SonarKey += ":"
+    [string]$encodedText = [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($SonarKey))
 
     $headers = @{
         "Authorization" = "Basic $encodedText"

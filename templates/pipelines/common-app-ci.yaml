@@ -71,6 +71,16 @@ stages:
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
+          - ${{ if ne(parameters.appBuildConfig.keyVaultName, '') }}:
+            - task: AzureKeyVault@2
+              displayName: Read KV Secrets
+              inputs:
+                azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
+                KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
+                ${{ if ne(parameters.appBuildConfig.keyVaultSecretFilter, '') }}:
+                  SecretsFilter: ${{ parameters.appBuildConfig.keyVaultSecretFilter }}
+                RunAsPreJob: false
+
           - task: PowerShell@2
             inputs:
               targetType: filePath
@@ -93,25 +103,21 @@ stages:
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
                 Write-Host "##vso[task.setvariable variable=appVersion]$(GetAppVersion.appVersion)"
 
-          - task: AzurePowerShell@5
+          - task: PowerShell@2
             condition:  |
               and(
                   eq(variables['appVersion'], variables['initialVersion']),
                   eq(variables.IsDefaultBranchBuild, true)   
                   )
-            displayName: Setup Azure Pipelines Github App            
-            name: SetupAzurePipelinesApp  
+            displayName: Setup Azure Pipelines Github App
+            name: SetupAzurePipelinesApp
             inputs:
-              azureSubscription: ${{ parameters.sonarConfig.keyVaultServiceConnection }}
-              ScriptType: filePath
-              ScriptPath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
-              ScriptArguments: > 
-                  -KeyVaultName ${{ parameters.sonarConfig.keyVaultName }}
-                  -KeyVaultSecretName "ADP-PLATFORM-GITHUB-PatToken"
+              filePath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
+              arguments: >
+                  -GithubPat $(ADP-PLATFORM-GITHUB-PatToken)
                   -AppInstallationSlug "Azure-Pipelines"
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-              FailOnStandardError: true
-              azurePowerShellVersion: 'LatestVersion'
+              failOnStderr: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
               pwsh: true
 
@@ -131,6 +137,16 @@ stages:
             path: s/
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
+
+          - ${{ if ne(parameters.appBuildConfig.keyVaultName, '') }}:
+            - task: AzureKeyVault@2
+              displayName: Read KV Secrets
+              inputs:
+                azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
+                KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
+                ${{ if ne(parameters.appBuildConfig.keyVaultSecretFilter, '') }}:
+                  SecretsFilter: ${{ parameters.appBuildConfig.keyVaultSecretFilter }}
+                RunAsPreJob: false
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis-prepare.yaml
