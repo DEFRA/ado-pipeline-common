@@ -100,6 +100,11 @@ try {
             throw [System.IO.FileNotFoundException]::new($ConfigFilePath) 
         }
     }
+    else {
+        Write-Host "${functionName} File`t`tNot found"
+        Get-ChildItem
+        throw [System.IO.FileNotFoundException]::new($ConfigFilePath) 
+    }
     $exitCode = 0
          
 }
