@@ -80,7 +80,18 @@ stages:
                 ${{ if ne(parameters.appBuildConfig.keyVaultSecretFilter, '') }}:
                   SecretsFilter: ${{ parameters.appBuildConfig.keyVaultSecretFilter }}
                 RunAsPreJob: false
-
+          - task: PowerShell@2
+            displayName: 'Validate App Reg File'
+            inputs:
+              targetType: filePath
+              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ValidateAppRegFile.ps1'
+              arguments: > 
+                -SchemaFilePath '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/config/appRegSchema.yaml'
+                -ConfigFilePath 'appreg/app-registration.yaml'
+                -AppConfigModuleDirectory ${{ variables.AppConfigModuleDirectory }}
+              failOnStderr: true
+              pwsh: true
+              workingDirectory: '$(Pipeline.Workspace)/s/source'
           - task: PowerShell@2
             inputs:
               targetType: filePath
@@ -120,18 +131,7 @@ stages:
               failOnStderr: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
               pwsh: true
-          - task: PowerShell@2
-            displayName: 'Validate App Reg File'
-            inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ValidateAppRegFile.ps1'
-              arguments: > 
-                -SchemaFilePath '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/config/appRegSchema.yaml'
-                -ConfigFilePath 'appreg/app-registration.yaml'
-                -AppConfigModuleDirectory ${{ variables.AppConfigModuleDirectory }}
-              failOnStderr: true
-              pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s/source'
+
       - job: Build
         displayName: 'Build'  
         condition: |
