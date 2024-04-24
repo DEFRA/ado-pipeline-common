@@ -1,0 +1,25 @@
+description: App Registration Schema
+type: array
+items:
+  type: object
+  required:
+    - AppRegName
+  dependentRequired:
+    IsForLoginUI: [redirectUris,accessGroups]
+  properties:
+    Name:
+      type: string
+    IsForLoginUI:
+      type: boolean
+    IsForDynamics:
+      type: boolean      
+    redirectUris:
+      type: array
+      items:
+        type: string
+      minItems: 1
+    accessGroups:
+      type: array
+      items:
+        type: string
+      minItems: 1     
