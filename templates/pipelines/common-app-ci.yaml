@@ -424,7 +424,7 @@ stages:
                           parameters:
                             TeamName: 'ffc-demo'
                             ServiceName: ${{ parameters.serviceName }}
-                            EnvName: 'dev1'
+                            EnvName: ${{ deploymentEnv.name }}
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
                         - template: /templates/steps/secrets-import-kv.yaml	                          
                           parameters:
