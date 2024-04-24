@@ -82,8 +82,13 @@ try {
                         }                      
                     }
                 }
-
-                Write-Host "${functionName} File`t`tPassed validation"
+                if ($validFile) {
+                    Write-Host "${functionName} File`t`tPassed validation"
+                }
+                else {
+                    Write-Host "${functionName} File`t`tFailed validation"
+                    throw [System.IO.InvalidDataException]::new($ConfigFilePath) 
+                }
             }
             else {
                 Write-Host "${functionName} File`t`tFailed validation"
