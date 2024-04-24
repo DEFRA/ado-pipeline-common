@@ -7,6 +7,9 @@ parameters:
 - name: deployConfigOnly
   type: boolean
   default: false   
+- name: generateFluxManifest
+  type: boolean
+  default: false
 - name: agentImage
   type: string
   default: 'ubuntu-latest'
@@ -416,6 +419,12 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
+                      - ${{ if eq(parameters.generateFluxManifest, true) }}:
+                        - template: /templates/steps/generate-flux-manifest.yaml
+                          parameters:
+                            TeamName: 'ffc-demo'
+                            ServiceName: ${{ parameters.serviceName }}
+                            EnvName: ${{ deploymentEnv.name }
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
                         - template: /templates/steps/secrets-import-kv.yaml	                          
                           parameters:

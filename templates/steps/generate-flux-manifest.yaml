@@ -1,0 +1,26 @@
+parameters:
+- name: TeamName
+  type: string
+- name: ServiceName
+  type: string
+- name: EnvName
+  type: string
+steps:
+  - checkout: Self
+    path: s/
+  - checkout: PipelineCommon
+    path: s/ADO-Pipeline-Common
+
+  - task: PowerShell@2
+    displayName: 'Generate Flux Manifest' 
+    name: GenerateFluxManifest   
+    inputs:
+      targetType: filePath
+      filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/GenerateFluxManifest.ps1'
+      arguments: >
+        -TeamName "${{ parameters.TeamName }}"
+        -ServiceName "${{ parameters.ServiceName }}"
+        -EnvName "${{ parameters.EnvName }}"
+      failOnStderr: false      
+      pwsh: true
+      workingDirectory: '$(Pipeline.Workspace)/s'  
