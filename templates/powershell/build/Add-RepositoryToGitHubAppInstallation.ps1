@@ -47,16 +47,9 @@ Write-Debug "${functionName}:AppInstallationSlug=$AppInstallationSlug"
 try {
     Import-Module $PSHelperDirectory -Force  
     
-    Write-Debug "Get Github Org & Repo name"
-
-    [string]$gitRepoFullPath = $($env:BUILD_REPOSITORY_NAME)
-
-    [string]$gitOrgName = $gitRepoFullPath.split("/")[0]
-    [string]$gitRepoName = $gitRepoFullPath.split("/")[1]
-
-    Write-Host "$gitRepoName"
-    Write-Host "$gitOrgName"
-    Write-Host "$($env:BUILD_REPOSITORY_NAME)"
+    Write-Debug "Get Github Org & Repo name from Build Vars"
+    [string]$gitOrgName = $($env:BUILD_REPOSITORY_NAME).split("/")[0]
+    [string]$gitRepoName = $($env:BUILD_REPOSITORY_NAME).split("/")[1]
 
     $headers = @{
         "Authorization"        = "Bearer " + $GithubPat
