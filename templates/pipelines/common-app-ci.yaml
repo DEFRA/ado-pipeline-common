@@ -422,6 +422,7 @@ stages:
                       - ${{ if eq(parameters.generateFluxManifest, true) }}:
                         - template: /templates/steps/generate-flux-manifest.yaml
                           parameters:
+                            ApiBaseUri: 'https://ssvadpdevca3401-adp-portal-api.agreeableocean-834016c8.uksouth.azurecontainerapps.io/api'
                             TeamName: 'ffc-demo'
                             ServiceName: ${{ parameters.serviceName }}
                             EnvName: ${{ deploymentEnv.name }}
