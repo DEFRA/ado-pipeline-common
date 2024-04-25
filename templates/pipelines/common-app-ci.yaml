@@ -22,8 +22,6 @@ parameters:
   default: ''
 - name: environments
   type: object
-- name: deploymentVariableFiles
-  type: object
 - name: packageFeedName
   type: string
   default: '' 
@@ -416,9 +414,6 @@ stages:
               ) 
             displayName: 'Publish To ${{ deploymentEnv.name }}'
             environment: ${{ deploymentEnv.name }}
-            variables:
-              - ${{ each file in parameters.deploymentVariableFiles }}:
-                - template: ${{ replace(file, '{environment}', lower(deploymentEnv.name)) }}
             strategy:
               runOnce:
                 deploy:          
@@ -431,7 +426,7 @@ stages:
                       - ${{ if eq(parameters.generateFluxManifest, true) }}:
                         - template: /templates/steps/generate-flux-manifest.yaml
                           parameters:
-                            ApiBaseUri: ${{ parameters.fluxManifestApiBaseUri }}
+                            ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
                             TeamName: ${{ parameters.teamName }}
                             ServiceName: ${{ parameters.serviceName }}
                             EnvName: ${{ deploymentEnv.name }}
