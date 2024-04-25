@@ -1,4 +1,6 @@
 parameters:
+- name: teamName
+  type: string
 - name: serviceName
   type: string
 - name: deployFromFeature
@@ -17,6 +19,8 @@ parameters:
   type: string
   default: ''
 - name: environments
+  type: object
+- name: deploymentVariableFiles
   type: object
 - name: packageFeedName
   type: string
@@ -410,6 +414,9 @@ stages:
               ) 
             displayName: 'Publish To ${{ deploymentEnv.name }}'
             environment: ${{ deploymentEnv.name }}
+            variables:
+              - ${{ each file in parameters.deploymentVariableFiles }}:
+                - template: ${{ replace(file, '{environment}', lower(deploymentEnv.name)) }}
             strategy:
               runOnce:
                 deploy:          
@@ -422,8 +429,8 @@ stages:
                       - ${{ if eq(parameters.generateFluxManifest, true) }}:
                         - template: /templates/steps/generate-flux-manifest.yaml
                           parameters:
-                            ApiBaseUri: 'https://ssvadpdevca3401-adp-portal-api.agreeableocean-834016c8.uksouth.azurecontainerapps.io/api'
-                            TeamName: 'ffc-demo'
+                            ApiBaseUri: $(portalApiBaseUri)
+                            TeamName: ${{ parameters.teamName }}
                             ServiceName: ${{ parameters.serviceName }}
                             EnvName: ${{ deploymentEnv.name }}
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         

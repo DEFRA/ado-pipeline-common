@@ -30,10 +30,9 @@ function Add-Environment {
         Write-Debug "${functionName}:Name=$Name"
     }
     process {
-        Write-Host "Adding environment '$Name'"
         $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/services/$ServiceName/environments"
-
         Write-Debug "${functionName}:Uri=$uri"
+
         Invoke-RestMethod -Uri $uri -Method Post -Body (@($Name) | ConvertTo-Json) -ContentType "application/json"
     }
     end {
@@ -58,10 +57,9 @@ function Add-FluxConfig {
         Write-Debug "${functionName}:ServiceName=$ServiceName"
     }
     process {
-        Write-Host "Generating flux config for '$ServiceName'"
         $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/generate?serviceName=$ServiceName"
-
         Write-Debug "${functionName}:Uri=$uri"
+        
         Invoke-RestMethod -Uri $uri -Method Post
     }
     end {
