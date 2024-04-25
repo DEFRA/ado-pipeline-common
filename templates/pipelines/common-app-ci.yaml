@@ -12,6 +12,8 @@ parameters:
 - name: generateFluxManifest
   type: boolean
   default: false
+- name: fluxManifestApiBaseUri
+  type: string
 - name: agentImage
   type: string
   default: 'ubuntu-latest'
@@ -429,7 +431,7 @@ stages:
                       - ${{ if eq(parameters.generateFluxManifest, true) }}:
                         - template: /templates/steps/generate-flux-manifest.yaml
                           parameters:
-                            ApiBaseUri: $(portalApiBaseUri)
+                            ApiBaseUri: ${{ parameters.fluxManifestApiBaseUri }}
                             TeamName: ${{ parameters.teamName }}
                             ServiceName: ${{ parameters.serviceName }}
                             EnvName: ${{ deploymentEnv.name }}
