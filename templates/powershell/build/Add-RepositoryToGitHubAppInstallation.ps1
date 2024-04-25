@@ -53,6 +53,10 @@ try {
     [string]$gitOrgName = $giturl.split("/")[3] -replace "/$gitRepoName.git", ""
     Write-Debug "Git config URL: $giturl"
 
+    Write-Host "$(Build.Repository.Name)"
+    Write-Host "$(Build.Repository.Uri)"
+    Write-Host "$(Build.Repository.ID)"
+
     $headers = @{
         "Authorization"        = "Bearer " + $GithubPat
         "Accept"               = "application/vnd.github+json"
