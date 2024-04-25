@@ -51,8 +51,8 @@ try {
 
     [string]$gitRepoFullPath = $($env:BUILD_REPOSITORY_NAME)
 
-    [string]$gitRepoName = $gitRepoFullPath.split("/")
-    [string]$gitOrgName = $gitRepoFullPath.split("/") -replace "/$gitRepoName", ""
+    [string]$gitOrgName = $gitRepoFullPath.split("/")[0]
+    [string]$gitRepoName = $gitRepoFullPath.split("/")[1]
 
     Write-Host "$gitRepoName"
     Write-Host "$gitOrgName"
