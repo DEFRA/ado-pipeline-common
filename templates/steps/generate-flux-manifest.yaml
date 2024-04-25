@@ -1,4 +1,6 @@
 parameters:
+- name: ApiBaseUri
+  type: string
 - name: TeamName
   type: string
 - name: ServiceName
@@ -18,6 +20,7 @@ steps:
       targetType: filePath
       filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/GenerateFluxManifest.ps1'
       arguments: >
+        -ApiBaseUri "${{ parameters.ApiBaseUri }}"
         -TeamName "${{ parameters.TeamName }}"
         -ServiceName "${{ parameters.ServiceName }}"
         -EnvName "${{ parameters.EnvName }}"
