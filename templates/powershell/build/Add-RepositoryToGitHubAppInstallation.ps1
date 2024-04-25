@@ -48,15 +48,16 @@ try {
     Import-Module $PSHelperDirectory -Force  
     
     Write-Debug "Get Github Org & Repo name"
-    [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
-    [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
-    [string]$gitOrgName = $giturl.split("/")[3] -replace "/$gitRepoName.git", ""
-    Write-Debug "Git config URL: $giturl"
 
+    [string]$gitRepoFullPath = $($env:BUILD_REPOSITORY_NAME)
+
+    [string]$gitRepoName = $gitRepoFullPath.split("/")
+    [string]$gitOrgName = $gitRepoFullPath.split("/") -replace "/$gitRepoName", ""
+
+    Write-Host "$gitRepoName"
+    Write-Host "$gitOrgName"
     Write-Host "$($env:BUILD_REPOSITORY_NAME)"
-    Write-Host "$($env:BUILD_REPOSITORY_URI)"
-    Write-Host "$($env:BUILD_REPOSITORY_ID)"
-    
+
     $headers = @{
         "Authorization"        = "Bearer " + $GithubPat
         "Accept"               = "application/vnd.github+json"
