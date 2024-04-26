@@ -67,6 +67,7 @@ stages:
         steps:
           - checkout: self
             path: s/source
+            persistCredentials: true
 
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
