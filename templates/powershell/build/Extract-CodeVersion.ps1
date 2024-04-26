@@ -61,7 +61,8 @@ try {
     $oldAppVersion = "0.1.0" #Assume version 0.1.0 for initial main branch
     $exitCode = 0
     $versionFilePath = "./VERSION"
-    $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
+    $DefaultBranchName = "main"
+    #$DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
     $IsDefaultBranchBuild = "False"
     $CurrentBranchName = (Get-ChildItem -Path Env:BUILD_SOURCEBRANCH).value
     if ($CurrentBranchName -like "refs/tags*") {
