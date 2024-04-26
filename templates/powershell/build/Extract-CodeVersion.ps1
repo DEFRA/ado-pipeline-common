@@ -72,7 +72,7 @@ try {
         $IsDefaultBranchBuild = "True"
     }
     
-    #Invoke-CommandLine -Command "git fetch origin"        
+    Invoke-CommandLine -Command "git fetch origin"        
     
     #If custom VERSION file exists, read version number from file
     if (Test-Path $versionFilePath -PathType Leaf) {
@@ -115,11 +115,10 @@ try {
     elseif ( $AppFrameworkType.ToLower() -eq 'nodejs' ) {
         $appVersion = node -p "require('$ProjectPath').version"
         if ($IsDefaultBranchBuild -eq "False") {  
-            ##Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
-            # if (Test-Path $ProjectPath -PathType Leaf) {
-            #     $oldAppVersion = node -p "require('$ProjectPath').version" 
-            # }     
-            $oldAppVersion = "0.1.0"   
+            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
+            if (Test-Path $ProjectPath -PathType Leaf) {
+                $oldAppVersion = node -p "require('$ProjectPath').version" 
+            }        
         } 
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'helm' ) {
