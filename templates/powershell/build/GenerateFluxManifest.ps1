@@ -47,7 +47,9 @@ function Add-FluxConfig {
         [Parameter(Mandatory)]
         [string]$TeamName,
         [Parameter(Mandatory)]
-        [string]$ServiceName
+        [string]$ServiceName,
+        [Parameter(Mandatory)]
+        [string]$EnvName
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
@@ -55,9 +57,10 @@ function Add-FluxConfig {
         Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
         Write-Debug "${functionName}:TeamName=$TeamName"
         Write-Debug "${functionName}:ServiceName=$ServiceName"
+        Write-Debug "${functionName}:EnvName=$EnvName"
     }
     process {
-        $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/generate?serviceName=$ServiceName"
+        $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/generate?serviceName=$ServiceName&environment=$EnvName"
         Write-Debug "${functionName}:Uri=$uri"
         
         Invoke-RestMethod -Uri $uri -Method Post
@@ -94,8 +97,8 @@ try {
     Write-Host "Adding environment '$EnvName' to service '$ServiceName' for team '$TeamName'"
     Add-Environment -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName 
 
-    Write-Host "Generating flux config for service '$ServiceName' for team '$TeamName'"
-    Add-FluxConfig -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName
+    Write-Host "Generating flux config for service '$ServiceName' for team '$TeamName' in environment '$EnvName'"
+    Add-FluxConfig -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -EnvName $EnvName
 
     $exitCode = 0
 }
