@@ -8,11 +8,6 @@ parameters:
 - name: EnvName
   type: string
 steps:
-  - checkout: Self
-    path: s/
-  - checkout: PipelineCommon
-    path: s/ADO-Pipeline-Common
-
   - task: PowerShell@2
     displayName: 'Generate Flux Manifest' 
     name: GenerateFluxManifest   
