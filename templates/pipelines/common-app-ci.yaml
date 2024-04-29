@@ -8,12 +8,7 @@ parameters:
   default: false  
 - name: deployConfigOnly
   type: boolean
-  default: false   
-- name: generateFluxManifest
-  type: boolean
   default: false
-- name: fluxManifestApiBaseUri
-  type: string
 - name: agentImage
   type: string
   default: 'ubuntu-latest'
@@ -423,7 +418,7 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
-                      - ${{ if and(eq(parameters.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
+                      - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
                         - template: /templates/steps/generate-flux-manifest.yaml
                           parameters:
                             ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
