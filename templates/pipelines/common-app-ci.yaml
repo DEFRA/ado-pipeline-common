@@ -67,6 +67,7 @@ stages:
         steps:
           - checkout: self
             path: s/source
+            persistCredentials: true
 
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
@@ -120,7 +121,7 @@ stages:
                   eq(variables['appVersion'], variables['initialVersion']),
                   eq(variables.IsDefaultBranchBuild, true)   
                   )
-            displayName: Setup Azure Pipelines Github App
+            displayName: Setup GitHub Repository Access
             name: SetupAzurePipelinesApp
             inputs:
               filePath: $(Agent.BuildDirectory)/s/ADO-Pipeline-Common/templates/powershell/build/Add-RepositoryToGitHubAppInstallation.ps1
