@@ -451,15 +451,15 @@ stages:
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
 
-                        - task: PowerShell@2
-                          displayName: 'Set Image added to ACR time used to check Flux Helm Release'   
-                          inputs:
-                            targetType: inline
-                            script: |
-                              Write-Host "##vso[task.setvariable variable=acrImageAddedTime]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
-                            failOnStderr: false
-                            pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s' 
+                      - task: PowerShell@2
+                        displayName: 'Set Image added to ACR time used to check Flux Helm Release'   
+                        inputs:
+                          targetType: inline
+                          script: |
+                            Write-Host "##vso[task.setvariable variable=acrImageAddedTime]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+                          failOnStderr: false
+                          pwsh: true
+                          workingDirectory: '$(Pipeline.Workspace)/s' 
 
                       - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
                         - template: /templates/steps/post-deployment-tests.yaml
