@@ -8,7 +8,6 @@ parameters:
 steps:  
 - checkout: self
   path: s/source
-  persistCredentials: true
 
 - task: PowerShell@2
   displayName: Git-Tag  
