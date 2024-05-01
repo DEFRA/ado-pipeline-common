@@ -466,7 +466,7 @@ stages:
                 displayName: 'Call ADO controller api to check If Helmrelease is successfull'
                 inputs:
                   serviceConnection: 'AZD-ADP-FluxDeploymentApi-DEV1'
-                  urlSuffix: 'api/AdoTask'
+                  urlSuffix: 'api/AdoTask/execute'
                   method: POST
                   body: |
                     {
