@@ -460,12 +460,22 @@ stages:
             displayName: 'Wait For Flux Release'
             dependsOn: PublishTo${{ deploymentEnv.name }}
             pool: server
+            variables:
+              - ${{ if eq(environment.name, 'snd1') }}:
+                - name: callBackServiceConnection
+                  value: 'AZD-ADP-FluxDeploymentApi-DEV1'
+              - ${{ elseif in(environment.name, 'snd2', 'snd3') }}:
+                - name: callBackServiceConnection
+                  value: 'AZD-ADP-FluxDeploymentApi-TST'
+              - ${{ elseif in(environment.name, 'dev1', 'tst1', 'pre1', 'prd1') }}:
+                - name: callBackServiceConnection
+                  value: 'AZD-ADP-FluxDeploymentApi-PRD'
             timeoutInMinutes: 10
             steps:            
               - task: InvokeRESTAPI@1
                 displayName: 'Call ADO controller api to check If Helmrelease is successfull'
                 inputs:
-                  serviceConnection: 'AZD-ADP-FluxDeploymentApi-DEV1'
+                  serviceConnection: '${{ variables.callBackServiceConnection }}'
                   urlSuffix: 'api/AdoTask/execute'
                   method: POST
                   body: |
