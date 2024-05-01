@@ -493,7 +493,8 @@ stages:
                     "serviceName": "${{ parameters.serviceName }}",
                     "helmReleaseName": "${{ parameters.serviceName }}",
                     "helmReleaseVersion": "$(appVersion)",
-                    "environment": "${{ deploymentEnv.name}}"
+                    "environment": "${{ deploymentEnv.name}}",
+                    "helmImageAddedToACRTime": "$(acrImageAddedTime)"
                     }
                   waitForCompletion: 'true'
           
