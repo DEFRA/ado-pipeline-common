@@ -455,3 +455,29 @@ stages:
                         - template: /templates/steps/post-deployment-tests.yaml
                           parameters:
                             url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
+
+          - job: WaitForFluxRelease
+            displayName: 'Wait For Flux Release'
+            dependsOn: PublishTo${{ deploymentEnv.name }}
+            pool: server
+            timeoutInMinutes: 10
+            steps:            
+              - task: InvokeRESTAPI@1
+                displayName: 'Call ADO controller api to check If Helmrelease is successfull'
+                inputs:
+                  serviceConnection: 'AZD-ADP-FluxDeploymentApi-DEV1'
+                  urlSuffix: 'api/AdoTask'
+                  method: POST
+                  body: |
+                    {
+                    "serviceName": "${{ parameters.serviceName }}",
+                    "helmReleaseName": "${{ parameters.serviceName }}",
+                    "helmReleaseVersion": $(appVersion),
+                    "environment": "snd"
+                    }
+                  waitForCompletion: 'true'
+          
+          - job: PostDeploymentTests
+            dependsOn: WaitForFluxRelease
+            steps:
+            - bash: echo "Running Post Deployment Tests"
