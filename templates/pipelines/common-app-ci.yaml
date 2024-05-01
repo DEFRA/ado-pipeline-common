@@ -452,11 +452,12 @@ stages:
                             stepsToSkip: ${{ parameters.stepsToSkip }}
 
                       - task: PowerShell@2
-                        displayName: 'Set Image added to ACR time used to check Flux Helm Release'   
+                        displayName: 'Set Image added to ACR time used to check Flux Helm Release'
+                        name: setAcrImageAddedTime
                         inputs:
                           targetType: inline
                           script: |
-                            Write-Host "##vso[task.setvariable variable=acrImageAddedTime]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+                            Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
                           failOnStderr: false
                           pwsh: true
                           workingDirectory: '$(Pipeline.Workspace)/s' 
@@ -471,6 +472,8 @@ stages:
             dependsOn: PublishTo${{ deploymentEnv.name }}
             pool: server
             variables:
+              - name: helmImageAddedToACRTime
+                value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['setAcrImageAddedTime.acrImageAddedTime']]
               - ${{ if eq(deploymentEnv.name, 'snd1') }}:
                 - name: callBackServiceConnection
                   value: 'AZD-ADP-FluxDeploymentApi-DEV1'
@@ -494,11 +497,12 @@ stages:
                     "helmReleaseName": "${{ parameters.serviceName }}",
                     "helmReleaseVersion": "$(appVersion)",
                     "environment": "${{ deploymentEnv.name}}",
-                    "helmImageAddedToACRTime": "$(acrImageAddedTime)"
+                    "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
                     }
                   waitForCompletion: 'true'
           
-          - job: PostDeploymentTests
+          - job: Post Deployment Tests
+            displayName: 'Post Deployment Tests'
             dependsOn: WaitForFluxRelease
             steps:
             - bash: echo "Running Post Deployment Tests"
