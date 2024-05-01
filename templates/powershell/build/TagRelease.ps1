@@ -46,8 +46,8 @@ try {
     if ($exists) { 
         Write-Host "Tag already exists"
     }    
-    git config user.name
-    git config credential.username
+    Invoke-CommandLine -Command "git config user.name"
+    Invoke-CommandLine -Command "git config credential.username"
 
     Invoke-CommandLine -Command "git tag $AppVersion --force"
     Invoke-CommandLine -Command "git push origin $AppVersion"
