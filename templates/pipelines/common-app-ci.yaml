@@ -473,7 +473,7 @@ stages:
             pool: server
             variables:
               - name: helmImageAddedToACRTime
-                value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['setAcrImageAddedTime.acrImageAddedTime']]
+                value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
               - ${{ if eq(deploymentEnv.name, 'snd1') }}:
                 - name: callBackServiceConnection
                   value: 'AZD-ADP-FluxDeploymentApi-DEV1'
