@@ -501,8 +501,8 @@ stages:
                     }
                   waitForCompletion: 'true'
           
-          - job: Post Deployment Tests
-            displayName: 'Post Deployment Tests'
-            dependsOn: WaitForFluxRelease
-            steps:
-            - bash: echo "Running Post Deployment Tests"
+          # - job: Post Deployment Tests
+          #   displayName: 'Post Deployment Tests'
+          #   dependsOn: WaitForFluxRelease
+          #   steps:
+          #   - bash: echo "Running Post Deployment Tests"
