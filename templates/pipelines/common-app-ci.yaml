@@ -490,7 +490,7 @@ stages:
                 - task: InvokeRESTAPI@1
                   displayName: 'Call ADO controller api to check If Helmrelease is successfull'
                   inputs:
-                    serviceConnection: 'AZD-ADP-FluxDeploymentApi-${{ deploymentEnv.adoCallBackApiEnabledEnv }}'
+                    serviceConnection: 'AZD-ADP-AdoCallbackApi-${{ deploymentEnv.adoCallBackApiEnabledEnv }}'
                     urlSuffix: 'api/AdoTask/execute'
                     method: POST
                     body: |
