@@ -450,24 +450,25 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
-
-                      - task: PowerShell@2
-                        displayName: 'Set Image added to ACR time used to check Flux Helm Release'
-                        name: setAcrImageAddedTime
-                        inputs:
-                          targetType: inline
-                          script: |
-                            Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
-                          failOnStderr: false
-                          pwsh: true
-                          workingDirectory: '$(Pipeline.Workspace)/s' 
+                      
+                      - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
+                        - task: PowerShell@2
+                          displayName: 'Set Image added to ACR time used to check Flux Helm Release'
+                          name: setAcrImageAddedTime
+                          inputs:
+                            targetType: inline
+                            script: |
+                              Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+                            failOnStderr: false
+                            pwsh: true
+                            workingDirectory: '$(Pipeline.Workspace)/s' 
 
                       - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
                         - template: /templates/steps/post-deployment-tests.yaml
                           parameters:
                             url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
           
-          - ${{ if eq(deploymentEnv.name, 'snd1') }}: # Need to add other environments (snd2, snd3, dev1, tst1, pre1, prd1) incrementally as and when the Flux Notifications solution is ready in those environments.
+          - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
             - job: WaitForFluxRelease
               displayName: 'Wait For Flux Release'
               dependsOn: PublishTo${{ deploymentEnv.name }}
@@ -475,21 +476,21 @@ stages:
               variables:
                 - name: helmImageAddedToACRTime
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
-                - ${{ if eq(deploymentEnv.name, 'snd1') }}:
-                  - name: callBackServiceConnection
-                    value: 'AZD-ADP-FluxDeploymentApi-DEV1'
-                - ${{ elseif in(deploymentEnv.name, 'snd2', 'snd3') }}:
-                  - name: callBackServiceConnection
-                    value: 'AZD-ADP-FluxDeploymentApi-TST'
-                - ${{ elseif in(deploymentEnv.name, 'dev1', 'tst1', 'pre1', 'prd1') }}:
-                  - name: callBackServiceConnection
-                    value: 'AZD-ADP-FluxDeploymentApi-PRD'
+                # - ${{ if eq(deploymentEnv.name, 'snd1') }}:
+                #   - name: callBackServiceConnection
+                #     value: 'AZD-ADP-FluxDeploymentApi-DEV1'
+                # - ${{ elseif in(deploymentEnv.name, 'snd2', 'snd3') }}:
+                #   - name: callBackServiceConnection
+                #     value: 'AZD-ADP-FluxDeploymentApi-TST'
+                # - ${{ elseif in(deploymentEnv.name, 'dev1', 'tst1', 'pre1', 'prd1') }}:
+                #   - name: callBackServiceConnection
+                #     value: 'AZD-ADP-FluxDeploymentApi-PRD'
               timeoutInMinutes: 10
               steps:            
                 - task: InvokeRESTAPI@1
                   displayName: 'Call ADO controller api to check If Helmrelease is successfull'
                   inputs:
-                    serviceConnection: '${{ variables.callBackServiceConnection }}'
+                    serviceConnection: 'AZD-ADP-FluxDeploymentApi-${{ deploymentEnv.adoCallBackApiEnabledEnv }}'
                     urlSuffix: 'api/AdoTask/execute'
                     method: POST
                     body: |
@@ -501,9 +502,3 @@ stages:
                       "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
                       }
                     waitForCompletion: 'true'
-            
-            # - job: Post Deployment Tests
-            #   displayName: 'Post Deployment Tests'
-            #   dependsOn: WaitForFluxRelease
-            #   steps:
-            #   - bash: echo "Running Post Deployment Tests"
