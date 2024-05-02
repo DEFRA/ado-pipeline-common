@@ -466,43 +466,44 @@ stages:
                         - template: /templates/steps/post-deployment-tests.yaml
                           parameters:
                             url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
-
-          - job: WaitForFluxRelease
-            displayName: 'Wait For Flux Release'
-            dependsOn: PublishTo${{ deploymentEnv.name }}
-            pool: server
-            variables:
-              - name: helmImageAddedToACRTime
-                value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
-              - ${{ if eq(deploymentEnv.name, 'snd1') }}:
-                - name: callBackServiceConnection
-                  value: 'AZD-ADP-FluxDeploymentApi-DEV1'
-              - ${{ elseif in(deploymentEnv.name, 'snd2', 'snd3') }}:
-                - name: callBackServiceConnection
-                  value: 'AZD-ADP-FluxDeploymentApi-TST'
-              - ${{ elseif in(deploymentEnv.name, 'dev1', 'tst1', 'pre1', 'prd1') }}:
-                - name: callBackServiceConnection
-                  value: 'AZD-ADP-FluxDeploymentApi-PRD'
-            timeoutInMinutes: 10
-            steps:            
-              - task: InvokeRESTAPI@1
-                displayName: 'Call ADO controller api to check If Helmrelease is successfull'
-                inputs:
-                  serviceConnection: '${{ variables.callBackServiceConnection }}'
-                  urlSuffix: 'api/AdoTask/execute'
-                  method: POST
-                  body: |
-                    {
-                    "serviceName": "${{ parameters.serviceName }}",
-                    "helmReleaseName": "${{ parameters.serviceName }}",
-                    "helmReleaseVersion": "$(appVersion)",
-                    "environment": "${{ deploymentEnv.name}}",
-                    "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
-                    }
-                  waitForCompletion: 'true'
           
-          # - job: Post Deployment Tests
-          #   displayName: 'Post Deployment Tests'
-          #   dependsOn: WaitForFluxRelease
-          #   steps:
-          #   - bash: echo "Running Post Deployment Tests"
+          - ${{ if eq(deploymentEnv.name, 'snd1') }}: # Need to add other environments (snd2, snd3, dev1, tst1, pre1, prd1) incrementally as and when the Flux Notifications solution is ready in those environments.
+            - job: WaitForFluxRelease
+              displayName: 'Wait For Flux Release'
+              dependsOn: PublishTo${{ deploymentEnv.name }}
+              pool: server
+              variables:
+                - name: helmImageAddedToACRTime
+                  value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
+                - ${{ if eq(deploymentEnv.name, 'snd1') }}:
+                  - name: callBackServiceConnection
+                    value: 'AZD-ADP-FluxDeploymentApi-DEV1'
+                - ${{ elseif in(deploymentEnv.name, 'snd2', 'snd3') }}:
+                  - name: callBackServiceConnection
+                    value: 'AZD-ADP-FluxDeploymentApi-TST'
+                - ${{ elseif in(deploymentEnv.name, 'dev1', 'tst1', 'pre1', 'prd1') }}:
+                  - name: callBackServiceConnection
+                    value: 'AZD-ADP-FluxDeploymentApi-PRD'
+              timeoutInMinutes: 10
+              steps:            
+                - task: InvokeRESTAPI@1
+                  displayName: 'Call ADO controller api to check If Helmrelease is successfull'
+                  inputs:
+                    serviceConnection: '${{ variables.callBackServiceConnection }}'
+                    urlSuffix: 'api/AdoTask/execute'
+                    method: POST
+                    body: |
+                      {
+                      "serviceName": "${{ parameters.serviceName }}",
+                      "helmReleaseName": "${{ parameters.serviceName }}",
+                      "helmReleaseVersion": "$(appVersion)",
+                      "environment": "${{ deploymentEnv.name}}",
+                      "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
+                      }
+                    waitForCompletion: 'true'
+            
+            # - job: Post Deployment Tests
+            #   displayName: 'Post Deployment Tests'
+            #   dependsOn: WaitForFluxRelease
+            #   steps:
+            #   - bash: echo "Running Post Deployment Tests"
