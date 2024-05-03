@@ -265,8 +265,8 @@ stages:
         dependsOn:  [Initialise]
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
-          dockerCacheKey: 'docker | "${{ lower(parameters.appBuildConfig.imageRepoName) }}:$(appVersion)" | $(Build.BuildId) | cache'
-          helmCacheKey: 'helm | "${{ lower(parameters.appBuildConfig.imageRepoName) }}:$(appVersion)" | $(Build.BuildId) | cache'
+          dockerCacheKey: 'docker | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
+          helmCacheKey: 'helm | "${{ parameters.appBuildConfig.imageRepoName }}:$(appVersion)" | $(Build.BuildId) | cache'
         steps:
           - checkout: self
             path: s/
