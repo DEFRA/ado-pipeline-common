@@ -225,7 +225,7 @@ function Invoke-Publish {
         $acrHelmPath = "oci://$AcrName.azurecr.io/helm"
         if (Test-Path $PathToSaveChart -PathType Leaf) { 
 
-            Write-Host "Publising cached chart $acrHelmPath from $PathToSaveChart"
+            Write-Host "Publishing cached chart $acrHelmPath from $PathToSaveChart"
             Invoke-CommandLine -Command "helm push $PathToSaveChart $acrHelmPath"
         }
         else {                                   
@@ -326,7 +326,7 @@ try {
                     }
 
                     Invoke-CommandLine -Command "az acr login --name $AcrName"
-                    Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
+                    Invoke-Publish -HelmChartName $helmChartName.ToLower() -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
                 }
                 
             }
