@@ -24,11 +24,11 @@ steps:
   inputs:
     serviceConnectionEndpoint: ${{ parameters.snykConnection }} 
     testType: 'container'
-    dockerImageName:  ${{ lower(parameters.acrRepoName) }}:${{ parameters.acrRepoTagVersion }}
+    dockerImageName:  ${{ parameters.acrRepoName }}:${{ parameters.acrRepoTagVersion }}
     dockerfilePath: '${{ parameters.dockerfilePath }}'
     monitorOnBuild: false
     failOnIssues: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
-    projectName: '${{ lower(parameters.acrRepoName) }}'
+    projectName: '${{ parameters.acrRepoName }}'
     organization: '${{ parameters.snykOrganizationName }}'    
     failOnThreshold: '${{ parameters.failOnThreshold }}'
     additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }} --exclude-base-image-vulns'
