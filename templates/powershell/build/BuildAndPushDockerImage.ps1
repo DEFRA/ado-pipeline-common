@@ -187,7 +187,7 @@ try {
     #Application Image
     [string]$AcrName = $AcrName.ToLower()
     Write-Host "Processing Application Docker file: Dockerfile"
-    [string]$tagName = $AcrRepoName.ToLower() + ":" + $ImageVersion
+    [string]$tagName = $AcrRepoName + ":" + $ImageVersion
     [string]$AcrtagName = $AcrName + ".azurecr.io/image/" + $tagName
     Write-Debug "${functionName}:Docker Image=$tagName"
     Write-Debug "${functionName}:AcrtagName=$AcrtagName"
