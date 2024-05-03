@@ -493,35 +493,3 @@ stages:
                       "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
                       }
                     waitForCompletion: 'true'
-
-          
-          # - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
-          #   - deployment: PostDeploymentTests
-          #     condition:  |
-          #       or(
-          #         eq( variables.IsDefaultBranchBuild, true),
-          #         eq(${{ parameters.deployConfigOnly }}, true),
-          #         and(
-          #           or(
-          #             eq(variables.IsPrBuild, true),
-          #             eq(${{ parameters.deployFromFeature }},true)
-          #           ),
-          #           eq('${{ deploymentEnv.type }}','dev')
-          #         ) 
-          #       )
-          #     - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
-          #       dependsOn: WaitForFluxRelease
-          #       displayName: 'Publish To ${{ deploymentEnv.name }}'
-          #       environment: ${{ deploymentEnv.name }}
-          #       strategy:
-          #         runOnce:
-          #           deploy:          
-          #             steps:
-          #               # - ${{ if ne(parameters.appDeployConfig, '') }}:
-          #               #   - checkout: Self
-          #               #     path: s/ 
-          #               #   - checkout: PipelineCommon
-          #               #     path: s/ADO-Pipeline-Common
-          #                 - template: /templates/steps/post-deployment-tests.yaml
-          #                   parameters:
-          #                     url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
