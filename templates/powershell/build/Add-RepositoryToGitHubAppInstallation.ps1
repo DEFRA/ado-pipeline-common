@@ -47,11 +47,9 @@ Write-Debug "${functionName}:AppInstallationSlug=$AppInstallationSlug"
 try {
     Import-Module $PSHelperDirectory -Force  
     
-    Write-Debug "Get Github Org & Repo name"
-    [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
-    [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
-    [string]$gitOrgName = $giturl.split("/")[3] -replace "/$gitRepoName.git", ""
-    Write-Debug "Git config URL: $giturl"
+    Write-Debug "Get Github Org & Repo name from Build Vars"
+    [string]$gitOrgName = $($env:BUILD_REPOSITORY_NAME).split("/")[0]
+    [string]$gitRepoName = $($env:BUILD_REPOSITORY_NAME).split("/")[1]
 
     $headers = @{
         "Authorization"        = "Bearer " + $GithubPat

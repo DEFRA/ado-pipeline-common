@@ -53,10 +53,10 @@ try {
 
     [string]$latestReleaseTag = ''
     try {
-        [string]$giturl = Invoke-CommandLine -Command "git config --get remote.origin.url"
-        [string]$gitEndpoint = $giturl.split("/")[-2]
-        [string]$gitRepoName = $giturl.split("/")[-1] -replace ".git", ""
-        $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitEndpoint/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+        [string]$gitOrgName = $($env:BUILD_REPOSITORY_NAME).split("/")[0]
+        [string]$gitRepoName = $($env:BUILD_REPOSITORY_NAME).split("/")[1]
+
+        $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
     }
     catch {
         Write-Host "Release '$AppVersion' could not be found for the repository '$gitRepoName'."

@@ -334,6 +334,11 @@ stages:
                                       scriptsList: ${{ deployment.postDeployScriptsList }}
                                       variables: ${{ variables }}
                               - ${{ if eq(deployment.type, 'script') }}:
+                                - template: /templates/steps/initialize.yaml
+                                  parameters:
+                                    additionalRepositories: ${{ parameters.additionalRepositories }}
+                                    tokenReplaceLocations: ${{ parameters.filePathsForTransform }}
+                                    tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
                                 - template: /templates/steps/powershell.yaml
                                   parameters:
                                     azureResourceManagerConnection: "${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}"
