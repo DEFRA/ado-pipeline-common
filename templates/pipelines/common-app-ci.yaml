@@ -216,7 +216,7 @@ stages:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
               arguments: >
-                 -AcrRepoName '${{ lower(parameters.appBuildConfig.imageRepoName) }}' 
+                 -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                  -ImageVersion  $(appVersion) 
                  -ImageCachePath '$(Pipeline.Workspace)/docker' 
                  -Command 'build'
