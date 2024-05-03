@@ -316,17 +316,17 @@ try {
 
                     if ($chartDirectory.DirectoryName.Contains($InfraChartDirName)) {  
                         #Update KeyVault Secret Names in values.yaml file of infrastruture helm chart
-                        if ((Test-Path $chartCacheFilePath.ToLower() -PathType Leaf) -and (-not $KeyVaultVSecretNames.Equals("[]"))) { 
-                            Invoke-CommandLine -Command "tar zxf $chartCacheFilePath -C $ChartCachePath".ToLower()
-                            Remove-Item $chartCacheFilePath.ToLower()
-                            Update-KVSecretValues -InfraChartHomeDir "$ChartCachePath/$InfraChartDirName".ToLower() -ServiceName $ServiceName -KeyVaultVSecretNames $KeyVaultVSecretNames
-                            Push-Location $ChartCachePath.ToLower()
-                            Invoke-CommandLine -Command "tar czf $chartCacheFilePath $InfraChartDirName".ToLower()
+                        if ((Test-Path $chartCacheFilePath -PathType Leaf) -and (-not $KeyVaultVSecretNames.Equals("[]"))) { 
+                            Invoke-CommandLine -Command "tar zxf $chartCacheFilePath -C $ChartCachePath"
+                            Remove-Item $chartCacheFilePath
+                            Update-KVSecretValues -InfraChartHomeDir "$ChartCachePath/$InfraChartDirName" -ServiceName $ServiceName -KeyVaultVSecretNames $KeyVaultVSecretNames
+                            Push-Location $ChartCachePath
+                            Invoke-CommandLine -Command "tar czf $chartCacheFilePath $InfraChartDirName"
                         }                                                
                     }
 
                     Invoke-CommandLine -Command "az acr login --name $AcrName"
-                    Invoke-Publish -HelmChartName $helmChartName.ToLower() -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath.ToLower()
+                    Invoke-Publish -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
                 }
                 
             }
