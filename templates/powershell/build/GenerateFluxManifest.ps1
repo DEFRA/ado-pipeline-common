@@ -40,6 +40,45 @@ function Add-Environment {
     }
 }
 
+function Get-Environment {
+    param (
+        [Parameter(Mandatory)]
+        [string]$ApiBaseUri,
+        [Parameter(Mandatory)]
+        [string]$TeamName,
+        [Parameter(Mandatory)]
+        [string]$ServiceName,
+        [Parameter(Mandatory)]
+        [string]$Name
+    )
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
+        Write-Debug "${functionName}:TeamName=$TeamName"
+        Write-Debug "${functionName}:ServiceName=$ServiceName"
+        Write-Debug "${functionName}:Name=$Name"
+    }
+    process {
+        $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/services/$ServiceName/environments/$Name"
+        Write-Debug "${functionName}:Uri=$uri"
+        try {
+            return Invoke-RestMethod -Uri $uri -Method Get -ContentType "application/json"    
+        }
+        catch  {
+            if ($_.Exception.Response.StatusCode -eq 404) {
+                return $null
+            }
+            else {
+                throw $_
+            }
+        }
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
 function Add-FluxConfig {
     param (
         [Parameter(Mandatory)]
@@ -70,6 +109,36 @@ function Add-FluxConfig {
     }
 }
 
+function Update-EnvironmentManifest {
+    param (
+        [Parameter(Mandatory)]
+        [string]$ApiBaseUri,
+        [Parameter(Mandatory)]
+        [string]$TeamName,
+        [Parameter(Mandatory)]
+        [string]$ServiceName,
+        [Parameter(Mandatory)]
+        [string]$Name
+    )
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
+        Write-Debug "${functionName}:TeamName=$TeamName"
+        Write-Debug "${functionName}:ServiceName=$ServiceName"
+        Write-Debug "${functionName}:Name=$Name"
+    }
+    process {
+        $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/services/$ServiceName/environments/$Name/manifest"
+        Write-Debug "${functionName}:Uri=$uri"
+
+        return Invoke-RestMethod -Uri $uri -Method Patch -Body (@( { generate=$false }) | ConvertTo-Json)  -ContentType "application/json"
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
 
 Set-StrictMode -Version 3.0
 
@@ -94,12 +163,25 @@ Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:EnvName=$EnvName"
 
 try {
-    Write-Host "Adding environment '$EnvName' to service '$ServiceName' for team '$TeamName'"
-    Add-Environment -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName 
 
-    Write-Host "Generating flux config for service '$ServiceName' for team '$TeamName' in environment '$EnvName'"
-    Add-FluxConfig -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -EnvName $EnvName
-
+    Write-Host "Generating flux manifest for service '$ServiceName' for team '$TeamName' in environment '$EnvName'"
+    
+    $response = Get-Environment -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
+    $generate = $false
+    if ($null -eq $response) {
+        Add-Environment -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
+    }
+    elseif ($response.PSObject.Properties.Name -contains 'environment' -and $response.environment) {
+        $generate = $response.environment.manifest.generate -or ($response.environment.manifest.generatedVersion -lt $response.fluxTemplatesVersion)
+    }
+    
+    if ($null -eq $response -or $generate) {
+        Add-FluxConfig -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -EnvName $EnvName
+        Update-EnvironmentManifest -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
+    }
+         
+    Write-Host "Flux manifest generated successfully."
+    
     $exitCode = 0
 }
 catch {
