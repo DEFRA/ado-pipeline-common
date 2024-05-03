@@ -226,7 +226,7 @@ function Invoke-Publish {
         if (Test-Path $PathToSaveChart -PathType Leaf) { 
 
             Write-Host "Publishing cached chart $acrHelmPath from $PathToSaveChart"
-            Invoke-CommandLine -Command "helm push $PathToSaveChart $acrHelmPath"
+            Invoke-CommandLine -Command "helm push $PathToSaveChart $acrHelmPath".ToLower()
         }
         else {                                   
             Write-Host "Chart does not exist in cache. Publishing chart $acrHelmPath from current directory" 
