@@ -17,17 +17,22 @@ parameters:
   - name: snykPolicyFilePath
     type: string
     default: './.snyk'
+
+variables:
+- name: acrRepoNameLower
+  value: ${{ lower(parameters.acrRepoName }}
+
 steps:   
 - task: SnykSecurityScan@1
   displayName: 'Snyk containter scan'
   inputs:
     serviceConnectionEndpoint: ${{ parameters.snykConnection }} 
     testType: 'container'
-    dockerImageName:  ${{ parameters.acrRepoName }}:${{ parameters.acrRepoTagVersion }}
+    dockerImageName:  ${{ variables.acrRepoNameLower }}:${{ parameters.acrRepoTagVersion }}
     dockerfilePath: '${{ parameters.dockerfilePath }}'
     monitorOnBuild: false
     failOnIssues: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
-    projectName: '${{ parameters.acrRepoName }}'
+    projectName: '${{ variables.acrRepoNameLower }}'
     organization: '${{ parameters.snykOrganizationName }}'    
     failOnThreshold: '${{ parameters.failOnThreshold }}'
     additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }} --exclude-base-image-vulns'
