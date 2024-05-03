@@ -278,7 +278,7 @@ try {
 
     $helmChartsDirList | ForEach-Object {
 
-        $helmChartName = $_.Name
+        $helmChartName = $_.Name.ToLower()
         Write-Debug "${functionName}:helmChartName=$helmChartName"
 
         $chartDirectory = Get-ChildItem -Recurse -Path $(Join-Path -Path $chartHomeDir -ChildPath $helmChartName)  -Include Chart.yaml | Where-Object { $_.PSIsContainer -eq $false }
