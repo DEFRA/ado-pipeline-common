@@ -476,15 +476,6 @@ stages:
               variables:
                 - name: helmImageAddedToACRTime
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
-                # - ${{ if eq(deploymentEnv.name, 'snd1') }}:
-                #   - name: callBackServiceConnection
-                #     value: 'AZD-ADP-FluxDeploymentApi-DEV1'
-                # - ${{ elseif in(deploymentEnv.name, 'snd2', 'snd3') }}:
-                #   - name: callBackServiceConnection
-                #     value: 'AZD-ADP-FluxDeploymentApi-TST'
-                # - ${{ elseif in(deploymentEnv.name, 'dev1', 'tst1', 'pre1', 'prd1') }}:
-                #   - name: callBackServiceConnection
-                #     value: 'AZD-ADP-FluxDeploymentApi-PRD'
               timeoutInMinutes: 10
               steps:            
                 - task: InvokeRESTAPI@1
