@@ -19,8 +19,8 @@ parameters:
     default: './.snyk'
 
 variables:
-- name: acrRepoNameLower
-  value: ${{ lower(parameters.acrRepoName }}
+  - name: acrRepoNameLower
+    value: ${{ lower(parameters.acrRepoName }}
 
 steps:   
 - task: SnykSecurityScan@1
