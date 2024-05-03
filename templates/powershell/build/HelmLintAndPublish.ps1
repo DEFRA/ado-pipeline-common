@@ -326,7 +326,7 @@ try {
                     }
 
                     Invoke-CommandLine -Command "az acr login --name $AcrName"
-                    Invoke-Publish -HelmChartName $helmChartName.ToLower() -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath
+                    Invoke-Publish -HelmChartName $helmChartName.ToLower() -ChartVersion $ChartVersion -PathToSaveChart $chartCacheFilePath.ToLower()
                 }
                 
             }
