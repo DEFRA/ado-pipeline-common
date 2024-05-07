@@ -1,4 +1,6 @@
 parameters:
+- name: teamName
+  type: string
 - name: serviceName
   type: string
 - name: deployFromFeature
@@ -6,7 +8,7 @@ parameters:
   default: false  
 - name: deployConfigOnly
   type: boolean
-  default: false   
+  default: false
 - name: agentImage
   type: string
   default: 'ubuntu-latest'
@@ -417,6 +419,13 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
+                      - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
+                        - template: /templates/steps/generate-flux-manifest.yaml
+                          parameters:
+                            ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
+                            TeamName: ${{ parameters.teamName }}
+                            ServiceName: ${{ parameters.serviceName }}
+                            EnvName: ${{ deploymentEnv.name }}
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
                         - template: /templates/steps/secrets-import-kv.yaml	                          
                           parameters:
