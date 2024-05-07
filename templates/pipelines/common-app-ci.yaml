@@ -507,6 +507,19 @@ stages:
                     serviceConnection: 'AZD-ADP-AdoCallbackApi-${{ deploymentEnv.adoCallBackApiEnv }}'
                     urlSuffix: 'api/AdoTask/execute'
                     method: POST
+                    headers: : |
+                      {
+                      "Content-Type": "application/json",
+                      "PlanUrl": "$(system.CollectionUri)",
+                      "ProjectId": "$(system.TeamProjectId)",
+                      "HubName": "$(system.HostType)",
+                      "PlanId": "$(system.PlanId)",
+                      "JobId": "$(system.JobId)",
+                      "TimelineId": "$(system.TimelineId)",
+                      "TaskInstanceId": "$(system.TaskInstanceId)",
+                      "AuthToken": "$(system.AccessToken)",
+                      "Authorization": $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
+                      }
                     body: |
                       {
                       "serviceName": "${{ parameters.serviceName }}",
