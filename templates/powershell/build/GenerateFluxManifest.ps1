@@ -165,21 +165,20 @@ Write-Debug "${functionName}:EnvName=$EnvName"
 try {
 
     Write-Host "Generating flux manifest for service '$ServiceName' for team '$TeamName' in environment '$EnvName'"
-    
     $response = Get-Environment -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
     $generate = $false
+    
     if ($null -eq $response) {
         Add-Environment -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
-    }
-    elseif ($response.PSObject.Properties.Name -contains 'environment' -and $response.environment) {
-        $generate = $response.environment.manifest.generate -or ($response.environment.manifest.generatedVersion -lt $response.fluxTemplatesVersion)
+    } elseif ($response.PSObject.Properties.Name -contains 'environment' -and $response.environment) {
+        $generate = $null -eq $response.environment.manifest ? $true : $response.environment.manifest.generate -or ($response.environment.manifest.generatedVersion -lt $response.fluxTemplatesVersion)
     }
     
     if ($null -eq $response -or $generate) {
         Add-FluxConfig -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -EnvName $EnvName
         Update-EnvironmentManifest -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
     }
-         
+    
     Write-Host "Flux manifest generated successfully."
     
     $exitCode = 0
