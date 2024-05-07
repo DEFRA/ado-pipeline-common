@@ -499,6 +499,8 @@ stages:
               variables:
                 - name: helmImageAddedToACRTime
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
+                - name: token
+                  value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
               timeoutInMinutes: 10
               steps:  
                 - task: InvokeRESTAPI@1
@@ -518,7 +520,7 @@ stages:
                       "TimelineId": "$(system.TimelineId)",
                       "TaskInstanceId": "$(system.TaskInstanceId)",
                       "AuthToken": "$(system.AccessToken)",
-                      "Authorization": $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
+                      "Authorization": "$[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]"
                       }
                     body: |
                       {
