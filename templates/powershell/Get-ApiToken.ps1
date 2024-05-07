@@ -61,11 +61,9 @@ try {
         Client_Secret = $ClientSecret
     }
     $accessToken = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$($TenantId)/oauth2/v2.0/token" -Method POST -Body $reqTokenBody -ErrorAction Stop
-    $authHeader = @{
-        'Authorization' = "Bearer $($accessToken.access_token)"
-    }
+    $authHeaderValue = "Bearer $($accessToken.access_token)"
 
-    Write-Host "##vso[task.setvariable variable=adoCallBackApiAuthHeader;issecret=true;isoutput=true]$($authHeader)"
+    Write-Host "##vso[task.setvariable variable=adoCallBackApiAuthHeader;issecret=true;isoutput=true]$($authHeaderValue)"
 
     $exitCode = 0    
 }
