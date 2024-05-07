@@ -56,7 +56,7 @@ try {
 
     $reqTokenBody = @{
         Grant_Type    = "client_credentials"
-        Scope         = "api://$BackendClientID /.default"
+        Scope         = "api://$BackendClientID/.default"
         client_Id     = $ClientID
         Client_Secret = $ClientSecret
     }
