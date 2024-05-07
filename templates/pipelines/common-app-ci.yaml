@@ -453,7 +453,7 @@ stages:
                       
                       - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
                         - task: PowerShell@2
-                          displayName: 'Set Image added to ACR time used to check Flux Helm Release'
+                          displayName: 'Use ACR image timestamp to verify Flux Helm release'
                           name: setAcrImageAddedTime
                           inputs:
                             targetType: inline
@@ -479,7 +479,7 @@ stages:
               timeoutInMinutes: 10
               steps:            
                 - task: InvokeRESTAPI@1
-                  displayName: 'Call ADO controller api to check If Helmrelease is successfull'
+                  displayName: 'Check If Release Has Succeeded (reconciled)'
                   inputs:
                     serviceConnection: 'AZD-ADP-AdoCallbackApi-${{ deploymentEnv.adoCallBackApiEnv }}'
                     urlSuffix: 'api/AdoTask/execute'
