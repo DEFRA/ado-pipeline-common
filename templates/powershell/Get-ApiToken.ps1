@@ -41,7 +41,6 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
-Write-Debug "${functionName}:SecretName=$SecretName"
 
 try {
     $a = "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID"
@@ -49,7 +48,7 @@ try {
     $c = "API-AUTH-BACKEND-APP-REG-CLIENT-ID"
     $d = "ADP-PORTAL-AUTH-APP-REG-TENANT-ID"
 
-    Write-Host "Fetching Keyvault secret $($SecretName) from KeyVaultName $($KeyVaultName)"
+    Write-Host "Fetching Keyvault secret from KeyVaultName $($KeyVaultName)"
     [string]$ClientID = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $a -AsPlainText -ErrorAction Stop
     [string]$ClientSecret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $b -AsPlainText -ErrorAction Stop
     [string]$BackendClientID = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $c -AsPlainText -ErrorAction Stop
