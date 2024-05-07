@@ -471,6 +471,20 @@ stages:
                             failOnStderr: false
                             pwsh: true
                             workingDirectory: '$(Pipeline.Workspace)/s' 
+
+                        - task: AzurePowerShell@5
+                          displayName: 'Generate Api Token'
+                          name: GenerateApiToken
+                          inputs:
+                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
+                            ScriptType: FilePath
+                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-ApiToken.ps1'
+                            ScriptArguments: >
+                                -KeyVaultName ${{ deploymentEnv.sharedKeyvault }} 
+                            FailOnStandardError: true
+                            azurePowerShellVersion: 'LatestVersion'
+                            pwsh: true
+                            workingDirectory: '$(Pipeline.Workspace)/s'     
           
                       - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
                         - template: /templates/steps/post-deployment-tests.yaml
@@ -486,7 +500,7 @@ stages:
                 - name: helmImageAddedToACRTime
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
               timeoutInMinutes: 10
-              steps:            
+              steps:  
                 - task: InvokeRESTAPI@1
                   displayName: 'Check If Release Has Succeeded (reconciled)'
                   inputs:
