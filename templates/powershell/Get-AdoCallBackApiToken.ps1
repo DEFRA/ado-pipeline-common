@@ -31,7 +31,7 @@ Set-StrictMode -Version 3.0
 
 [int]$exitCode = -1
 [bool]$setHostExitCode = (Test-Path -Path ENV:TF_BUILD) -and ($ENV:TF_BUILD -eq "true")
-[bool]$enableDebug = (Test-Path -Path ENV:SYSTEM_DEBUG) -and ($ENV:SYSTEM_DEBUG -eq "true")
+[bool]$enableDebug = $false
 
 Set-Variable -Name ErrorActionPreference -Value Continue -scope global
 Set-Variable -Name InformationPreference -Value Continue -Scope global
