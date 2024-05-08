@@ -459,8 +459,77 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
+                      
+                      - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
+                        - task: PowerShell@2
+                          displayName: 'Use ACR image timestamp to verify Flux Helm release'
+                          name: setAcrImageAddedTime
+                          inputs:
+                            targetType: inline
+                            script: |
+                              Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+                            failOnStderr: false
+                            pwsh: true
+                            workingDirectory: '$(Pipeline.Workspace)/s' 
 
-                      - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
-                        - template: /templates/steps/post-deployment-tests.yaml
-                          parameters:
-                            url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
+                        - task: AzurePowerShell@5
+                          displayName: 'Generate Api Token'
+                          name: GenerateApiToken
+                          inputs:
+                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
+                            ScriptType: FilePath
+                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
+                            ScriptArguments: >
+                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
+                                -TenantId ${{ deploymentEnv.tenantId }}
+                            FailOnStandardError: true
+                            azurePowerShellVersion: 'LatestVersion'
+                            pwsh: true
+                            workingDirectory: '$(Pipeline.Workspace)/s'     
+          
+                      # - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
+                      #   - template: /templates/steps/post-deployment-tests.yaml
+                      #     parameters:
+                      #       url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
+          
+          - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
+            - job: WaitForFluxRelease
+              displayName: 'Wait For Flux Release'
+              dependsOn: PublishTo${{ deploymentEnv.name }}
+              pool: server
+              variables:
+                - name: helmImageAddedToACRTime
+                  value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
+                - name: token
+                  value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
+              timeoutInMinutes: 10
+              steps:                  
+                - task: InvokeRESTAPI@1
+                  displayName: 'Check If Release Has Succeeded (reconciled)'
+                  inputs:
+                    serviceConnection: 'AZD-ADP-AdoCallbackApi-${{ deploymentEnv.adoCallBackApiEnv }}'
+                    urlSuffix: 'api/AdoTask/execute'
+                    method: POST
+                    headers: |
+                      {
+                      "Content-Type": "application/json",
+                      "PlanUrl": "$(system.CollectionUri)",
+                      "ProjectId": "$(system.TeamProjectId)",
+                      "HubName": "$(system.HostType)",
+                      "PlanId": "$(system.PlanId)",
+                      "JobId": "$(system.JobId)",
+                      "TimelineId": "$(system.TimelineId)",
+                      "TaskInstanceId": "$(system.TaskInstanceId)",
+                      "AuthToken": "$(system.AccessToken)",
+                      "Authorization": "$(token)"
+                      }
+                    body: |
+                      {
+                      "serviceName": "${{ parameters.serviceName }}",
+                      "helmReleaseName": "${{ parameters.serviceName }}",
+                      "helmReleaseVersion": "$(appVersion)",
+                      "environment": "${{ deploymentEnv.name }}",
+                      "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
+                      }
+                    waitForCompletion: 'true'
+
