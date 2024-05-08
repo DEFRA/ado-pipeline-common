@@ -478,9 +478,10 @@ stages:
                           inputs:
                             azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
                             ScriptType: FilePath
-                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-ApiToken.ps1'
+                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
                             ScriptArguments: >
-                                -KeyVaultName ${{ deploymentEnv.sharedKeyvault }} 
+                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
+                                -TenantId ${{ deploymentEnv.tenantId }}
                             FailOnStandardError: true
                             azurePowerShellVersion: 'LatestVersion'
                             pwsh: true
@@ -531,4 +532,4 @@ stages:
                       "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
                       }
                     waitForCompletion: 'true'
-   
+

@@ -8,18 +8,20 @@ Get keyvault secret and store it in task variable.
 .PARAMETER KeyVaultName
 Mandatory. KeyVault Name.
 
-.PARAMETER -SecretName
-Mandatory. Secret Name.
+.PARAMETER -TenantId
+Mandatory. Tenant Id.
 
 
 .EXAMPLE
-.\Get-KeyVaultSecret KeyVaultName <KeyVaultName> -SecretName <SecretName> 
+.\Get-KeyVaultSecret KeyVaultName <KeyVaultName> -TenantId <TenantId> 
 #> 
 
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)] 
-    [string]$KeyVaultName
+    [string]$KeyVaultName,
+    [Parameter(Mandatory)] 
+    [string]$TenantId
 )
 
 Set-StrictMode -Version 3.0
@@ -41,29 +43,24 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
+Write-Debug "${functionName}:TenantId=$TenantId"
 
 try {
-    $a = "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID"
-    $b = "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET"
-    $c = "API-AUTH-BACKEND-APP-REG-CLIENT-ID"
-    $d = "ADP-PORTAL-AUTH-APP-REG-TENANT-ID"
-
-    Write-Host "Fetching Keyvault secret from KeyVaultName $($KeyVaultName)"
-    [string]$ClientID = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $a -AsPlainText -ErrorAction Stop
-    [string]$ClientSecret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $b -AsPlainText -ErrorAction Stop
-    [string]$BackendClientID = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $c -AsPlainText -ErrorAction Stop
-    [string]$TenantId = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $d -AsPlainText -ErrorAction Stop
+    Write-Host "Fetching Keyvault secrets from KeyVaultName $($KeyVaultName)"
+    [string]$AdoCallBackApiClientAppClientId = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID" -AsPlainText -ErrorAction Stop
+    [string]$AdoCallBackApiClientAppClientSecret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET" -AsPlainText -ErrorAction Stop
+    [string]$ApiAuthBackendAppClientID = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "API-AUTH-BACKEND-APP-REG-CLIENT-ID" -AsPlainText -ErrorAction Stop
 
     $reqTokenBody = @{
         Grant_Type    = "client_credentials"
-        Scope         = "api://$BackendClientID/.default"
-        client_Id     = $ClientID
-        Client_Secret = $ClientSecret
+        Scope         = "api://$ApiAuthBackendAppClientID/.default"
+        client_Id     = $AdoCallBackApiClientAppClientId
+        Client_Secret = $AdoCallBackApiClientAppClientSecret
     }
     $accessToken = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$($TenantId)/oauth2/v2.0/token" -Method POST -Body $reqTokenBody -ErrorAction Stop
     $authHeaderValue = "Bearer $($accessToken.access_token)"
 
-    Write-Host "##vso[task.setvariable variable=adoCallBackApiAuthHeader;isoutput=true]$($authHeaderValue)"
+    Write-Host "##vso[task.setvariable variable=adoCallBackApiAuthHeader;isoutput=true;issecret=true]$($authHeaderValue)"
 
     $exitCode = 0    
 }
