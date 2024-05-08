@@ -31,7 +31,7 @@ Set-StrictMode -Version 3.0
 
 [int]$exitCode = -1
 [bool]$setHostExitCode = (Test-Path -Path ENV:TF_BUILD) -and ($ENV:TF_BUILD -eq "true")
-[bool]$enableDebug = $false
+[bool]$enableDebug = (Test-Path -Path ENV:SYSTEM_DEBUG) -and ($ENV:SYSTEM_DEBUG -eq "true")
 
 Set-Variable -Name ErrorActionPreference -Value Continue -scope global
 Set-Variable -Name InformationPreference -Value Continue -Scope global
@@ -47,9 +47,9 @@ Write-Debug "${functionName}:TenantId=$TenantId"
 
 try {
     Write-Host "Fetching Keyvault secrets from KeyVaultName $($KeyVaultName)"
-    [string]$AdoCallBackApiClientAppClientId = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID" -AsPlainText -ErrorAction Stop
-    [string]$AdoCallBackApiClientAppClientSecret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET" -AsPlainText -ErrorAction Stop
-    [string]$ApiAuthBackendAppClientID = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "API-AUTH-BACKEND-APP-REG-CLIENT-ID" -AsPlainText -ErrorAction Stop
+    [string]$AdoCallBackApiClientAppClientId = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID" -AsPlainText -ErrorAction Stop -Debug:$false
+    [string]$AdoCallBackApiClientAppClientSecret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET" -AsPlainText -ErrorAction Stop -Debug:$false
+    [string]$ApiAuthBackendAppClientID = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name "API-AUTH-BACKEND-APP-REG-CLIENT-ID" -AsPlainText -ErrorAction Stop -Debug:$false
 
     $reqTokenBody = @{
         Grant_Type    = "client_credentials"
