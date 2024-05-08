@@ -531,15 +531,4 @@ stages:
                       "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
                       }
                     waitForCompletion: 'true'
-
-                - task: PowerShell@2
-                  displayName: 'debug token'
-                  name: debugToken
-                  inputs:
-                    targetType: inline
-                    script: |
-                      Write-Host "Printing...."
-                      Write-Host "$(token)"
-                    failOnStderr: true
-                    pwsh: true
-                    workingDirectory: '$(Pipeline.Workspace)/s'    
+   
