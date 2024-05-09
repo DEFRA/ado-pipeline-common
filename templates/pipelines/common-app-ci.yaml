@@ -502,7 +502,7 @@ stages:
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
                 - name: token
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
-              timeoutInMinutes: 10
+              timeoutInMinutes: 20
               steps:                  
                 - task: InvokeRESTAPI@1
                   displayName: 'Check If Release Has Succeeded (reconciled)'
