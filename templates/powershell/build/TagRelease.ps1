@@ -55,7 +55,12 @@ try {
     try {
         [string]$gitOrgName = $($env:BUILD_REPOSITORY_NAME).split("/")[0]
         [string]$gitRepoName = $($env:BUILD_REPOSITORY_NAME).split("/")[1]
-
+        $test=Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest
+        Write-Host "basic '$test'"
+        $test2 = (Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content
+        Write-Host "content '$test2'"
+        $test3 = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json)
+        Write-Host "json '$test3'"
         $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
     }
     catch {
