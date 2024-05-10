@@ -43,7 +43,7 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AppVersion=$AppVersion"
 Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
-Write-Output "${functionName}:GithubPat=$GithubPat"
+
 try {
     Import-Module $PSHelperDirectory -Force  
     $exists = Invoke-CommandLine -Command "git tag -l '$AppVersion'"

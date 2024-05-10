@@ -5,12 +5,10 @@ parameters:
     type: string 
   - name: PSHelperDirectory
     type: string
-
 steps:  
 - checkout: self
   path: s/source
   persistCredentials: true
-
 
 - task: AzureKeyVault@2
   displayName: Read KV Secrets
