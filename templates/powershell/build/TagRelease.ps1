@@ -9,9 +9,9 @@ Mandatory. Application version
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
 .PARAMETER GithubPat
-optional. Github Personel Access Token
+Optional. Github Personel Access Token
 .EXAMPLE
-.\TagRelease.ps1 -AppVersion <AppVersion>
+.\TagRelease.ps1 -AppVersion <AppVersion> -PSHelperDirectory <PSHelperDirectory> -GithubPat <GithubPat>
 #> 
 
 [CmdletBinding()]
@@ -50,10 +50,10 @@ try {
     if ($exists) { 
         Write-Host "Tag already exists"
     }    
-    #Invoke-CommandLine -Command "git tag $AppVersion --force"
-    #Invoke-CommandLine -Command "git push origin $AppVersion"
+    Invoke-CommandLine -Command "git tag $AppVersion --force"
+    Invoke-CommandLine -Command "git push origin $AppVersion"
 
-    #Write-Host "Tag $AppVersion updated to latest commit"
+    Write-Host "Tag $AppVersion updated to latest commit"
 
     [string]$latestReleaseTag = ''
     try {
@@ -67,15 +67,12 @@ try {
             "X-GitHub-Api-Version" = "2022-11-28"
         }
     
-        Write-Debug "Get the repository ID..."
-        [Object]$repo = ((Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers) | ConvertFrom-Json).tag_name
-        Write-Host "repo '$repo'"
-        #$latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+        [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers
+        $latestReleaseTag=$repo.tag_name
     }
     catch {
-        Write-Host "Release '$AppVersion' could not be found for the repository '$gitRepoName'."
-        Write-Host $_
-        $exitCode = -2
+        Write-Host "Release details could not be fetched for the repository '$gitRepoName'."
+        throw $_.Exception
     }
     
     if ($latestReleaseTag -eq $AppVersion) {
@@ -83,7 +80,7 @@ try {
         Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
     }
     else {
-        Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
+        Write-Output "##vso[task.setvariable variable=ReleaseExists]false"
     }
     $exitCode = 0
 }

@@ -109,7 +109,6 @@ stages:
           - template: /templates/steps/tag-and-release.yaml
             parameters:
               appBuildConfig: ${{ parameters.appBuildConfig }}
-              GithubPat: $(ADP-PLATFORM-GITHUB-PatToken)
               appVersion: $(GetAppVersion.appVersion)
               PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
