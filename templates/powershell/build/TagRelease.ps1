@@ -60,6 +60,7 @@ try {
     }
     catch {
         Write-Host "Release '$AppVersion' could not be found for the repository '$gitRepoName'."
+        Write-Host $_
     }
     
     if ($latestReleaseTag -eq $AppVersion) {
@@ -67,7 +68,7 @@ try {
         Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
     }
     else {
-        Write-Output "##vso[task.setvariable variable=ReleaseExists]false"
+        Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
     }
     $exitCode = 0
 }
