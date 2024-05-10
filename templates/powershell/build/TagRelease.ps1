@@ -8,6 +8,8 @@ Set Tag for repository
 Mandatory. Application version
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
+.PARAMETER GithubPat
+optional. Github Personel Access Token
 .EXAMPLE
 .\TagRelease.ps1 -AppVersion <AppVersion>
 #> 
@@ -17,7 +19,8 @@ param(
     [Parameter(Mandatory)]
     [string] $AppVersion,
     [Parameter(Mandatory)]
-    [string]$PSHelperDirectory
+    [string]$PSHelperDirectory,
+    [string]$GithubPat
 )
 
 Set-StrictMode -Version 3.0
@@ -55,15 +58,21 @@ try {
     try {
         [string]$gitOrgName = $($env:BUILD_REPOSITORY_NAME).split("/")[0]
         [string]$gitRepoName = $($env:BUILD_REPOSITORY_NAME).split("/")[1]
-        Write-Host "gitOrgName '$gitOrgName'"
-        Write-Host "gitRepoName '$gitRepoName'"
-        $test=Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest
-        Write-Host "basic '$test'"
-        $test2 = (Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content
-        Write-Host "content '$test2'"
-        $test3 = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json)
-        Write-Host "json '$test3'"
-        $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+        
+        $headers = @{
+            "Authorization"        = "Bearer " + $GithubPat
+            "Accept"               = "application/vnd.github+json"
+            "ContentType"          = "application/json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+        }
+    
+        Write-Debug "Get the repository ID..."
+        [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers
+        [string]$status = $repo.StatusCode
+
+        Write-Host "repo '$repo'"
+        Write-Host "status '$status'"
+        #$latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
     }
     catch {
         Write-Host "Release '$AppVersion' could not be found for the repository '$gitRepoName'."
