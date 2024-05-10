@@ -68,6 +68,7 @@ try {
     catch {
         Write-Host "Release '$AppVersion' could not be found for the repository '$gitRepoName'."
         Write-Host $_
+        $exitCode = -2
     }
     
     if ($latestReleaseTag -eq $AppVersion) {
