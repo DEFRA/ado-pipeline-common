@@ -55,6 +55,8 @@ try {
     try {
         [string]$gitOrgName = $($env:BUILD_REPOSITORY_NAME).split("/")[0]
         [string]$gitRepoName = $($env:BUILD_REPOSITORY_NAME).split("/")[1]
+        Write-Host "gitOrgName '$gitOrgName'"
+        Write-Host "gitRepoName '$gitRepoName'"
         $test=Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest
         Write-Host "basic '$test'"
         $test2 = (Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content
