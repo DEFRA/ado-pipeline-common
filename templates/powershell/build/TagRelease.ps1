@@ -66,9 +66,11 @@ try {
             "ContentType"          = "application/json"
             "X-GitHub-Api-Version" = "2022-11-28"
         }
-    
-        [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers
-        $latestReleaseTag=$repo.tag_name
+        [Object]$releases = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases" -f $gitOrgName, $gitRepoName) -Headers $headers
+        if($releases){
+            [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers
+            $latestReleaseTag=$repo.tag_name
+        }
     }
     catch {
         Write-Host "Release details could not be fetched for the repository '$gitRepoName'."
