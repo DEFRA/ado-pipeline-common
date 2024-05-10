@@ -68,7 +68,7 @@ try {
         }
     
         Write-Debug "Get the repository ID..."
-        [Object]$repo = ((Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers).Content | ConvertFrom-Json).tag_name
+        [Object]$repo = ((Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers) | ConvertFrom-Json).tag_name
         Write-Host "repo '$repo'"
         #$latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
     }
