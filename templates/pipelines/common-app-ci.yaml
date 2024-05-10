@@ -73,7 +73,6 @@ stages:
 
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
-            ref: refs/heads/rv/debug-release
 
           - ${{ if ne(parameters.appBuildConfig.keyVaultName, '') }}:
             - task: AzureKeyVault@2
