@@ -106,6 +106,12 @@ stages:
                 Write-Host "##vso[build.updatebuildnumber]$(GetAppVersion.appVersion)-$(RunDate)-$(Revision)"
                 Write-Host "##vso[task.setvariable variable=appVersion]$(GetAppVersion.appVersion)"
 
+          - template: /templates/steps/tag-and-release.yaml
+            parameters:
+              appBuildConfig: ${{ parameters.appBuildConfig }}
+              appVersion: $(GetAppVersion.appVersion)
+              PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+
           - task: PowerShell@2
             condition:  |
               and(
@@ -360,12 +366,12 @@ stages:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
           
-        
-          - template: /templates/steps/tag-and-release.yaml
-            parameters:
-              appBuildConfig: ${{ parameters.appBuildConfig }}
-              appVersion: $(appVersion)
-              PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+          - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
+            - template: /templates/steps/tag-and-release.yaml
+              parameters:
+                appBuildConfig: ${{ parameters.appBuildConfig }}
+                appVersion: $(appVersion)
+                PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
   - ${{ each deploymentEnv in parameters.environments }}:  
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:
