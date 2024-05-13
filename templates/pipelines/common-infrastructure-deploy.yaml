@@ -98,7 +98,7 @@ stages:
                               Type: PowerShell
                             scriptArguments: >
                               -TemplateName "${{ deployment.name }}"
-                              -TemplatePath "$(Pipeline.Workspace)/s/self/${{ deployment.path }}"
+                              -TemplatePath "$(Pipeline.Workspace)/s/${{ coalesce(deployment.scriptRepo, 'self') }}/${{ deployment.path }}"
                         
                         - displayName: ARM ttk - ${{ deployment.name }}
                           scriptRepo: PipelineCommonFiles
@@ -106,7 +106,7 @@ stages:
                           Type: PowerShell
                           azurePowershellUseCore: true
                           scriptArguments:
-                            -TemplateFile $(Build.SourcesDirectory)\self\${{ deployment.path }}\${{ deployment.name }}.json
+                            -TemplateFile $(Build.SourcesDirectory)\${{ coalesce(deployment.scriptRepo, 'self') }}\${{ deployment.path }}\${{ deployment.name }}.json
                   
                   - template: /templates/steps/validate-deploy-arm-template.yaml
                     parameters:
@@ -181,7 +181,7 @@ stages:
                               templateName: ${{ deployment.name }}
                               templateType: ${{ deployment.type }}
                               parameterFilePath: ${{ deployment.parameterFilePath }}
-                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                              templatePath: $(Build.SourcesDirectory)/${{ coalesce(deployment.scriptRepo, 'self') }}/${{ deployment.path }}
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -219,7 +219,7 @@ stages:
                               templateName: ${{ deployment.name }}
                               templateType: ${{ deployment.type }}
                               parameterFilePath: ${{ deployment.parameterFilePath }}
-                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                              templatePath: $(Build.SourcesDirectory)/${{ coalesce(deployment.scriptRepo, 'self') }}/${{ deployment.path }}
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -319,7 +319,7 @@ stages:
                                     templateName: ${{ deployment.name }}
                                     templateType: ${{ deployment.type }}
                                     parameterFilePath: ${{ deployment.parameterFilePath }}
-                                    templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                                    templatePath: $(Build.SourcesDirectory)/${{ coalesce(deployment.scriptRepo, 'self') }}/${{ deployment.path }}
                                     location: ${{ variables.location }}
                                     resourceGroup: '${{ deployment.resourceGroupName }}'
                                     connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
