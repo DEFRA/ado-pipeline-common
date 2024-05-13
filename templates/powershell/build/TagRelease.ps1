@@ -8,8 +8,10 @@ Set Tag for repository
 Mandatory. Application version
 .PARAMETER PSHelperDirectory
 Mandatory. Directory Path of PSHelper module
+.PARAMETER GithubPat
+Optional. Github Personel Access Token
 .EXAMPLE
-.\TagRelease.ps1 -AppVersion <AppVersion>
+.\TagRelease.ps1 -AppVersion <AppVersion> -PSHelperDirectory <PSHelperDirectory> -GithubPat <GithubPat>
 #> 
 
 [CmdletBinding()]
@@ -17,7 +19,8 @@ param(
     [Parameter(Mandatory)]
     [string] $AppVersion,
     [Parameter(Mandatory)]
-    [string]$PSHelperDirectory
+    [string]$PSHelperDirectory,
+    [string]$GithubPat
 )
 
 Set-StrictMode -Version 3.0
@@ -40,6 +43,7 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AppVersion=$AppVersion"
 Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
+
 try {
     Import-Module $PSHelperDirectory -Force  
     $exists = Invoke-CommandLine -Command "git tag -l '$AppVersion'"
@@ -55,11 +59,22 @@ try {
     try {
         [string]$gitOrgName = $($env:BUILD_REPOSITORY_NAME).split("/")[0]
         [string]$gitRepoName = $($env:BUILD_REPOSITORY_NAME).split("/")[1]
-
-        $latestReleaseTag = ((Invoke-WebRequest -Uri https://api.github.com/repos/$gitOrgName/$gitRepoName/releases/latest).Content | ConvertFrom-Json).tag_name
+        
+        $headers = @{
+            "Authorization"        = "Bearer " + $GithubPat
+            "Accept"               = "application/vnd.github+json"
+            "ContentType"          = "application/json"
+            "X-GitHub-Api-Version" = "2022-11-28"
+        }
+        [Object]$releases = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases" -f $gitOrgName, $gitRepoName) -Headers $headers
+        if($releases){
+            [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers
+            $latestReleaseTag=$repo.tag_name
+        }
     }
     catch {
-        Write-Host "Release '$AppVersion' could not be found for the repository '$gitRepoName'."
+        Write-Host "Release details could not be fetched for the repository '$gitRepoName'."
+        throw $_.Exception
     }
     
     if ($latestReleaseTag -eq $AppVersion) {
