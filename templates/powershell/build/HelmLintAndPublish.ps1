@@ -166,6 +166,10 @@ function Invoke-HelmLintAndBuild {
         
         Invoke-CommandLine -Command "helm lint"
 
+        Invoke-CommandLine -Command "helm template --debug"
+
+        Invoke-CommandLine -Command "helm install --dry-run --debug"
+
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
         Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $ChartCachePath"
