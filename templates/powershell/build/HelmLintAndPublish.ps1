@@ -52,6 +52,9 @@ function Update-KVSecretValues {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:InfraChartHomeDir=$InfraChartHomeDir"
+        Write-Debug "${functionName}:ServiceName=$ServiceName"
+        Write-Debug "${functionName}:KeyVaultVSecretNames=$KeyVaultVSecretNames"
     }
     process {
         if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
@@ -125,6 +128,7 @@ function Invoke-HelmLint {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:HelmChartName=$HelmChartName"
     }
     process {
         Write-Host "Build Helm dependencies for $HelmChartName"
@@ -155,6 +159,9 @@ function Invoke-HelmLintAndBuild {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:HelmChartName=$HelmChartName"
+        Write-Debug "${functionName}:ChartVersion=$ChartVersion"
+        Write-Debug "${functionName}:PathToSaveChart=$PathToSaveChart"
     }
     process {
         try {
@@ -192,6 +199,9 @@ function Invoke-HelmBuild {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:HelmChartName=$HelmChartName"
+        Write-Debug "${functionName}:ChartVersion=$ChartVersion"
+        Write-Debug "${functionName}:PathToSaveChart=$PathToSaveChart"
     }
     process {
         try {
@@ -223,6 +233,9 @@ function Invoke-Publish {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:HelmChartName=$HelmChartName"
+        Write-Debug "${functionName}:ChartVersion=$ChartVersion"
+        Write-Debug "${functionName}:PathToSaveChart=$PathToSaveChart"
     }
     process {
         Write-Host "Publishing Helm chart $HelmChartName"
