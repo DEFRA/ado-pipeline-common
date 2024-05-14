@@ -192,9 +192,7 @@ function Invoke-HelmValidateAndBuild {
         }
 
         if($LASTEXITCODE -ne 0) {
-            Write-Error $results[0]
-            Write-Host "##vso[task.logissue type=error]$results[0]"
-            throw "Helm template failed"
+            Write-Host "##vso[task.logissue type=error]$($results[0])"
         }
 
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
