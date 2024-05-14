@@ -147,14 +147,15 @@ function Invoke-HelmLint {
     }
 }
 
-function Invoke-HelmLintAndBuild {
+function Invoke-HelmValidateAndBuild {
     param(
         [Parameter(Mandatory)]
         [string]$HelmChartName,
         [Parameter(Mandatory)]
         [string]$ChartVersion,
         [Parameter(Mandatory)]
-        [string]$PathToSaveChart
+        [string]$PathToSaveChart,
+        [string]$ValuesYamlString = "" 
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
@@ -162,6 +163,12 @@ function Invoke-HelmLintAndBuild {
         Write-Debug "${functionName}:HelmChartName=$HelmChartName"
         Write-Debug "${functionName}:ChartVersion=$ChartVersion"
         Write-Debug "${functionName}:PathToSaveChart=$PathToSaveChart"
+        Write-Debug "${functionName}:ValuesYamlString=$ValuesYamlString"  # Log new parameter
+
+        if ($ValuesYamlString -ne "") {
+            $tempFile = New-TemporaryFile
+            $ValuesYamlString | Out-File -FilePath $tempFile.FullName
+        }
     }
     process {
         try {
@@ -171,11 +178,14 @@ function Invoke-HelmLintAndBuild {
             Invoke-CommandLine -Command "helm dependency update"
         }
         
-        Invoke-CommandLine -Command "helm lint"
+        Invoke-CommandLine -Command "helm lint ."
 
-        Invoke-CommandLine -Command "helm template --debug"
-
-        Invoke-CommandLine -Command "helm install --dry-run --debug"
+        if (Test-Path -Path $tempFile.FullName) {
+            Invoke-CommandLine -Command "helm template . --debug --values $($tempFile.FullName)"
+        }
+        else {
+            Invoke-CommandLine -Command "helm template . --debug"
+        }
 
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
@@ -184,6 +194,9 @@ function Invoke-HelmLintAndBuild {
     }
     end {
         Write-Debug "${functionName}:Exited"
+        if (Test-Path -Path $tempFile.FullName) {
+            Remove-Item -Path $tempFile.FullName -Force
+        }
     }
 }
 
@@ -327,7 +340,7 @@ try {
                         '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$chartHomeDir/$InfraChartDirName/templates/keyvault-secrets-role-assignment.yaml"
                     }
 
-                    Invoke-HelmLintAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
+                    Invoke-HelmValidateAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
                 }
                 'publish' {
 
