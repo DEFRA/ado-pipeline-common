@@ -186,7 +186,7 @@ function Invoke-HelmValidateAndBuild {
             Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName)"
         }
         else {
-            Invoke-CommandLine -Command "helm template . 2>&1"
+           $results = Invoke-CommandLine -Command "helm template . 2>&1"
         }
 
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
