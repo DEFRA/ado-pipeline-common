@@ -185,10 +185,10 @@ function Invoke-HelmValidateAndBuild {
         $results = $null
         
         if ($null -ne $tempFile) {  
-            $results = Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName) 2>&1"
+            $results = Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName) 2>&1" -IgnoreErrorCode
         }
         else {
-            $results = Invoke-CommandLine -Command "helm template . 2>&1"
+            $results = Invoke-CommandLine -Command "helm template . 2>&1" -IgnoreErrorCode
         }
 
         if($LASTEXITCODE -ne 0) {
