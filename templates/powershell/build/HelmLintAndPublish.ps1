@@ -371,7 +371,7 @@ try {
 }
 catch {
     $exitCode = -2
-    Write-Error $_.Exception.ToString()
+    Write-Error "Falied to validate and build helm chart. Error: $_"
     throw $_.Exception
 }
 finally {
