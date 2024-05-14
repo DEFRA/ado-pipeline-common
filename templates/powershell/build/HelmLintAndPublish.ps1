@@ -182,14 +182,19 @@ function Invoke-HelmValidateAndBuild {
         
         Invoke-CommandLine -Command "helm lint ."
 
+        $results = $null
+        
         if ($null -ne $tempFile) {  
-            Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName)"
+            $results = Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName) 2>&1"
         }
         else {
-           $results = Invoke-CommandLine -Command "helm template . 2>&1"
+            $results = Invoke-CommandLine -Command "helm template . 2>&1"
         }
 
-        Write-Host "##vso[task.logissue type=error]$results[0]"
+        if($LASTEXITCODE -ne 0) {
+            Write-Host "##vso[task.logissue type=error]$results[0]"
+            throw "Helm template failed"
+        }
 
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
