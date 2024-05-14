@@ -189,6 +189,8 @@ function Invoke-HelmValidateAndBuild {
            $results = Invoke-CommandLine -Command "helm template . 2>&1"
         }
 
+        Write-Host "##vso[task.logissue type=error]$results[0]"
+
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
         Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $ChartCachePath"
