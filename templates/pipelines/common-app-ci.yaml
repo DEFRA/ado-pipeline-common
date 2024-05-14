@@ -472,20 +472,20 @@ stages:
                             pwsh: true
                             workingDirectory: '$(Pipeline.Workspace)/s' 
 
-                        - task: AzurePowerShell@5
-                          displayName: 'Generate Api Token'
-                          name: GenerateApiToken
-                          inputs:
-                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
-                            ScriptType: FilePath
-                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
-                            ScriptArguments: >
-                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
-                                -TenantId ${{ deploymentEnv.tenantId }}
-                            FailOnStandardError: true
-                            azurePowerShellVersion: 'LatestVersion'
-                            pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s'     
+                        # - task: AzurePowerShell@5
+                        #   displayName: 'Generate Api Token'
+                        #   name: GenerateApiToken
+                        #   inputs:
+                        #     azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
+                        #     ScriptType: FilePath
+                        #     ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
+                        #     ScriptArguments: >
+                        #         -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
+                        #         -TenantId ${{ deploymentEnv.tenantId }}
+                        #     FailOnStandardError: true
+                        #     azurePowerShellVersion: 'LatestVersion'
+                        #     pwsh: true
+                        #     workingDirectory: '$(Pipeline.Workspace)/s'     
           
                       # - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
                       #   - template: /templates/steps/post-deployment-tests.yaml
@@ -500,8 +500,8 @@ stages:
               variables:
                 - name: helmImageAddedToACRTime
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
-                - name: token
-                  value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
+                # - name: token
+                #   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
               timeoutInMinutes: 20
               steps:                  
                 - task: InvokeRESTAPI@1
@@ -521,7 +521,7 @@ stages:
                       "TimelineId": "$(system.TimelineId)",
                       "TaskInstanceId": "$(system.TaskInstanceId)",
                       "AuthToken": "$(system.AccessToken)",
-                      "Authorization": "$(token)",
+                      "Authorization": "token",
                       "Accept": "application/json"
                       }
                     body: |
