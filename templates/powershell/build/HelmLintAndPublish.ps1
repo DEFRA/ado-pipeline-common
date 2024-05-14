@@ -183,10 +183,10 @@ function Invoke-HelmValidateAndBuild {
         Invoke-CommandLine -Command "helm lint ."
 
         if ($null -ne $tempFile) {  
-            Invoke-CommandLine -Command "helm template . --debug --values $($tempFile.FullName)"
+            Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName)"
         }
         else {
-            Invoke-CommandLine -Command "helm template . --debug"
+            Invoke-CommandLine -Command "helm template . 2>&1"
         }
 
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
@@ -371,7 +371,7 @@ try {
 }
 catch {
     $exitCode = -2
-    Write-Error "Falied to validate and build helm chart. Error: $_"
+    Write-Error $_.Exception.ToString()
     throw $_.Exception
 }
 finally {
