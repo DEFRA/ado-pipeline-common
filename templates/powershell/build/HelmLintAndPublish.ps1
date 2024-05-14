@@ -165,6 +165,8 @@ function Invoke-HelmValidateAndBuild {
         Write-Debug "${functionName}:PathToSaveChart=$PathToSaveChart"
         Write-Debug "${functionName}:ValuesYamlString=$ValuesYamlString"  # Log new parameter
 
+        $tempFile = $null
+
         if ($ValuesYamlString -ne "") {
             $tempFile = New-TemporaryFile
             $ValuesYamlString | Out-File -FilePath $tempFile.FullName
@@ -180,7 +182,7 @@ function Invoke-HelmValidateAndBuild {
         
         Invoke-CommandLine -Command "helm lint ."
 
-        if (Test-Path -Path $tempFile.FullName) {
+        if ($null -ne $tempFile) {  
             Invoke-CommandLine -Command "helm template . --debug --values $($tempFile.FullName)"
         }
         else {
@@ -194,7 +196,7 @@ function Invoke-HelmValidateAndBuild {
     }
     end {
         Write-Debug "${functionName}:Exited"
-        if (Test-Path -Path $tempFile.FullName) {
+        if ($null -ne $tempFile) {  
             Remove-Item -Path $tempFile.FullName -Force
         }
     }
