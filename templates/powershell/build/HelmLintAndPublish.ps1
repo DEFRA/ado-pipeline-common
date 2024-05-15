@@ -196,9 +196,7 @@ function Invoke-HelmValidateAndBuild {
         }
         else {
             write-host "##[section] Helm Templates - $HelmChartName"
-            write-host "##[group] Templates"
             $results
-            write-host "##[endgroup]"
         }
 
         Write-Debug "Building Helm chart $HelmChartName"
