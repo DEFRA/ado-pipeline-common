@@ -58,15 +58,7 @@ function Update-KVSecretValues {
         Write-Debug "${functionName}:KeyVaultVSecretNames=$KeyVaultVSecretNames"
     }
     process {
-        if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
-            Write-Host "powershell-yaml Module does not exists. Installing now.."
-            Install-Module powershell-yaml -Force
-            Write-Host "powershell-yaml Installed Successfully."
-        } 
-        else {
-            Write-Host "powershell-yaml Module exist"
-        }
-
+    
         $kvSecretNames = $KeyVaultVSecretNames | ConvertFrom-Json
 
         Write-Debug "${functionName}:kvSecretNames:$kvSecretNames"
@@ -290,9 +282,6 @@ function Get-HelmValues {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
-
-        Install-Module powershell-yaml
-		Import-Module powershell-yaml
     }
     process {
         $uri = "$ApiBaseUri/FluxManifest/templates/service/$ChartType/patch-values"
@@ -346,6 +335,10 @@ Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
 try {
 
     Import-Module $PSHelperDirectory -Force
+
+    if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
+        Install-Module powershell-yaml -Force
+    } 
 
     $InfraChartDirName = "$serviceName-infra"
     #If there are no variable groups for given service the KeyVaultVSecretNames value will be "$(secretVariableNamesJson)"
