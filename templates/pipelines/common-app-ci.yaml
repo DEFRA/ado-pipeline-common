@@ -536,7 +536,7 @@ stages:
 
           - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
             - deployment: PostDeploymentTests${{ deploymentEnv.name }}
-              displayName: 'Run Post Deployment Tests in ${{ deploymentEnv.name }}'
+              displayName: 'Post Deployment Tests'
               dependsOn: WaitForFluxRelease
               environment: ${{ deploymentEnv.name }}
               strategy:
