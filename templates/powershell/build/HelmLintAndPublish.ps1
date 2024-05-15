@@ -195,7 +195,8 @@ function Invoke-HelmValidateAndBuild {
             throw "Helm template failed"
         }
         else {
-            write-host "##[group] $HelmChartName - Helm template output"
+            write-host "##[section] Helm Templates - $HelmChartName"
+            write-host "##[group] Templates"
             $results
             write-host "##[endgroup]"
         }
