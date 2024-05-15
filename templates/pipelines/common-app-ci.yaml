@@ -487,11 +487,6 @@ stages:
                             pwsh: true
                             workingDirectory: '$(Pipeline.Workspace)/s'     
           
-                      # - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
-                      #   - template: /templates/steps/post-deployment-tests.yaml
-                      #     parameters:
-                      #       url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
-          
           - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - job: WaitForFluxRelease
               displayName: 'Wait For Flux Release'
