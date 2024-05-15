@@ -294,6 +294,7 @@ stages:
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                 -chartHomeDir '$(Pipeline.Workspace)/s/helm'
                 -ServiceName ${{ parameters.serviceName }}
+                -ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'  

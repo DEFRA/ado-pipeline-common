@@ -36,7 +36,8 @@ param(
     [Parameter(Mandatory)]
     [string]$chartHomeDir,
     [string]$KeyVaultVSecretNames = "[]",
-    [string]$ServiceName
+    [string]$ServiceName,
+    [string]$ApiBaseUri= ""
 )
 
 
@@ -278,6 +279,42 @@ function Invoke-Publish {
     }
 }
 
+function Get-HelmValues {
+    param (
+        [Parameter(Mandatory)]
+        [string]$ApiBaseUri,
+        [Parameter(Mandatory)]
+        [string]$ChartType
+    )
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
+
+        Install-Module powershell-yaml
+		Import-Module powershell-yaml
+    }
+    process {
+        $uri = "$ApiBaseUri/FluxManifest/templates/service/$ChartType/patch-values"
+        Write-Debug "${functionName}:Uri=$uri"
+        try {
+            $response = Invoke-RestMethod -Uri $uri -Method Get -ContentType "application/json"
+            return ConvertTo-Yaml -Data $response
+        }
+        catch  {
+            if ($_.Exception.Response.StatusCode -eq 400) {
+                return $null
+            }
+            else {
+                throw $_
+            }
+        }
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -304,6 +341,7 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:chartHomeDir=$chartHomeDir"
 Write-Debug "${functionName}:KeyVaultVSecretNames=$KeyVaultVSecretNames"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
+Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
 
 try {
 
@@ -350,7 +388,13 @@ try {
                         '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$chartHomeDir/$InfraChartDirName/templates/keyvault-secrets-role-assignment.yaml"
                     }
 
-                    Invoke-HelmValidateAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
+                    $helmChartType = $chartDirectory.DirectoryName.Contains($InfraChartDirName)? "infra" : "deploy"
+                    Write-Debug "${functionName}:Helm Chart Type=$helmChartType"
+
+                    $valuesYaml = Get-HelmValues -ApiBaseUri $ApiBaseUri -ChartType $helmChartType
+                    Write-Debug "${functionName}:Helm Values=$valuesYaml"
+
+                    Invoke-HelmValidateAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath -ValuesYamlString $valuesYaml
                 }
                 'publish' {
 
