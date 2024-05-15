@@ -198,14 +198,15 @@ function Invoke-HelmValidateAndBuild {
 
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
-        Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $ChartCachePath"
-        Copy-Item "$helmChartName-$ChartVersion.tgz" -Destination $ChartCachePath -Force 
+        $chartPath = Join-Path -Path $PathToSaveChart -ChildPath "$HelmChartName-$ChartVersion.tgz"
+        Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $chartPath"
+        Copy-Item "$HelmChartName-$ChartVersion.tgz" -Destination $chartPath -Force 
     }
     end {
-        Write-Debug "${functionName}:Exited"
-        if ($null -ne $tempFile) {  
+        if ($null -ne $tempFile -and (Test-Path -Path $tempFile.FullName)) {  
             Remove-Item -Path $tempFile.FullName -Force
         }
+        Write-Debug "${functionName}:Exited"
     }
 }
 
