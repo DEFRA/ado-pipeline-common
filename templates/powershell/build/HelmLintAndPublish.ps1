@@ -172,15 +172,15 @@ function Invoke-HelmValidateAndBuild {
         catch {
             Invoke-CommandLine -Command "helm dependency update"
         }
-        
-        Invoke-CommandLine -Command "helm lint ."
 
         $results = $null
         
         if ($null -ne $tempFile) {  
+            Invoke-CommandLine -Command "helm lint . --values $($tempFile.FullName)"
             $results = Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName) 2>&1" -IgnoreErrorCode
         }
         else {
+            Invoke-CommandLine -Command "helm lint ."
             $results = Invoke-CommandLine -Command "helm template . 2>&1" -IgnoreErrorCode
         }
 
