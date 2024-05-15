@@ -189,7 +189,9 @@ function Invoke-HelmValidateAndBuild {
             throw "Helm template failed"
         }
         else {
+            write-host "##[group] $HelmChartName - Helm template output"
             $results
+            write-host "##[endgroup]"
         }
 
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
