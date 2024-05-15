@@ -176,11 +176,17 @@ function Invoke-HelmValidateAndBuild {
         $results = $null
         
         if ($null -ne $tempFile) {  
+            Write-Debug "Linting Helm chart $HelmChartName"
             Invoke-CommandLine -Command "helm lint . --values $($tempFile.FullName)"
+
+            Write-Debug "Validating Helm chart $HelmChartName"
             $results = Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName) 2>&1" -IgnoreErrorCode
         }
         else {
+            Write-Debug "Linting Helm chart $HelmChartName"
             Invoke-CommandLine -Command "helm lint ."
+
+            Write-Debug "Validating Helm chart $HelmChartName"
             $results = Invoke-CommandLine -Command "helm template . 2>&1" -IgnoreErrorCode
         }
 
@@ -194,6 +200,7 @@ function Invoke-HelmValidateAndBuild {
             write-host "##[endgroup]"
         }
 
+        Write-Debug "Building Helm chart $HelmChartName"
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
         $chartPath = Join-Path -Path $PathToSaveChart -ChildPath "$HelmChartName-$ChartVersion.tgz"
