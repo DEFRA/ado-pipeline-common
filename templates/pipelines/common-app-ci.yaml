@@ -536,6 +536,7 @@ stages:
 
           - deployment: PostDeploymentTests${{ deploymentEnv.name }}
             displayName: 'Run Post Deployment Tests in ${{ deploymentEnv.name }}'
+            dependsOn: WaitForFluxRelease
             environment: ${{ deploymentEnv.name }}
             strategy:
               runOnce:
