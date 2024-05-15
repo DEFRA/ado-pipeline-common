@@ -13,17 +13,18 @@ parameters:
     default: ''         
 
 steps:
-- task: SnykSecurityScan@1
-  displayName: 'Snyk Application scan'
-  inputs:
-    serviceConnectionEndpoint: ${{ parameters.snykConnection }} 
-    testDirectory: '$(Build.SourcesDirectory)'
-    ${{ if ne(parameters.manifestPath, '') }}:
-      targetFile: '${{ parameters.manifestPath }}'
-    failOnIssues: true
-    monitorOnBuild: false
-    projectName: '${{ parameters.acrRepoName }}'
-    organization: '${{ parameters.snykOrganizationName }}'
-    failOnThreshold: '${{ parameters.failOnThreshold }}'
-  enabled: true
-  continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+- ${{ each projectManifestPath in split(parameters.manifestPath, ';') }}:
+  - task: SnykSecurityScan@1
+    displayName: 'Snyk Application scan'
+    inputs:
+      serviceConnectionEndpoint: ${{ parameters.snykConnection }} 
+      testDirectory: '$(Build.SourcesDirectory)'
+      ${{ if ne(projectManifestPath, '') }}:
+        targetFile: '${{ projectManifestPath }}'
+      failOnIssues: true
+      monitorOnBuild: false
+      projectName: '${{ parameters.acrRepoName }}'
+      organization: '${{ parameters.snykOrganizationName }}'
+      failOnThreshold: '${{ parameters.failOnThreshold }}'
+    enabled: true
+    continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
