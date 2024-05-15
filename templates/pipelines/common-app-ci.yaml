@@ -534,15 +534,15 @@ stages:
                       }
                     waitForCompletion: 'true'
 
-          - deployment: PostDeploymentTests${{ deploymentEnv.name }}
-            displayName: 'Run Post Deployment Tests in ${{ deploymentEnv.name }}'
-            dependsOn: WaitForFluxRelease
-            environment: ${{ deploymentEnv.name }}
-            strategy:
-              runOnce:
-                deploy:          
-                  steps:
-                    - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
+          - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
+            - deployment: PostDeploymentTests${{ deploymentEnv.name }}
+              displayName: 'Run Post Deployment Tests in ${{ deploymentEnv.name }}'
+              dependsOn: WaitForFluxRelease
+              environment: ${{ deploymentEnv.name }}
+              strategy:
+                runOnce:
+                  deploy:          
+                    steps:
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
