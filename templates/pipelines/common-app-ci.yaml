@@ -543,6 +543,13 @@ stages:
                 runOnce:
                   deploy:          
                     steps:
+                      - checkout: self
+                        path: s/source
+                        persistCredentials: true
+
+                      - checkout: PipelineCommon
+                        path: s/ADO-Pipeline-Common
+                        
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
