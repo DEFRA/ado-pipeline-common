@@ -702,7 +702,7 @@ function New-AppConfigDifference {
 			[bool]$exists = $sourceAppConfig.ContainsKey($_)
 			Write-Debug "${functionName}:process:${exists}:destinationKey=$_"
 
-			if (-not $exists -and $_.Key -notmatch $sentinelKey) {
+			if (-not $exists -and $_.Key -ne $sentinelKey) {
 				Write-Verbose "$_ surplus - needs removed"
 				$removeEntries.Add($_, $destinationAppConfig[$_])
 			}
