@@ -1,10 +1,9 @@
-description: App Config Schema
 type: array
 items:
   type: object
   required:
-  - key
-  - value
+    - key
+    - value
   properties:
     key:
       type: string
@@ -12,6 +11,13 @@ items:
       type: string
     type:
       type: string
-      enum: [
-        "keyvault"
-      ]
+      enum:
+        - keyvault
+  if:
+    properties:
+      type:
+        const: keyvault
+  then:
+    properties:
+      value:
+        pattern: '^[a-zA-Z0-9-]+$'

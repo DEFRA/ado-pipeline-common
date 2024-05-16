@@ -20,7 +20,10 @@
                 ]
             },
             "content_type": {
-                "type": "string"
+                "type": "string",
+                "enum": [
+                    "keyvault"
+                ]
             },
             "tags": {
                 "type": "object"
@@ -30,6 +33,20 @@
             "key",
             "value",
             "label"
-        ]
+        ],
+        "if": {
+            "properties": {
+                "content_type": {
+                    "const": "keyvault"
+                }
+            }
+        },
+        "then": {
+            "properties": {
+                "value": {
+                    "pattern": "^[a-zA-Z0-9-]+$"
+                }
+            }
+        }
     }
 }
