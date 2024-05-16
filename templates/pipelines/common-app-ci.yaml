@@ -221,6 +221,7 @@ stages:
                  -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                  -ImageVersion  $(appVersion) 
                  -ImageCachePath '$(Pipeline.Workspace)/docker' 
+                 -DockerFilePath '${{ parameters.appBuildConfig.dockerfilePath }}'
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               failOnStderr: false

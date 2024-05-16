@@ -69,6 +69,7 @@ steps:
           -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
           -ImageVersion  $(GetAppVersion.appVersion) 
           -ImageCachePath $(Pipeline.Workspace)/docker 
+          -DockerFilePath '${{ parameters.appBuildConfig.dockerfilePath }}'
           -Command "push" 
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
         addSpnToEnvironment: true          
