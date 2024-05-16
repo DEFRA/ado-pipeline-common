@@ -36,7 +36,8 @@ param(
     [Parameter(Mandatory)]
     [string]$chartHomeDir,
     [string]$KeyVaultVSecretNames = "[]",
-    [string]$ServiceName
+    [string]$ServiceName,
+    [string]$ApiBaseUri= ""
 )
 
 
@@ -52,17 +53,12 @@ function Update-KVSecretValues {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:InfraChartHomeDir=$InfraChartHomeDir"
+        Write-Debug "${functionName}:ServiceName=$ServiceName"
+        Write-Debug "${functionName}:KeyVaultVSecretNames=$KeyVaultVSecretNames"
     }
     process {
-        if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
-            Write-Host "powershell-yaml Module does not exists. Installing now.."
-            Install-Module powershell-yaml -Force
-            Write-Host "powershell-yaml Installed Successfully."
-        } 
-        else {
-            Write-Host "powershell-yaml Module exist"
-        }
-
+    
         $kvSecretNames = $KeyVaultVSecretNames | ConvertFrom-Json
 
         Write-Debug "${functionName}:kvSecretNames:$kvSecretNames"
@@ -125,6 +121,7 @@ function Invoke-HelmLint {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:HelmChartName=$HelmChartName"
     }
     process {
         Write-Host "Build Helm dependencies for $HelmChartName"
@@ -143,18 +140,30 @@ function Invoke-HelmLint {
     }
 }
 
-function Invoke-HelmLintAndBuild {
+function Invoke-HelmValidateAndBuild {
     param(
         [Parameter(Mandatory)]
         [string]$HelmChartName,
         [Parameter(Mandatory)]
         [string]$ChartVersion,
         [Parameter(Mandatory)]
-        [string]$PathToSaveChart
+        [string]$PathToSaveChart,
+        [string]$ValuesYamlString = "" 
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:HelmChartName=$HelmChartName"
+        Write-Debug "${functionName}:ChartVersion=$ChartVersion"
+        Write-Debug "${functionName}:PathToSaveChart=$PathToSaveChart"
+        Write-Debug "${functionName}:ValuesYamlString=$ValuesYamlString"  # Log new parameter
+
+        $tempFile = $null
+
+        if ($ValuesYamlString -ne "") {
+            $tempFile = New-TemporaryFile
+            $ValuesYamlString | Out-File -FilePath $tempFile.FullName
+        }
     }
     process {
         try {
@@ -163,15 +172,44 @@ function Invoke-HelmLintAndBuild {
         catch {
             Invoke-CommandLine -Command "helm dependency update"
         }
-        
-        Invoke-CommandLine -Command "helm lint"
 
+        $results = $null
+        
+        if ($null -ne $tempFile) {  
+            Write-Debug "Linting Helm chart $HelmChartName"
+            Invoke-CommandLine -Command "helm lint . --values $($tempFile.FullName)"
+
+            Write-Debug "Validating Helm chart $HelmChartName"
+            $results = Invoke-CommandLine -Command "helm template . --values $($tempFile.FullName) 2>&1" -IgnoreErrorCode
+        }
+        else {
+            Write-Debug "Linting Helm chart $HelmChartName"
+            Invoke-CommandLine -Command "helm lint ."
+
+            Write-Debug "Validating Helm chart $HelmChartName"
+            $results = Invoke-CommandLine -Command "helm template . 2>&1" -IgnoreErrorCode
+        }
+
+        if($LASTEXITCODE -ne 0) {
+            Write-Host "##vso[task.logissue type=error]$($results[0])"
+            throw "Helm template failed"
+        }
+        else {
+            write-host "##[section] Helm Templates - $HelmChartName"
+            $results
+        }
+
+        Write-Debug "Building Helm chart $HelmChartName"
         Invoke-CommandLine -Command "helm package . --version $ChartVersion"
 
-        Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $ChartCachePath"
-        Copy-Item "$helmChartName-$ChartVersion.tgz" -Destination $ChartCachePath -Force 
+        $chartPath = Join-Path -Path $PathToSaveChart -ChildPath "$HelmChartName-$ChartVersion.tgz"
+        Write-Host "Saving chart '$HelmChartName-$ChartVersion.tgz' to $chartPath"
+        Copy-Item "$HelmChartName-$ChartVersion.tgz" -Destination $chartPath -Force 
     }
     end {
+        if ($null -ne $tempFile -and (Test-Path -Path $tempFile.FullName)) {  
+            Remove-Item -Path $tempFile.FullName -Force
+        }
         Write-Debug "${functionName}:Exited"
     }
 }
@@ -188,6 +226,9 @@ function Invoke-HelmBuild {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:HelmChartName=$HelmChartName"
+        Write-Debug "${functionName}:ChartVersion=$ChartVersion"
+        Write-Debug "${functionName}:PathToSaveChart=$PathToSaveChart"
     }
     process {
         try {
@@ -219,6 +260,9 @@ function Invoke-Publish {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:HelmChartName=$HelmChartName"
+        Write-Debug "${functionName}:ChartVersion=$ChartVersion"
+        Write-Debug "${functionName}:PathToSaveChart=$PathToSaveChart"
     }
     process {
         Write-Host "Publishing Helm chart $HelmChartName"
@@ -231,6 +275,39 @@ function Invoke-Publish {
         else {                                   
             Write-Host "Chart does not exist in cache. Publishing chart $acrHelmPath from current directory" 
             throw "Chart does not exist in cache"         
+        }
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
+function Get-HelmValues {
+    param (
+        [Parameter(Mandatory)]
+        [string]$ApiBaseUri,
+        [Parameter(Mandatory)]
+        [string]$ChartType
+    )
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
+    }
+    process {
+        $uri = "$ApiBaseUri/FluxManifest/templates/service/$ChartType/patch-values"
+        Write-Debug "${functionName}:Uri=$uri"
+        try {
+            $response = Invoke-RestMethod -Uri $uri -Method Get -ContentType "application/json"
+            return ConvertTo-Yaml -Data $response
+        }
+        catch  {
+            if ($_.Exception.Response.StatusCode -eq 400) {
+                return $null
+            }
+            else {
+                throw $_
+            }
         }
     }
     end {
@@ -264,10 +341,15 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:chartHomeDir=$chartHomeDir"
 Write-Debug "${functionName}:KeyVaultVSecretNames=$KeyVaultVSecretNames"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
+Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
 
 try {
 
     Import-Module $PSHelperDirectory -Force
+
+    if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
+        Install-Module powershell-yaml -Force
+    } 
 
     $InfraChartDirName = "$serviceName-infra"
     #If there are no variable groups for given service the KeyVaultVSecretNames value will be "$(secretVariableNamesJson)"
@@ -310,7 +392,13 @@ try {
                         '{{- include "adp-aso-helm-library.keyvault-secrets-role-assignment" . -}}' | Out-File -FilePath "$chartHomeDir/$InfraChartDirName/templates/keyvault-secrets-role-assignment.yaml"
                     }
 
-                    Invoke-HelmLintAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath
+                    $helmChartType = $chartDirectory.DirectoryName.Contains($InfraChartDirName)? "infra" : "deploy"
+                    Write-Debug "${functionName}:Helm Chart Type=$helmChartType"
+
+                    $valuesYaml = Get-HelmValues -ApiBaseUri $ApiBaseUri -ChartType $helmChartType
+                    Write-Debug "${functionName}:Helm Values=$valuesYaml"
+
+                    Invoke-HelmValidateAndBuild -HelmChartName $helmChartName -ChartVersion $ChartVersion -PathToSaveChart $ChartCachePath -ValuesYamlString $valuesYaml
                 }
                 'publish' {
 

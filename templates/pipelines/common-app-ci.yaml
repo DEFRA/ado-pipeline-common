@@ -283,7 +283,7 @@ stages:
               cacheHitVar: CACHE_RESTORED
 
           - task: PowerShell@2
-            displayName: 'Helm Lint & Build'
+            displayName: 'Helm Validate & Build'
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/HelmLintAndPublish.ps1'
@@ -294,6 +294,7 @@ stages:
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                 -chartHomeDir '$(Pipeline.Workspace)/s/helm'
                 -ServiceName ${{ parameters.serviceName }}
+                -ApiBaseUri: ${{ parameters.appBuildConfig.fluxManifestApiBaseUri }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'  
