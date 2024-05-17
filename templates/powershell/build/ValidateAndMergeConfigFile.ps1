@@ -46,7 +46,7 @@ function Test-FileContent {
                     $errors | ForEach-Object {
                         Write-Host "##vso[task.logissue type=error]$_"
                     }
-                    throw [System.IO.InvalidDataException]::new($FilePath)
+                    throw "File $FilePath failed validation"
                 }
             }
             default { throw [System.IO.InvalidDataException]::new($FilePath) }
