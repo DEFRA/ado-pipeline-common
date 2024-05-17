@@ -56,7 +56,7 @@ variables:
 
 stages:
   - stage: Application_CI
-    displayName: 'Validate'
+    displayName: 'Build'
     ${{ if ne(parameters.privateAgentName, '') }}:
       pool:
         name: ${{ parameters.privateAgentName }}
