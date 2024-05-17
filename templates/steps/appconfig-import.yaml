@@ -38,7 +38,7 @@ steps:
       errorActionPreference: silentlyContinue
       displayName: 'Upgrade PowerShell Version'  
     - task: PowerShell@2
-      displayName: 'Validate and Merge Config Files'
+      displayName: 'Pepare Import App Config Files'
       inputs:
         targetType: filePath
         filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ValidateAndMergeConfigFile.ps1'
@@ -51,7 +51,7 @@ steps:
         pwsh: true
         workingDirectory: '$(Pipeline.Workspace)/s'
     - task: replacetokens@5
-      displayName: 'Replace tokens in config'
+      displayName: 'Replace tokens in App Config Files'
       inputs:
         tokenPattern: doublebraces
         inlineVariables: |
@@ -63,7 +63,7 @@ steps:
         targetFiles: |
           ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}
     - task: AzureCLI@2
-      displayName: 'Import Azure App Configuration '
+      displayName: 'Import App Config'
       inputs:
         azureSubscription: '${{ parameters.environmentObj.serviceConnection}}'
         scriptType: pscore
