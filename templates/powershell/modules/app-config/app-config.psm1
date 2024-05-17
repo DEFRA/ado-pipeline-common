@@ -935,7 +935,7 @@ function Test-Yaml {
 				$keyValid = $item.key -is [string]
 				$valueValid = $item.value -is [string] -and $item.value -match $secretNameRegex
 				$valid = $keyValid -and $valueValid
-				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a valid. The secret name must be unique within a Key Vault. The name must be a 1-127 character string, starting with a letter and containing only 0-9, a-z, A-Z, and -. and the name must start with '{{serviceName}}-'" } else { $null }
+				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a valid. The secret name must be unique within a Key Vault. The name must be a 1-127 character string, starting with a letter and containing only 0-9, a-z, A-Z, - and the name must start with '{{serviceName}}-'" } else { $null }
 				return $valid, $reason
 			}
 		}
