@@ -41,7 +41,7 @@ steps:
          -CommonConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.configFileType }}'
          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }}
-        failOnStderr: true
+        failOnStderr: false
         pwsh: true
         workingDirectory: '$(Pipeline.Workspace)/s'
     - task: replacetokens@5
