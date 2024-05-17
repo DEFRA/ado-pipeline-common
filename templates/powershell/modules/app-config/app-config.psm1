@@ -922,7 +922,7 @@ function Test-Yaml {
 	}
 
 	process {
-		$secretNameRegex = '^{{serviceName}}-[a-zA-Z][a-zA-Z0-9_-]*$'
+		$secretNameRegex = '^{{serviceName}}-[a-zA-Z][a-zA-Z0-9-]{0,126}$'
 		$rules = @{
 			'string'   = { param($item) 
 				$keyValid = $item.key -is [string]
@@ -939,9 +939,9 @@ function Test-Yaml {
 				return $valid, $reason
 			}
 		}
-
+		
 		$data = ConvertFrom-Yaml $Yaml
-
+		
 		foreach ($item in $data) {
 			$type = if ($item.ContainsKey('type')) { $item.type } else { 'string' }
 			if ($rules.ContainsKey($type)) {
