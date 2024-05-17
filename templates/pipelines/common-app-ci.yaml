@@ -56,7 +56,7 @@ variables:
 
 stages:
   - stage: Application_CI
-    displayName: 'Build Validation'
+    displayName: 'Validate'
     ${{ if ne(parameters.privateAgentName, '') }}:
       pool:
         name: ${{ parameters.privateAgentName }}
@@ -374,7 +374,7 @@ stages:
         dependsOn:
           - Application_CI
           - ${{ deploymentEnv.dependsOn }}
-        displayName: 'Deployment: ${{ deploymentEnv.name }}'
+        displayName: '${{ upper(deploymentEnv.name) }}'
         variables:       
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
