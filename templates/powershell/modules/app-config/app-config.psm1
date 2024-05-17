@@ -663,12 +663,12 @@ function New-AppConfigDifference {
 
 	process {
 		Write-Debug "${functionName}:process:Start"
-		[string]$sentinelKey = 'Sentinel'
+		[string]$sentinelKey = 'Sentinel:'
 
 		$sourceAppConfig.Keys | ForEach-Object {
 			Write-Debug "${functionName}:process:sourceKey=$_"
 			[AppConfigEntry]$sourceItem = $SourceAppConfig[$_]
-			if ($_.Key -ne $sentinelKey) {
+			if (-not $_.StartsWith($sentinelKey)) {
 				if ($destinationAppConfig.ContainsKey($_)) {
 					[AppConfigEntry]$destinationItem = $destinationAppConfig[$_]
 					[string]$sourceValue = $sourceItem.Value
@@ -702,7 +702,7 @@ function New-AppConfigDifference {
 			[bool]$exists = $sourceAppConfig.ContainsKey($_)
 			Write-Debug "${functionName}:process:${exists}:destinationKey=$_"
 
-			if (-not $exists -and $_.Key -notmatch $sentinelKey) {
+			if (-not $exists -and -not $_.StartsWith($sentinelKey)) {
 				Write-Verbose "$_ surplus - needs removed"
 				$removeEntries.Add($_, $destinationAppConfig[$_])
 			}
