@@ -104,7 +104,6 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:SchemaFilePath=$SchemaFilePath"
 Write-Debug "${functionName}:CommonConfigFilePath=$CommonConfigFilePath"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
