@@ -38,7 +38,7 @@ steps:
       errorActionPreference: silentlyContinue
       displayName: 'Upgrade PowerShell Version'  
     - task: PowerShell@2
-      displayName: 'Pepare Import App Config Files'
+      displayName: 'Validate App Config Files'
       inputs:
         targetType: filePath
         filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ValidateAndMergeConfigFile.ps1'
@@ -72,7 +72,7 @@ steps:
         arguments: > 
           -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
           -ServiceName '${{ parameters.serviceName }}' 
-          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'          
+          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
           -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
