@@ -906,53 +906,57 @@ function Set-AppConfigValue {
 }
 
 function Test-Yaml {
-	[CmdletBinding(DefaultParameterSetName = '__AllParameterSets', HelpUri = 'https://go.microsoft.com/fwlink/?LinkID=2096609')]
 	param(
-		[Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
-		[string]
-		${Yaml},
-
-		[Parameter(ParameterSetName = 'SchemaString', Position = 1)]
-		[ValidateNotNullOrEmpty()]
-		[string]
-		${Schema},
-
-		[Parameter(ParameterSetName = 'SchemaFile', Position = 1)]
-		[ValidateNotNullOrEmpty()]
-		[string]
-		${SchemaFile})
+		[Parameter(Mandatory)]
+		[string] $Yaml
+		)
 
 	begin {
-		
-		Install-Module powershell-yaml -Force
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Start"
+		Write-Debug "${functionName}:Yaml=$Yaml"
 
-		function Yaml2Json ($Yaml) { $Yaml | ConvertFrom-Yaml | ConvertTo-Json -Depth 64 }
-		$outBuffer = $null
-		if ($PSBoundParameters.TryGetValue('OutBuffer', [ref]$outBuffer)) { $PSBoundParameters['OutBuffer'] = 1 }
-		$Parameters = @{}
-		foreach ($PSBoundParameters in $PSBoundParameters.GetEnumerator()) {
-			switch ($PSBoundParameters.Key) {
-				'Yaml' { $Parameters['Json'] = Yaml2Json $PSBoundParameters.Value }
-				'Schema' { $Parameters['Schema'] = Yaml2Json $PSBoundParameters.Value }
-				'SchemaFile' { $Parameters['Schema'] = Yaml2Json (Get-Content -Raw -LiteralPath $PSBoundParameters.Value) }
-				Default { $Parameters[$PSBoundParameters.Key] = $PSBoundParameters.Value }
-			}
+		if (!(Get-Module -ListAvailable -Name powershell-yaml)) {
+			Install-Module -Name powershell-yaml -Force
 		}
-
-		$wrappedCmd = $ExecutionContext.InvokeCommand.GetCommand('Microsoft.PowerShell.Utility\Test-Json', [System.Management.Automation.CommandTypes]::Cmdlet)
-		$scriptCmd = { & $wrappedCmd @Parameters }
-
-		$steppablePipeline = $scriptCmd.GetSteppablePipeline($myInvocation.CommandOrigin)
-		$steppablePipeline.Begin($PSCmdlet)
 	}
 
 	process {
-		$Json = Yaml2Json $_
-		$steppablePipeline.Process($Json)
+		$secretNameRegex = '^{{serviceName}}-[a-zA-Z][a-zA-Z0-9_-]*$'
+		$rules = @{
+			'string'   = { param($item) 
+				$keyValid = $item.key -is [string]
+				$valueValid = $item.value -is [string]
+				$valid = $keyValid -and $valueValid
+				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a string" } else { $null }
+				return $valid, $reason
+			}
+			'keyvault' = { param($item) 
+				$keyValid = $item.key -is [string]
+				$valueValid = $item.value -is [string] -and $item.value -match $secretNameRegex
+				$valid = $keyValid -and $valueValid
+				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a valid keyvault secret name or does not start with '{{serviceName}}-'" } else { $null }
+				return $valid, $reason
+			}
+		}
+
+		$data = ConvertFrom-Yaml $Yaml
+
+		foreach ($item in $data) {
+			$type = if ($item.ContainsKey('type')) { $item.type } else { 'string' }
+			if ($rules.ContainsKey($type)) {
+				$valid, $reason = & $rules[$type] $item
+				if (-not $valid) {
+					Write-Output "Validation failed for item $($item | ConvertTo-Json -Compress) : $($reason)"
+				}
+			}
+			else {
+				Write-Output "Validation failed for item $($item | ConvertTo-Json -Compress): unknown type '$type'"
+			}
+		}
 	}
 
 	end {
-		$steppablePipeline.End()
-
+		Write-Debug "${functionName}:End"
 	}	
 }

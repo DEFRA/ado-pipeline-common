@@ -31,19 +31,13 @@ steps:
   - checkout: PipelineCommon
     path: s/ADO-Pipeline-Common
     
-  - ${{ if ne(parameters.appDeployConfig, '') }}:          
-    - pwsh: |
-        $PSVersionTable
-        sudo apt-get install -y powershell=7.4.0-1.deb --allow-downgrades
-      errorActionPreference: silentlyContinue
-      displayName: 'Upgrade PowerShell Version'  
+  - ${{ if ne(parameters.appDeployConfig, '') }}:
     - task: PowerShell@2
       displayName: 'Validate App Config Files'
       inputs:
         targetType: filePath
         filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ValidateAndMergeConfigFile.ps1'
-        arguments: > 
-         -SchemaFilePath '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/config/schema.${{ parameters.configFileType }}'
+        arguments: >
          -CommonConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.configFileType }}'
          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }}

@@ -4,8 +4,6 @@ Validate Azure app config file
 .DESCRIPTION
 Validate Azure app config file
 
-.PARAMETER SchemaFilePath
-Mandatory. Schema file path.
 .PARAMETER CommonConfigFilePath
 Mandatory. Common App Config file path. This config file conents will be merged to env specific config file.
 .PARAMETER ConfigFilePath
@@ -13,16 +11,14 @@ Mandatory. App Config file path.
 .PARAMETER AppConfigModuleDirectory
 Mandatory. Directory Path of App-Config module
 .EXAMPLE
-.\ValidateAndMergeConfigFile.ps1  -SchemaFilePath <SchemaFilePath> -CommonConfigFilePath <CommonConfigFilePath> -ConfigFilePath <ConfigFilePath> -AppConfigModuleDirectory <AppConfigModuleDirectory>
+.\ValidateAndMergeConfigFile.ps1  -CommonConfigFilePath <CommonConfigFilePath> -ConfigFilePath <ConfigFilePath> -AppConfigModuleDirectory <AppConfigModuleDirectory>
 #> 
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
-    [string] $SchemaFilePath,
     [string] $CommonConfigFilePath,
     [Parameter(Mandatory)]    
-    [string] $ConfigFilePath,    
+    [string] $ConfigFilePath, 
     [Parameter(Mandatory)]
     [string] $AppConfigModuleDirectory
 )
@@ -30,8 +26,7 @@ param(
 function Test-FileContent {
     param(
         [Parameter(Mandatory = $true)][string]$FilePath,
-        [Parameter(Mandatory = $true)][string]$FileContent,
-        [Parameter(Mandatory = $true)][string]$SchemaFileContent
+        [Parameter(Mandatory = $true)][string]$FileContent
     )
 
     begin {
@@ -39,22 +34,22 @@ function Test-FileContent {
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:FilePath=$FilePath"
         Write-Debug "${functionName}:FileContent=$FileContent"
-        Write-Debug "${functionName}:SchemaFileContent=$SchemaFileContent"
     }
 
     process {
         switch -Wildcard ($FilePath) {
-            "*.json" { $result = ( Test-Json -Json $FileContent -Schema $SchemaFileContent) }
-            "*.yaml" { $result = ( Test-Yaml -Yaml $FileContent -Schema $SchemaFileContent) }
+            "*.yaml" {
+                $errors = Test-Yaml -Yaml $FileContent
+                if ($null -eq $errors) {
+                    Write-Host "${functionName} File`t`tPassed validation"
+                } else {
+                    $errors | ForEach-Object {
+                        Write-Host "##vso[task.logissue type=error]$_"
+                    }
+                    throw [System.IO.InvalidDataException]::new($FilePath)
+                }
+            }
             default { throw [System.IO.InvalidDataException]::new($FilePath) }
-        }
-    
-        if ($result -eq $true) {
-            Write-Host "${functionName} File`t`tPassed validation"
-        }
-        else {
-            Write-Host "${functionName} File`t`tFailed validation"
-            throw [System.IO.InvalidDataException]::new($FilePath) 
         }
     }
 
@@ -79,7 +74,6 @@ function Merge-CommonConfig {
     }
     process {
         switch -Wildcard ($ConfigFilePath) {
-            "*.json" { @($ConfigFileContent; $CommonConfigFileContent) | ConvertTo-Json | Out-File $ConfigFilePath }
             "*.yaml" { "`n"  | Out-File -append $ConfigFilePath; $CommonConfigFileContent  | Out-File -append $ConfigFilePath }
             default { throw [System.IO.InvalidDataException]::new($ConfigFilePath) }
         }
@@ -119,23 +113,19 @@ try {
 
     Import-Module $AppConfigModuleDirectory -Force
 
-    if (Test-Path $SchemaFilePath -PathType Leaf) {
-        [string]$SchemaFileContent = Get-Content -Raw -Path $SchemaFilePath 
-    }
-
     if (Test-Path $CommonConfigFilePath -PathType Leaf) {
-        [bool]$CommonConfigFileExists = $true
+        [bool]$commonConfigFileExists = $true
         [string]$CommonConfigFileContent = Get-Content -Raw -Path $CommonConfigFilePath 
-        Test-FileContent -FilePath $CommonConfigFilePath -FileContent $CommonConfigFileContent -SchemaFileContent $SchemaFileContent
+        Test-FileContent -FilePath $CommonConfigFilePath -FileContent $CommonConfigFileContent
     }
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         [string]$ConfigFileContent = Get-Content -Raw -Path $ConfigFilePath     
         Write-Debug $ConfigFileContent
-        Test-FileContent -FilePath $ConfigFilePath -FileContent $ConfigFileContent -SchemaFileContent $SchemaFileContent
+        Test-FileContent -FilePath $ConfigFilePath -FileContent $ConfigFileContent
     }
 
-    if ($CommonConfigFileExists) {
+    if ($commonConfigFileExists) {
         Merge-CommonConfig -ConfigFilePath $ConfigFilePath -ConfigFileContent $ConfigFileContent -CommonConfigFileContent $CommonConfigFileContent
     }
                
