@@ -48,11 +48,11 @@ function Test-AppConfigSecretValue{
 
             $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
             if (!$role) {
-                Write-Output "Role assignment for the secret $secretName in the Key Vault $KeyVault could not be found for the service $ServiceName."
+                Write-Output "Role assignment for the secret $secretName in the Key Vault $KeyVaultName could not be found for the service $ServiceName."
             }
         } 
         else {
-          Write-Output "Secret $secretName not found in the Key Vault $KeyVault."
+          Write-Output "Secret $secretName not found in the Key Vault $KeyVaultName."
         }
     }
     
@@ -87,7 +87,6 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 
 try {
-
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
 
