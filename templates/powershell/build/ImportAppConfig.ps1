@@ -29,11 +29,7 @@ Mandatory. Flag to update correct Sentinel key value.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string] $SubscriptionId,
-    [Parameter(Mandatory)]
     [string] $KeyVault,
-    [Parameter(Mandatory)]
-    [string] $KeyVaultRgName,
     [Parameter(Mandatory)]
     [string] $AppConfig,
     [Parameter(Mandatory)]
@@ -57,11 +53,7 @@ function Test-AppConfigSecretValue{
         [Parameter(Mandatory, ValueFromPipeline)]
         [AppConfigEntry]$ConfigSecret,
         [Parameter(Mandatory)]
-        [string]$SubscriptionId,
-        [Parameter(Mandatory)]
         [string]$KeyVaultName,
-        [Parameter(Mandatory)]
-        [string]$KeyVaultRgName,
         [Parameter(Mandatory)]
         [string]$ServiceName
     )
@@ -69,30 +61,18 @@ function Test-AppConfigSecretValue{
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
-        Write-Debug "${functionName}:SubscriptionId:$SubscriptionId"
         Write-Debug "${functionName}:KeyVaultName:$KeyVaultName"
-        Write-Debug "${functionName}:KeyVaultRgName:$KeyVaultRgName"
         Write-Debug "${functionName}:ServiceName:$ServiceName"
-        $keyVaultResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$KeyVaultRgName/providers/Microsoft.KeyVault/vaults/$KeyVaultName"
     }
     
     process {
         Write-Debug "${functionName}:ConfigSecret:$ConfigSecret"
         $secretName = $ConfigSecret.GetSecretName()
         Write-Debug "${functionName}:secretName:$secretName"
-        $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $secretName
-        if ($secret) {
-            $scope = $keyVaultResourceId + "/secrets/" + $secretName
-            Write-Debug "${functionName}:scope:$scope"
-
-            $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
-            if (!$role) {
-                Write-Output "Role assignment for the secret $secretName in the Key Vault $KeyVault could not be found for the service $ServiceName."
-            }
+        $secret =  Invoke-Command "az keyvault secret show --vault-name $KeyVaultName --name $secretName --query name -o tsv 2>1" 
+        if (!$secret) {
+            Write-Output "Secret $secretName not found in the Key Vault $KeyVault."
         } 
-        else {
-          Write-Output "Secret $secretName not found in the Key Vault $KeyVault."
-        }
     }
     
     end {
@@ -118,9 +98,7 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:SubscriptionId=$SubscriptionId"
 Write-Debug "${functionName}:KeyVault=$KeyVault"
-Write-Debug "${functionName}:KeyVaultRgName=$KeyVaultRgName"
 Write-Debug "${functionName}:AppConfig=$AppConfig"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
@@ -138,7 +116,7 @@ try {
         Write-Host "Importing app config file from $ConfigFilePath"
         [AppConfigEntry[]]$configItems = Get-AppConfigValuesFromYamlFile -Path $ConfigFilePath -DefaultLabel $ServiceName -KeyVault $KeyVault 
         
-        $errors = $configItems | Where-Object { $_.IsKeyVault() } | Test-AppConfigSecretValue -SubscriptionId $SubscriptionId -KeyVaultRgName $KeyVaultRgName -KeyVaultName $KeyVault -ServiceName $ServiceName
+        $errors = $configItems | Where-Object { $_.IsKeyVault() } | Test-AppConfigSecretValue -KeyVaultName $KeyVault -ServiceName $ServiceName
 
         if($errors) {
             $errors | ForEach-Object {
