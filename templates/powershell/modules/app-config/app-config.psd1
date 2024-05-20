@@ -68,6 +68,7 @@
     FunctionsToExport = @(
         'Export-AppConfigValues',
         'Get-AppConfigValues',
+        'Get-AppConfigValuesFromYamlFile',
         'Import-AppConfigValues',
         'Test-Yaml'
     )
