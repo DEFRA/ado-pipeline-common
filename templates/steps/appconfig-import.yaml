@@ -56,6 +56,19 @@ steps:
           resourceid: 'uri":"https://${{ parameters.environmentObj.appKeyVault }}.vault.azure.net/secrets'
         targetFiles: |
           ${{ parameters.workingDirectory }}/${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}
+    - task: AzurePowerShell@5
+      displayName: 'Pre Check - Import App Config'
+      inputs:
+        azureSubscription: '${{ parameters.environmentObj.serviceConnection }}'
+        scriptType: FilePath
+        scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/PreImportAppConfigCheck.ps1'
+        scriptArguments: > 
+          -AdoVariableNames : $(secretVariableNamesJson)
+          -ServiceName '${{ parameters.serviceName }}' 
+          -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
+          -KeyVaultName '${{ parameters.environmentObj.appKeyVault }}'
+          -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
+          -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
     - task: AzureCLI@2
       displayName: 'Import App Config'
       inputs:
@@ -64,10 +77,10 @@ steps:
         scriptLocation: scriptPath
         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ImportAppConfig.ps1'
         arguments: > 
-          -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
           -ServiceName '${{ parameters.serviceName }}' 
           -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
+          -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
           -Version ${{ parameters.Version }}

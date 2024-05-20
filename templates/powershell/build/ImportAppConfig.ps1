@@ -29,13 +29,13 @@ Mandatory. Flag to update correct Sentinel key value.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
-    [string] $KeyVault,
-    [Parameter(Mandatory)]
     [string] $AppConfig,
     [Parameter(Mandatory)]
     [string] $ServiceName,
     [Parameter(Mandatory)]
     [string] $ConfigFilePath,
+    [Parameter(Mandatory)]
+    [string] $KeyVault,
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [Parameter(Mandatory)]
@@ -48,37 +48,6 @@ param(
     [bool]$FullBuild
 )
 
-function Test-AppConfigSecretValue{
-    param(
-        [Parameter(Mandatory, ValueFromPipeline)]
-        [AppConfigEntry]$ConfigSecret,
-        [Parameter(Mandatory)]
-        [string]$KeyVaultName,
-        [Parameter(Mandatory)]
-        [string]$ServiceName
-    )
-
-    begin {
-        [string]$functionName = $MyInvocation.MyCommand
-        Write-Debug "${functionName}:Entered"
-        Write-Debug "${functionName}:KeyVaultName:$KeyVaultName"
-        Write-Debug "${functionName}:ServiceName:$ServiceName"
-    }
-    
-    process {
-        Write-Debug "${functionName}:ConfigSecret:$ConfigSecret"
-        $secretName = $ConfigSecret.GetSecretName()
-        Write-Debug "${functionName}:secretName:$secretName"
-        $secret =  Invoke-Command "az keyvault secret show --vault-name $KeyVaultName --name $secretName --query name -o tsv 2>1" 
-        if (!$secret) {
-            Write-Output "Secret $secretName not found in the Key Vault $KeyVault."
-        } 
-    }
-    
-    end {
-        Write-Debug "${functionName}: Exited"
-    }
-}
 
 Set-StrictMode -Version 3.0
 
@@ -98,10 +67,11 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:KeyVault=$KeyVault"
+Write-Debug "${functionName}:AdoVariableNames=$AdoVariableNames"
 Write-Debug "${functionName}:AppConfig=$AppConfig"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
+Write-Debug "${functionName}:KeyVault=$KeyVault"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 Write-Debug "${functionName}:BuildId=$BuildId"
@@ -113,18 +83,7 @@ try {
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
     if (Test-Path $ConfigFilePath -PathType Leaf) {
-        Write-Host "Importing app config file from $ConfigFilePath"
-        [AppConfigEntry[]]$configItems = Get-AppConfigValuesFromYamlFile -Path $ConfigFilePath -DefaultLabel $ServiceName -KeyVault $KeyVault 
-        
-        $errors = $configItems | Where-Object { $_.IsKeyVault() } | Test-AppConfigSecretValue -KeyVaultName $KeyVault -ServiceName $ServiceName
-
-        if($errors) {
-            $errors | ForEach-Object {
-                Write-Host "##vso[task.logissue type=error]$($_)"
-            }
-            throw "Import validation failed for the secrets in the app config file."
-        }
-        
+        Write-Host "Importing app config file from $ConfigFilePath" 
         Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId -Version $Version -FullBuild $FullBuild -DeleteEntriesNotInFile
 
         Write-Host "App config file import completed successfully"
