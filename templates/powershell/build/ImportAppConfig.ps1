@@ -84,7 +84,9 @@ try {
         Write-Host "Importing app config file from $ConfigFilePath"
         [AppConfigEntry[]]$configItems = Get-AppConfigValuesFromYamlFile -Path $ConfigFilePath -DefaultLabel $ServiceName -KeyVault $KeyVault 
         $configItems | ForEach-Object {
-            Write-Host "Key: $($_.Key), Value: $($_.Value), Label: $($_.Label),IsKeyVault: $($_.IsKeyVault),GetSecretIdentifier: $($_.GetSecretIdentifier)"
+            if ($_.IsKeyVault()) {
+             Write-Host "KeyVault Key: $($_.Key) Value: $($_.GetSecretIdentifier())"   
+            }
         }
         Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId -Version $Version -FullBuild $FullBuild -DeleteEntriesNotInFile
         Write-Host "App config file import completed successfully"
