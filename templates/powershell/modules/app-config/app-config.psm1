@@ -551,14 +551,17 @@ function Import-AppConfigValues {
 	process {
 		Write-Debug "${functionName}:process:Start"
 		[AppConfigEntry[]]$existingItems = Get-AppConfigValues -ConfigStore $ConfigStore -Label $Label
-		if ($importFile.FullName.EndsWith(".json")) {
-			[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromFile -Path $importFile.FullName
-		}
-		elseif ($importFile.FullName.EndsWith(".yaml")) {
-			[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromYamlFile -Path $importFile.FullName -DefaultLabel $Label -KeyVault $KeyVaultName 
-		}
-		else {
-			throw [System.IO.InvalidDataException]::new($importFile.FullName)
+
+		switch ($importFile.Extension) {
+			".json" {
+				[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromFile -Path $importFile.FullName
+			}
+			".yaml" {
+				[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromYamlFile -Path $importFile.FullName -DefaultLabel $Label -KeyVault $KeyVaultName 
+			}
+			default {
+				throw [System.IO.InvalidDataException]::new($importFile.FullName)
+			}
 		}
 
 		#Validate if each record has a label matching the service
@@ -923,27 +926,30 @@ function Test-Yaml {
 
 	process {
 		$secretNameRegex = '^{{serviceName}}-[a-zA-Z][a-zA-Z0-9-]{0,126}$'
+		$keyvaultSecretRule = { param($item) 
+			$keyValid = $item.key -is [string]
+			$valueValid = $item.value -is [string] -and $item.value -match $secretNameRegex
+			$valid = $keyValid -and $valueValid
+			$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a valid. The secret name must be unique within a Key Vault. The name must be a 1-127 character string, starting with a letter and containing only 0-9, a-z, A-Z, - and the name must start with '{{serviceName}}-'" } else { $null }
+			return $valid, $reason
+		}
+
 		$rules = @{
-			'string'   = { param($item) 
+			'string' = { param($item) 
 				$keyValid = $item.key -is [string]
 				$valueValid = $item.value -is [string]
 				$valid = $keyValid -and $valueValid
 				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a string" } else { $null }
 				return $valid, $reason
 			}
-			'keyvault' = { param($item) 
-				$keyValid = $item.key -is [string]
-				$valueValid = $item.value -is [string] -and $item.value -match $secretNameRegex
-				$valid = $keyValid -and $valueValid
-				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a valid. The secret name must be unique within a Key Vault. The name must be a 1-127 character string, starting with a letter and containing only 0-9, a-z, A-Z, - and the name must start with '{{serviceName}}-'" } else { $null }
-				return $valid, $reason
-			}
+			'keyvault' = $keyvaultSecretRule
+    		'keyvaultsecret' = $keyvaultSecretRule
 		}
 		
 		$data = ConvertFrom-Yaml $Yaml
 		
 		foreach ($item in $data) {
-			$type = if ($item.ContainsKey('type')) { $item.type } else { 'string' }
+			$type = if ($item.ContainsKey('type')) { $item.type.ToLower() } else { 'string' }
 			if ($rules.ContainsKey($type)) {
 				$valid, $reason = & $rules[$type] $item
 				if (-not $valid) {
