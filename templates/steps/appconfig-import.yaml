@@ -63,7 +63,7 @@ steps:
         scriptType: FilePath
         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/PreImportAppConfigCheck.ps1'
         scriptArguments: > 
-          -AdoVariableNames $(secretVariableNamesJson)
+          -AdoVariableNames '$(secretVariableNamesJson)'
           -ServiceName '${{ parameters.serviceName }}' 
           -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
           -KeyVaultName '${{ parameters.environmentObj.appKeyVault }}'

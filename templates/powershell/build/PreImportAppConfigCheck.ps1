@@ -18,7 +18,7 @@ function Test-AppConfigSecretValue{
         [AppConfigEntry]$ConfigSecret,
         [string]$KeyVaultName,
         [string]$ServiceName,
-        [array]$AdoVariableNamesList = "[]"
+        [string]$AdoVariableNames = "[]"
 
     )
 
@@ -27,8 +27,9 @@ function Test-AppConfigSecretValue{
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:KeyVaultName:$KeyVaultName"
         Write-Debug "${functionName}:ServiceName:$ServiceName"
-        Write-Debug "${functionName}:AdoVariableNamesList:$AdoVariableNamesList"
+        Write-Debug "${functionName}:AdoVariableNames:$AdoVariableNames"
         $keyVaultResourceId = (Get-AzKeyVault -VaultName $KeyVaultName).ResourceId
+        $adoVariableNamesList = $AdoVariableNames | ConvertFrom-Json
     }
     
     process {
@@ -36,7 +37,7 @@ function Test-AppConfigSecretValue{
         $secretName = $ConfigSecret.GetSecretName()
         Write-Debug "${functionName}:secretName:$secretName"
 
-        if ($AdoVariableNamesList -contains $secretName) {
+        if ($adoVariableNamesList -contains $secretName) {
             Write-Debug "${functionName}:secretName:$secretName is in the list of ADO variables"
             return
         }
@@ -97,7 +98,7 @@ try {
 
         $errors = $configItems | Where-Object { 
             $_.IsKeyVault() 
-        } | Test-AppConfigSecretValue -KeyVaultName $KeyVaultName -ServiceName $ServiceName -AdoVariableNamesList ($AdoVariableNames | ConvertTo-Json)
+        } | Test-AppConfigSecretValue -KeyVaultName $KeyVaultName -ServiceName $ServiceName -AdoVariableNames $AdoVariableNames
 
         if($errors) {
             $errors | ForEach-Object {
