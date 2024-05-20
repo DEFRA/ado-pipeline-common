@@ -417,7 +417,7 @@ function Get-AppConfigValuesFromYamlFile {
 		$ConfigFileContent = $content | ConvertFrom-YAML
 		foreach ($configFileObj in $ConfigFileContent) {
 			$configFileObj.Label = $DefaultLabel
-			if ($configFileObj.ContainsKey("type") -and $configFileObj.type -eq "keyvault" ) {
+			if ($configFileObj.ContainsKey("type") -and ($configFileObj.type -eq "keyvault" -or $configFileObj.type -eq "keyvaultsecret") ) {
 				$configFileObj.ContentType = $kvContentType
 
 				[System.Text.StringBuilder]$kvBuilder = [System.Text.StringBuilder]::new("{ `"uri`" : `"https://")

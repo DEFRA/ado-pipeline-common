@@ -15,4 +15,14 @@ class AppConfigEntry {
 		}
 		return $result
 	}
+    [string] GetSecretName() {
+		[string]$result = $null
+		if ($this.IsKeyVault()) {
+			[hashtable]$item = ConvertFrom-Json -InputObject $this.Value -AsHashtable
+			[string]$itemKey = $item.Keys[0]
+			$uri = New-Object System.Uri($item[$itemKey])
+            $result = $uri.Segments[2].TrimEnd('/')
+		}
+		return $result
+	}
 }
