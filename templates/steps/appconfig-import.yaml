@@ -64,10 +64,12 @@ steps:
         scriptLocation: scriptPath
         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/ImportAppConfig.ps1'
         arguments: > 
+          -SubscriptionId '${{ parameters.environmentObj.subscriptionId }}'
+          -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
+          -KeyVaultRgName '${{ parameters.environmentObj.appKeyVaultRgName }}'
           -AppConfig '${{ parameters.environmentObj.appConfiguration }}' 
           -ServiceName '${{ parameters.serviceName }}' 
           -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
-          -KeyVault '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
           -Version ${{ parameters.Version }}

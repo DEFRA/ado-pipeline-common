@@ -29,13 +29,17 @@ Mandatory. Flag to update correct Sentinel key value.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
+    [string] $SubscriptionId,
+    [Parameter(Mandatory)]
+    [string] $KeyVault,
+    [Parameter(Mandatory)]
+    [string] $KeyVaultRgName,
+    [Parameter(Mandatory)]
     [string] $AppConfig,
     [Parameter(Mandatory)]
     [string] $ServiceName,
     [Parameter(Mandatory)]
     [string] $ConfigFilePath,
-    [Parameter(Mandatory)]
-    [string] $KeyVault,
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [Parameter(Mandatory)]
@@ -48,22 +52,28 @@ param(
     [bool]$FullBuild
 )
 
-
 function Test-AppConfigSecretValue{
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
         [AppConfigEntry]$ConfigSecret,
+        [Parameter(Mandatory)]
+        [string]$SubscriptionId,
+        [Parameter(Mandatory)]
         [string]$KeyVaultName,
+        [Parameter(Mandatory)]
+        [string]$KeyVaultRgName,
+        [Parameter(Mandatory)]
         [string]$ServiceName
     )
 
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
-        
+        Write-Debug "${functionName}:SubscriptionId:$SubscriptionId"
         Write-Debug "${functionName}:KeyVaultName:$KeyVaultName"
+        Write-Debug "${functionName}:KeyVaultRgName:$KeyVaultRgName"
         Write-Debug "${functionName}:ServiceName:$ServiceName"
-        $keyVaultResourceId = (Get-AzKeyVault -VaultName $KeyVaultName).ResourceId
+        $keyVaultResourceId = "/subscriptions/$SubscriptionId/resourceGroups/$KeyVaultRgName/providers/Microsoft.KeyVault/vaults/$KeyVaultName"
     }
     
     process {
@@ -108,10 +118,12 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
+Write-Debug "${functionName}:SubscriptionId=$SubscriptionId"
+Write-Debug "${functionName}:KeyVault=$KeyVault"
+Write-Debug "${functionName}:KeyVaultRgName=$KeyVaultRgName"
 Write-Debug "${functionName}:AppConfig=$AppConfig"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
-Write-Debug "${functionName}:KeyVault=$KeyVault"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 Write-Debug "${functionName}:BuildId=$BuildId"
