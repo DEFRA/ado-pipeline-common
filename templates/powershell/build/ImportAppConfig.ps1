@@ -49,10 +49,10 @@ param(
 )
 
 
-function Validate-AppConfigSecretValues{
+function Test-AppConfigSecretValue{
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
-        [AppConfigEntry[]]$ConfigSecrets,
+        [AppConfigEntry]$ConfigSecret,
         [string]$KeyVaultName,
         [string]$ServiceName
     )
@@ -60,29 +60,28 @@ function Validate-AppConfigSecretValues{
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
-        Write-Debug "${functionName}:ConfigSecrets:$ConfigSecrets"
+        
         Write-Debug "${functionName}:KeyVaultName:$KeyVaultName"
         Write-Debug "${functionName}:ServiceName:$ServiceName"
         $keyVaultResourceId = (Get-AzKeyVault -VaultName $KeyVaultName).ResourceId
     }
     
     process {
-        $ConfigSecrets | ForEach-Object {
-            $secretName = $_.GetSecretName()
-            Write-Debug "${functionName}:secretName:$secretName"
-            $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $secretName
-            if ($secret) {
-                $scope = $keyVaultResourceId + "/secrets/" + $secretName
-                Write-Debug "${functionName}:scope:$scope"
+        Write-Debug "${functionName}:ConfigSecret:$ConfigSecret"
+        $secretName = $ConfigSecret.GetSecretName()
+        Write-Debug "${functionName}:secretName:$secretName"
+        $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $secretName
+        if ($secret) {
+            $scope = $keyVaultResourceId + "/secrets/" + $secretName
+            Write-Debug "${functionName}:scope:$scope"
 
-                $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
-                if (!$role) {
-                    Write-Output "Role assignment for the secret $secretName in the Key Vault $KeyVault could not be found for the service $ServiceName."
-                }
-            } 
-            else {
-              Write-Output "Secret $secretName not found in the Key Vault $KeyVault."
+            $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
+            if (!$role) {
+                Write-Output "Role assignment for the secret $secretName in the Key Vault $KeyVault could not be found for the service $ServiceName."
             }
+        } 
+        else {
+          Write-Output "Secret $secretName not found in the Key Vault $KeyVault."
         }
     }
     
@@ -127,7 +126,7 @@ try {
         Write-Host "Importing app config file from $ConfigFilePath"
         [AppConfigEntry[]]$configItems = Get-AppConfigValuesFromYamlFile -Path $ConfigFilePath -DefaultLabel $ServiceName -KeyVault $KeyVault 
         
-        $errors = $configItems | Where-Object { $_.IsKeyVault() } | Validate-AppConfigSecretValues -KeyVaultName $KeyVault -ServiceName $ServiceName
+        $errors = $configItems | Where-Object { $_.IsKeyVault() } | Test-AppConfigSecretValue -KeyVaultName $KeyVault -ServiceName $ServiceName
 
         if($errors) {
             $errors | ForEach-Object {
