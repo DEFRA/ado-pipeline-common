@@ -69,6 +69,10 @@ steps:
           -KeyVaultName '${{ parameters.environmentObj.appKeyVault }}'
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }} 
           -AppConfigModuleDirectory ${{ parameters.AppConfigModuleDirectory }} 
+        failOnStandardError: false
+        azurePowerShellVersion: 'LatestVersion'          
+        pwsh: true
+        workingDirectory: '$(Pipeline.Workspace)/s'  
     - task: AzureCLI@2
       displayName: 'Import App Config'
       inputs:
