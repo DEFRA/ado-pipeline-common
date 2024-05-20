@@ -138,7 +138,7 @@ try {
         Write-Host "Importing app config file from $ConfigFilePath"
         [AppConfigEntry[]]$configItems = Get-AppConfigValuesFromYamlFile -Path $ConfigFilePath -DefaultLabel $ServiceName -KeyVault $KeyVault 
         
-        $errors = $configItems | Where-Object { $_.IsKeyVault() } | Test-AppConfigSecretValue -KeyVaultName $KeyVault -ServiceName $ServiceName
+        $errors = $configItems | Where-Object { $_.IsKeyVault() } | Test-AppConfigSecretValue -SubscriptionId $SubscriptionId -KeyVaultRgName $KeyVaultRgName -KeyVaultName $KeyVault -ServiceName $ServiceName
 
         if($errors) {
             $errors | ForEach-Object {
