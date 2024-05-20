@@ -66,7 +66,15 @@ try {
             "ContentType"          = "application/json"
             "X-GitHub-Api-Version" = "2022-11-28"
         }
-        [Object]$releases = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases" -f $gitOrgName, $gitRepoName) -Headers $headers
+
+        try {
+            # For public repos
+            [Object]$releases = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases" -f $gitOrgName, $gitRepoName)
+        }
+        catch {
+            #For Private repo use PAT
+            [Object]$releases = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases" -f $gitOrgName, $gitRepoName) -Headers $headers
+        }        
         if($releases){
             [Object]$repo = Invoke-RestMethod -Method Get -Uri ("https://api.github.com/repos/{0}/{1}/releases/latest" -f $gitOrgName, $gitRepoName) -Headers $headers
             $latestReleaseTag=$repo.tag_name
