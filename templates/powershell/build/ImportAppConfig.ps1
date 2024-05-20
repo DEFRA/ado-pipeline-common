@@ -48,6 +48,49 @@ param(
     [bool]$FullBuild
 )
 
+
+function Validate-AppConfigSecretValues{
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [AppConfigEntry[]]$ConfigSecrets,
+        [string]$KeyVaultName,
+        [string]$ServiceName
+    )
+
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:ConfigSecrets:$ConfigSecrets"
+        Write-Debug "${functionName}:KeyVaultName:$KeyVaultName"
+        Write-Debug "${functionName}:ServiceName:$ServiceName"
+        $keyVaultResourceId = (Get-AzKeyVault -VaultName $KeyVaultName).ResourceId
+    }
+    
+    process {
+        $ConfigSecrets | ForEach-Object {
+            $secretName = $_.GetSecretName()
+            Write-Debug "${functionName}:secretName:$secretName"
+            $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $secretName
+            if ($secret) {
+                $scope = $keyVaultResourceId + "/secrets/" + $secretName
+                Write-Debug "${functionName}:scope:$scope"
+
+                $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
+                if (!$role) {
+                    Write-Output "Role assignment for the secret $secretName in the Key Vault $KeyVault could not be found for the service $ServiceName."
+                }
+            } 
+            else {
+              Write-Output "Secret $secretName not found in the Key Vault $KeyVault."
+            }
+        }
+    }
+    
+    end {
+        Write-Debug "${functionName}: Exited"
+    }
+}
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -83,10 +126,18 @@ try {
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         Write-Host "Importing app config file from $ConfigFilePath"
         [AppConfigEntry[]]$configItems = Get-AppConfigValuesFromYamlFile -Path $ConfigFilePath -DefaultLabel $ServiceName -KeyVault $KeyVault 
-        $configItems | ForEach-Object {
-         Write-Host "KeyVault Key: $($_.Key), IsKeyValue: $($_.IsKeyVault()) Value: $($_.GetSecretName())"   
+        
+        $errors = $configItems | Where-Object { $_.IsKeyVault() } | Validate-AppConfigSecretValues -KeyVaultName $KeyVault -ServiceName $ServiceName
+
+        if($errors) {
+            $errors | ForEach-Object {
+                Write-Host "##vso[task.logissue type=error]$($_)"
+            }
+            throw "Import validation failed for the secrets in the app config file."
         }
+        
         Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId -Version $Version -FullBuild $FullBuild -DeleteEntriesNotInFile
+
         Write-Host "App config file import completed successfully"
     }
     else {

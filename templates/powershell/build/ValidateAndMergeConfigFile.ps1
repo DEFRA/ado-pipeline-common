@@ -16,11 +16,11 @@ Mandatory. Directory Path of App-Config module
 
 [CmdletBinding()]
 param(
-    [string] $CommonConfigFilePath="D:\workspace\defra-ffc\ffc-demo-web\appConfig\appConfig.yaml",
-    #[Parameter(Mandatory)]    
-    [string] $ConfigFilePath="D:\workspace\defra-ffc\ffc-demo-web\appConfig\appConfig.snd3.yaml", 
-    #[Parameter(Mandatory)]
-    [string] $AppConfigModuleDirectory="D:\workspace\defra\ado-pipeline-common\templates\powershell\modules\app-config"
+    [string] $CommonConfigFilePath,
+    [Parameter(Mandatory)]    
+    [string] $ConfigFilePath, 
+    [Parameter(Mandatory)]
+    [string] $AppConfigModuleDirectory
 )
 
 function Test-FileContent {
