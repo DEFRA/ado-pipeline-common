@@ -41,7 +41,10 @@ function Test-AppConfigSecretValue{
             Write-Debug "${functionName}:secretName:$secretName is in the list of ADO variables"
             return
         }
+        
+        Get-InstalledModule -Name Az.Resources
         Get-AzContext
+
         $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $secretName
         if ($secret) {
             $scope = "{0}/secrets/{1}" -f $keyVaultResourceId, $secretName
