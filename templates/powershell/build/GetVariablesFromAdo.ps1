@@ -1,25 +1,29 @@
 <#
 .SYNOPSIS
-List all variables from provided list of groups
+    Retrieves all variables from the specified variable groups in Azure DevOps.
+
 .DESCRIPTION
-List all variables from provided list of groups
+    This script retrieves all variables from the provided list of variable groups in Azure DevOps. 
+    It can filter variables based on the provided filters and can also filter based on ProgrammeName.
 
 .PARAMETER VariableGroups
-Mandatory. SemiColon seperated variable groups
-.PARAMETER ProgrammeName
-Optional. ProgrammeName Name
-.PARAMETER EnvName
-Mandatory. Environment Name
-.PARAMETER VarFilter
-Optional. SemiColon seperated variable filters
-.PARAMETER PSHelperDirectory
-Mandatory. Directory Path of PSHelper module
+    Mandatory. A semi-colon separated list of variable groups to retrieve variables from.
 
+.PARAMETER ProgrammeName
+    Optional. The name of the programme to filter variables by.
+
+.PARAMETER EnvName
+    Mandatory. The name of the environment to retrieve variables for.
+
+.PARAMETER VarFilter
+    Optional. A semi-colon separated list of variable filters to apply when retrieving variables.
+
+.PARAMETER PSHelperDirectory
+    Mandatory. The directory path of the PSHelper module.
 
 .EXAMPLE
-.\ListAndImportSecretsToKV.ps1  -VariableGroups <VariableGroups> -EnvName <EnvName> -ProgrammeName <ProgrammeName> -VarFilter <VarFilter>  -PSHelperDirectory <PSHelperDirectory> 
-#> 
-
+    .\GetVariablesFromAdo.ps1  -VariableGroups "Group1;Group2" -EnvName "Production" -ProgrammeName "Programme1" -VarFilter "Filter1;Filter2"  -PSHelperDirectory "C:\PSHelper" 
+#>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]

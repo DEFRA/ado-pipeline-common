@@ -1,6 +1,38 @@
+<#
+.SYNOPSIS
+    This script performs pre-import checks for application configuration.
+
+.DESCRIPTION
+    The script checks if the secrets in the application configuration file exist in the specified Key Vault and if the service has the necessary role assignments to access these secrets. 
+    It uses the Azure PowerShell module to interact with Azure resources.
+
+.PARAMETER AdoVariableNames
+    A JSON string containing the names of Azure DevOps variables.
+
+.PARAMETER SubscriptionId
+    The ID of the Azure subscription.
+
+.PARAMETER ServiceName
+    The name of the service.
+
+.PARAMETER ConfigFilePath
+    The path to the application configuration file.
+
+.PARAMETER KeyVaultName
+    The name of the Key Vault.
+
+.PARAMETER PSHelperDirectory
+    The directory containing the PowerShell helper scripts.
+
+.PARAMETER AppConfigModuleDirectory
+    The directory containing the application configuration module.
+
+.FUNCTION Test-AppConfigSecretValue
+    This function checks if a secret exists in the Key Vault and if the service has the necessary role assignments to access it.
+#>
+
 [CmdletBinding()]
 param(
-    
     [string]$AdoVariableNames = "[]",
     [Parameter(Mandatory)]
     [string] $SubscriptionId,
