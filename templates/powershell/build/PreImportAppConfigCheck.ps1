@@ -44,7 +44,7 @@ function Test-AppConfigSecretValue{
 
         $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $secretName
         if ($secret) {
-            $scope = $keyVaultResourceId + "/secrets/" + $secretName
+            $scope = "{0}/secrets/{1}" -f $keyVaultResourceId, $secretName
             Write-Debug "${functionName}:Key Vault Secret Scope:$scope"
 
             $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
