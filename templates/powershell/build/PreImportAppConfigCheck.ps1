@@ -45,9 +45,10 @@ function Test-AppConfigSecretValue{
         $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $secretName
         if ($secret) {
             $scope = $keyVaultResourceId + "/secrets/" + $secretName
-            Write-Debug "${functionName}:scope:$scope"
+            Write-Debug "${functionName}:Key Vault Secret Scope:$scope"
 
             $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
+            Write-Debug "${functionName}:Role:$role"
             if (!$role) {
                 Write-Output "Role assignment for the secret $secretName in the Key Vault $KeyVaultName could not be found for the service $ServiceName."
             }
