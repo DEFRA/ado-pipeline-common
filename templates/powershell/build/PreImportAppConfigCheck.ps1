@@ -50,6 +50,8 @@ function Test-AppConfigSecretValue{
             Write-Host "${functionName}:Checking role assignment for the secret $secretName in the Key Vault $KeyVaultName for the service $ServiceName"
             Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User'
 
+            Get-AzContext
+
             $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
             Write-Host "${functionName}:Role:$role"
             if (!$role) {
