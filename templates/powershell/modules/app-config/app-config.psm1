@@ -900,7 +900,7 @@ function Test-Yaml {
 	}
 
 	process {
-		$secretNameRegex = '^{{serviceName}}-[a-zA-Z0-9-]{0,76}$'
+		$secretNameRegex = '^{{serviceName}}-[a-zA-Z0-9][a-zA-Z0-9-]{0,74}[a-zA-Z0-9]$'
 		$keyvaultSecretRule = { param($item) 
 			$keyValid = $item.key -is [string]
 			$valueValid = $item.value -is [string] -and $item.value -match $secretNameRegex
