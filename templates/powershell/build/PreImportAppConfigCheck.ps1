@@ -41,7 +41,7 @@ function Test-AppConfigSecretValue{
             Write-Debug "${functionName}:secretName:$secretName is in the list of ADO variables"
             return
         }
-
+        Get-AzContext
         $secret = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $secretName
         if ($secret) {
             $scope = "{0}/secrets/{1}" -f $keyVaultResourceId, $secretName
@@ -49,8 +49,6 @@ function Test-AppConfigSecretValue{
 
             Write-Host "${functionName}:Checking role assignment for the secret $secretName in the Key Vault $KeyVaultName for the service $ServiceName"
             Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User'
-
-            Get-AzContext
 
             $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
             Write-Host "${functionName}:Role:$role"
