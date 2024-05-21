@@ -28,6 +28,7 @@ function Test-AppConfigSecretValue{
         Write-Debug "${functionName}:KeyVaultName:$KeyVaultName"
         Write-Debug "${functionName}:ServiceName:$ServiceName"
         Write-Debug "${functionName}:AdoVariableNames:$AdoVariableNames"
+        Set-AzContext -SubscriptionId 22ff5465-17ba-4833-85b0-e47c13a82be8
         $keyVaultResourceId = (Get-AzKeyVault -VaultName $KeyVaultName).ResourceId
         $adoVariableNamesList = $AdoVariableNames | ConvertFrom-Json
     }
