@@ -3,6 +3,8 @@ param(
     
     [string]$AdoVariableNames = "[]",
     [Parameter(Mandatory)]
+    [string] $SubscriptionId,
+    [Parameter(Mandatory)]
     [string] $ServiceName,
     [Parameter(Mandatory)]
     [string] $ConfigFilePath,
@@ -21,7 +23,6 @@ function Test-AppConfigSecretValue{
         [string]$KeyVaultName,
         [string]$ServiceName,
         [string]$AdoVariableNames = "[]"
-
     )
 
     begin {
@@ -30,7 +31,6 @@ function Test-AppConfigSecretValue{
         Write-Debug "${functionName}:KeyVaultName:$KeyVaultName"
         Write-Debug "${functionName}:ServiceName:$ServiceName"
         Write-Debug "${functionName}:AdoVariableNames:$AdoVariableNames"
-        Set-AzContext -SubscriptionId 22ff5465-17ba-4833-85b0-e47c13a82be8 | Out-Null
         $keyVaultResourceId = (Get-AzKeyVault -VaultName $KeyVaultName).ResourceId
         $adoVariableNamesList = $AdoVariableNames | ConvertFrom-Json
     }
@@ -51,15 +51,21 @@ function Test-AppConfigSecretValue{
             Write-Debug "${functionName}:Key Vault Secret Scope:$scope"
 
             Write-Debug "${functionName}:Checking role assignment for the secret $secretName in the Key Vault $KeyVaultName for the service $ServiceName"
-            
             $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
-            Write-Debug "${functionName}:Role:$role"
             if (!$role) {
-                Write-Output "Role assignment for the secret $secretName in the Key Vault $KeyVaultName could not be found for the service $ServiceName."
+                $warningObject = New-Object PSObject -Property @{ 
+                    Type = "warning" 
+                    Message = "Role assignment for the secret $secretName in the Key Vault $KeyVaultName does not exist. The application $ServiceName will not function correctly without this role." 
+                }
+                Write-Output $warningObject
             }
         } 
         else {
-          Write-Output "Secret $secretName not found in the Key Vault $KeyVaultName."
+            $errorObject = New-Object PSObject -Property @{ 
+                Type = "error" 
+                Message = "Secret $secretName not found in the Key Vault $KeyVaultName." 
+            }
+            Write-Output $errorObject
         }
     }
     
@@ -87,6 +93,7 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:AdoVariableNames=$AdoVariableNames"
+Write-Debug "${functionName}:SubscriptionId=$SubscriptionId"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
 Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
@@ -97,10 +104,13 @@ try {
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
 
+    Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
+
     if (Test-Path $ConfigFilePath -PathType Leaf) {
+
         Write-Debug "${functionName}:ConfigFilePath exists"
         [AppConfigEntry[]]$configItems = Get-AppConfigValuesFromYamlFile -Path $ConfigFilePath -DefaultLabel $ServiceName -KeyVault $KeyVaultName 
-        Write-Debug "${functionName}:configItems=$configItems"
+        Write-Debug "${functionName}:ConfigItems=$configItems"
 
         $errors = $configItems | Where-Object { 
             $_.IsKeyVault() 
@@ -108,7 +118,10 @@ try {
 
         if($errors) {
             $errors | ForEach-Object {
-                Write-Host "##vso[task.logissue type=error]$($_)"
+                $propertyNames = $_.PSObject.Properties.Name
+                if ($propertyNames -contains 'Type' -and $propertyNames -contains 'Message') {
+                    Write-Host "##vso[task.logissue type=$($_.Type)]$($_.Message)"
+                }
             }
             throw "Import validation failed for the secrets in the app config file."
         }

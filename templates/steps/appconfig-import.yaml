@@ -59,11 +59,12 @@ steps:
     - task: AzurePowerShell@5
       displayName: 'Pre Check - Import App Config'
       inputs:
-        azureSubscription: 'AZD-ADP-SSV3'
+        azureSubscription: '${{ parameters.environmentObj.ssvServiceConnection }}'
         scriptType: FilePath
         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/PreImportAppConfigCheck.ps1'
         scriptArguments: > 
           -AdoVariableNames '$(secretVariableNamesJson)'
+          -SubscriptionId '${{ parameters.environmentObj.subscriptionId }}'
           -ServiceName '${{ parameters.serviceName }}' 
           -ConfigFilePath '${{ parameters.appDeployConfig.filepath }}/appConfig.${{ parameters.environmentObj.name }}.${{ parameters.configFileType }}'
           -KeyVaultName '${{ parameters.environmentObj.appKeyVault }}'
