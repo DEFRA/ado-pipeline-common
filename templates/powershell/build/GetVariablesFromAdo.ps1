@@ -75,8 +75,8 @@ function Get-VariableGroups {
 
     process {
 
-        $variableGroupsArray = $VariableGroups -split ";"
-        $variableGroupsHashtable = @{}
+        [array]$variableGroupsArray = $VariableGroups -split ";"
+        [hashtable]$variableGroupsHashtable = @{}
 
         foreach ($variableGroup in $variableGroupsArray) {
             if ([string]::IsNullOrEmpty($ProgrammeName) -or $variableGroup -like $ProgrammeName -or $variableGroup -match $ProgrammeName) {        
@@ -126,8 +126,8 @@ function Get-FinalVariables {
     }
     process {
 
-        $varFilterArray = @()
-        $variablesArray = @()
+        [array]$varFilterArray = @()
+        [array]$variablesArray = @()
 
         if (-not [string]::IsNullOrEmpty($VarFilter)) {
             $varFilterArray = $VarFilter -split ";"
@@ -190,11 +190,16 @@ try {
     
     Set-AzureDevOpsDefaults -Organization $ENV:DevOpOrganization -Project $ENV:DevOpsProject
 
-    $variableGroupsHashtable = Get-VariableGroups -VariableGroups $VariableGroups -EnvName $EnvName -ProgrammeName $ProgrammeName
-
-    $variablesArray = Get-FinalVariables -VariableGroupsHashtable $VariableGroupsHashtable -VarFilter $VarFilter
+    [hashtable]$variableGroupsHashtable = Get-VariableGroups -VariableGroups $VariableGroups -EnvName $EnvName -ProgrammeName $ProgrammeName
     
-    Write-Host "variables:$variablesArray" 
+    Write-Debug "${functionName}:VariableGroups:"
+    foreach ($key in $variableGroupsHashtable.Keys) {
+        Write-Debug "Key: $key, Value: $($variableGroupsHashtable[$key])"
+    }
+
+    [array]$variablesArray = Get-FinalVariables -VariableGroupsHashtable $VariableGroupsHashtable -VarFilter $VarFilter
+    
+    Write-Host "Variables:$variablesArray" 
 
     if ($variablesArray.Count -gt 0) {
         $secretVariableNamesJson = $variablesArray | ConvertTo-Json -Compress 
