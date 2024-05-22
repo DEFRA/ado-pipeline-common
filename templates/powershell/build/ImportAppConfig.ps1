@@ -67,7 +67,6 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:AdoVariableNames=$AdoVariableNames"
 Write-Debug "${functionName}:AppConfig=$AppConfig"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
