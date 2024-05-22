@@ -144,18 +144,20 @@ try {
         [AppConfigEntry[]]$configItems = Get-AppConfigValuesFromYamlFile -Path $ConfigFilePath -DefaultLabel $ServiceName -KeyVault $KeyVaultName 
         Write-Debug "${functionName}:ConfigItems=$configItems"
 
-        $errors = $configItems | Where-Object { 
+        $issues = $configItems | Where-Object { 
             $_.IsKeyVault() 
         } | Test-AppConfigSecretValue -KeyVaultName $KeyVaultName -ServiceName $ServiceName -AdoVariableNames $AdoVariableNames
 
-        if($errors) {
-            $errors | ForEach-Object {
+        if($issues) {
+            $issues | ForEach-Object {
                 $propertyNames = $_.PSObject.Properties.Name
                 if ($propertyNames -contains 'Type' -and $propertyNames -contains 'Message') {
                     Write-Host "##vso[task.logissue type=$($_.Type)]$($_.Message)"
                 }
             }
-            throw "Import validation failed for the secrets in the app config file."
+            if ($issues | Where-Object { $_.Type -eq 'error' }) {
+                throw "Import validation failed for the secrets in the app config file."
+            }
         }
     }
 
