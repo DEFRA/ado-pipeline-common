@@ -4,8 +4,6 @@ Validate Azure app config file
 .DESCRIPTION
 Validate Azure app config file
 
-.PARAMETER SchemaFilePath
-Mandatory. Schema file path.
 .PARAMETER CommonConfigFilePath
 Mandatory. Common App Config file path. This config file conents will be merged to env specific config file.
 .PARAMETER ConfigFilePath
@@ -13,19 +11,80 @@ Mandatory. App Config file path.
 .PARAMETER AppConfigModuleDirectory
 Mandatory. Directory Path of App-Config module
 .EXAMPLE
-.\ValidateAndMergeConfigFile.ps1  -SchemaFilePath <SchemaFilePath> -CommonConfigFilePath <CommonConfigFilePath> -ConfigFilePath <ConfigFilePath> -AppConfigModuleDirectory <AppConfigModuleDirectory>
+.\ValidateAndMergeConfigFile.ps1  -CommonConfigFilePath <CommonConfigFilePath> -ConfigFilePath <ConfigFilePath> -AppConfigModuleDirectory <AppConfigModuleDirectory>
 #> 
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
-    [string] $SchemaFilePath,
     [string] $CommonConfigFilePath,
     [Parameter(Mandatory)]    
-    [string] $ConfigFilePath,    
+    [string] $ConfigFilePath, 
     [Parameter(Mandatory)]
     [string] $AppConfigModuleDirectory
 )
+
+function Test-FileContent {
+    param(
+        [Parameter(Mandatory = $true)][string]$FilePath,
+        [Parameter(Mandatory = $true)][string]$FileContent
+    )
+
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:FilePath=$FilePath"
+        Write-Debug "${functionName}:FileContent=$FileContent"
+    }
+
+    process {
+        switch -Wildcard ($FilePath) {
+            "*.yaml" {
+                $errors = Test-Yaml -Yaml $FileContent
+                if ($null -eq $errors) {
+                    Write-Host "${functionName} File`t`tPassed validation"
+                } else {
+                    $errors | ForEach-Object {
+                        Write-Host "##vso[task.logissue type=error]$_"
+                    }
+                    throw "File $FilePath failed validation"
+                }
+            }
+            default { throw [System.IO.InvalidDataException]::new($FilePath) }
+        }
+    }
+
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
+function Merge-CommonConfig {
+    param(
+        [Parameter(Mandatory = $true)][string]$ConfigFilePath,
+        [Parameter(Mandatory = $true)][string]$ConfigFileContent,
+        [Parameter(Mandatory = $true)][string]$CommonConfigFileContent
+    )
+
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
+        Write-Debug "${functionName}:ConfigFileContent=$ConfigFileContent"
+        Write-Debug "${functionName}:CommonConfigFileContent=$CommonConfigFileContent"
+    }
+    process {
+        switch -Wildcard ($ConfigFilePath) {
+            "*.yaml" { "`n"  | Out-File -append $ConfigFilePath; $CommonConfigFileContent  | Out-File -append $ConfigFilePath }
+            default { throw [System.IO.InvalidDataException]::new($ConfigFilePath) }
+        }
+
+        Write-Host "${functionName} File $CommonConfigFilePath merged to $ConfigFilePath "
+    }
+    
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
 
 Set-StrictMode -Version 3.0
 
@@ -45,72 +104,28 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
-Write-Debug "${functionName}:SchemaFilePath=$SchemaFilePath"
 Write-Debug "${functionName}:CommonConfigFilePath=$CommonConfigFilePath"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
 Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 
 try {
 
-    [bool]$CommonConfigFileExists = $false
-
     Import-Module $AppConfigModuleDirectory -Force
-    if (Test-Path $SchemaFilePath -PathType Leaf) {
-        [string]$SchemaFileContent = Get-Content -Raw -Path $SchemaFilePath 
-    }
 
     if (Test-Path $CommonConfigFilePath -PathType Leaf) {
-        [bool]$CommonConfigFileExists = $true
+        [bool]$commonConfigFileExists = $true
         [string]$CommonConfigFileContent = Get-Content -Raw -Path $CommonConfigFilePath 
-        if ($CommonConfigFilePath.EndsWith(".json")) {        
-            $result = ( Test-Json -Json $CommonConfigFileContent -Schema $SchemaFileContent)
-        }
-        elseif ($CommonConfigFilePath.EndsWith(".yaml")) {
-
-            $result = ( Test-Yaml -Yaml $CommonConfigFileContent -Schema $SchemaFileContent)
-        }        
-        if ($result -eq $true) {
-            Write-Host "${functionName} File`t`tPassed validation"
-        }
-        else {
-            Write-Host "${functionName} File`t`tFailed validation"
-            throw [System.IO.InvalidDataException]::new($CommonConfigFilePath) 
-        }
+        Test-FileContent -FilePath $CommonConfigFilePath -FileContent $CommonConfigFileContent
     }
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
         [string]$ConfigFileContent = Get-Content -Raw -Path $ConfigFilePath     
         Write-Debug $ConfigFileContent
-        
-        if ($ConfigFilePath.EndsWith(".json")) {        
-            $result = ( Test-Json -Json $ConfigFileContent -Schema $SchemaFileContent)
-        }
-        elseif ($ConfigFilePath.EndsWith(".yaml")) {
-
-            $result = ( Test-Yaml -Yaml $ConfigFileContent -Schema $SchemaFileContent)
-        }        
-       
-        if ($result -eq $true) {
-            Write-Host "${functionName} File`t`tPassed validation"
-        }
-        else {
-            Write-Host "${functionName} File`t`tFailed validation"
-            throw [System.IO.InvalidDataException]::new($ConfigFilePath) 
-        }
+        Test-FileContent -FilePath $ConfigFilePath -FileContent $ConfigFileContent
     }
 
-    if ($CommonConfigFileExists) {
-        if ($ConfigFilePath.EndsWith(".json")) { 
-            @($ConfigFileContent; $CommonConfigFileContent) | ConvertTo-Json | Out-File $ConfigFilePath
-        }
-        elseif ($ConfigFilePath.EndsWith(".yaml")) {
-            "`n"  | Out-File -append $ConfigFilePath
-            $CommonConfigFileContent  | Out-File -append $ConfigFilePath
-        }
-        else {
-            throw [System.IO.InvalidDataException]::new($ConfigFilePath)            
-        }
-        Write-Host "${functionName} File $CommonConfigFilePath merged to $ConfigFilePath "
+    if ($commonConfigFileExists) {
+        Merge-CommonConfig -ConfigFilePath $ConfigFilePath -ConfigFileContent $ConfigFileContent -CommonConfigFileContent $CommonConfigFileContent
     }
                
     $exitCode = 0

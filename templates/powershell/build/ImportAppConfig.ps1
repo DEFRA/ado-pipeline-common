@@ -48,6 +48,7 @@ param(
     [bool]$FullBuild
 )
 
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -66,6 +67,7 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
+Write-Debug "${functionName}:AdoVariableNames=$AdoVariableNames"
 Write-Debug "${functionName}:AppConfig=$AppConfig"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:ConfigFilePath=$ConfigFilePath"
@@ -81,11 +83,13 @@ try {
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
     if (Test-Path $ConfigFilePath -PathType Leaf) {
+        Write-Host "Importing app config file from $ConfigFilePath" 
         Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId -Version $Version -FullBuild $FullBuild -DeleteEntriesNotInFile
-        Write-Host "${functionName} : App config file import completed successfully"
+
+        Write-Host "App config file import completed successfully"
     }
     else {
-        Write-Host "${functionName} : No app config file found to import"
+        Write-Host "No app config file found to import"
     }
    
     $exitCode = 0
