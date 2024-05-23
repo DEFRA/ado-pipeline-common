@@ -48,7 +48,7 @@ param(
     [string]$AppConfigModuleDirectory
 )
 
-function Test-AppConfigSecretValue{
+function Test-AppConfigSecretValue {
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
         [AppConfigEntry]$ConfigSecret,
@@ -83,10 +83,10 @@ function Test-AppConfigSecretValue{
             Write-Debug "${functionName}:Key Vault Secret Scope:$scope"
 
             Write-Debug "${functionName}:Checking role assignment for the secret $secretName in the Key Vault $KeyVaultName for the service $ServiceName"
-            $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*'+$ServiceName }
+            $role = Get-AzRoleAssignment -Scope $scope -RoleDefinitionName 'Key Vault Secrets User' | Where-Object { $_.DisplayName -like '*' + $ServiceName }
             if (!$role) {
                 $warningObject = New-Object PSObject -Property @{ 
-                    Type = "warning" 
+                    Type    = "warning" 
                     Message = "Role assignment for the secret $secretName in the Key Vault $KeyVaultName does not exist. The application $ServiceName will not function correctly without this role." 
                 }
                 Write-Output $warningObject
@@ -94,7 +94,7 @@ function Test-AppConfigSecretValue{
         } 
         else {
             $errorObject = New-Object PSObject -Property @{ 
-                Type = "error" 
+                Type    = "error" 
                 Message = "Secret $secretName not found in the Key Vault $KeyVaultName." 
             }
             Write-Output $errorObject
@@ -136,6 +136,11 @@ try {
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
 
+    #If there are no variable groups for given service the AdoVariableNames value will be "$(secretVariableNamesJson)"
+    if ($AdoVariableNames.Contains("secretVariableNamesJson")) {
+        $AdoVariableNames = "[]"
+    }
+
     Set-AzContext -SubscriptionId $SubscriptionId | Out-Null
 
     if (Test-Path $ConfigFilePath -PathType Leaf) {
@@ -148,7 +153,7 @@ try {
             $_.IsKeyVault() 
         } | Test-AppConfigSecretValue -KeyVaultName $KeyVaultName -ServiceName $ServiceName -AdoVariableNames $AdoVariableNames
 
-        if($issues) {
+        if ($issues) {
             $issues | ForEach-Object {
                 $propertyNames = $_.PSObject.Properties.Name
                 if ($propertyNames -contains 'Type' -and $propertyNames -contains 'Message') {
