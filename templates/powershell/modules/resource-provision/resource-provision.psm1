@@ -39,7 +39,7 @@ function New-ServiceBusEntities {
 		Write-Debug "${functionName}:Pr=$Pr"
 	}
 	process {
-		if (Check-HasResourcesToProvision) {
+		if (Test-HasResourcesToProvision) {
 			Set-ServiceBusCredEnvironmentVariables
 			New-AllServiceBusEntities -Environment $Environment -RepoName $RepoName -Pr $Pr
 		}
@@ -52,7 +52,7 @@ function New-ServiceBusEntities {
 	}
 }
 
-function Check-HasResourcesToProvision {
+function Test-HasResourcesToProvision {
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
 		Write-Debug "${functionName}:Entered"
