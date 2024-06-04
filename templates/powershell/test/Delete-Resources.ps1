@@ -6,7 +6,7 @@ Delete Dynamically provisioned cloud resource i.e. service bus queues, topics et
 
 .PARAMETER PipelineCommonDirectory
 Mandatory. Directory Path of ADO Pipeline common repo
-.PARAMETER ServiceName
+.PARAMETER TeamName
 Mandatory. Service Name
 .PARAMETER IsPrBuild
 Mandatory. Is PR Build flag
@@ -24,7 +24,7 @@ param(
     [Parameter(Mandatory)]
     [string]$PipelineCommonDirectory,
     [Parameter(Mandatory)]
-    [string]$ServiceName,
+    [string]$TeamName,
     [Parameter(Mandatory)]
     [string]$IsPrBuild,
     [Parameter(Mandatory)]
@@ -39,7 +39,7 @@ param(
 #------------------------------START : LOCAL TESTING VARIABLES----------------------------------#
 # $Environment = 'snd1'
 # $PipelineCommonDirectory = '.\ado-pipeline-common'
-# $ServiceName = 'ffc-demo-web'
+# $TeamName = 'ffc-demo'
 # $ENV:BUILD_BUILDID = 439548
 # $IsPrBuild = 'false'
 # $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = 305
@@ -66,7 +66,7 @@ if ($enableDebug) {
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:PipelineCommonDirectory=$PipelineCommonDirectory"
-Write-Debug "${functionName}:ServiceName=$ServiceName"
+Write-Debug "${functionName}:TeamName=$TeamName"
 Write-Debug "${functionName}:IsPrBuild=$IsPrBuild"
 Write-Debug "${functionName}:Environment=$Environment"
 Write-Debug "${functionName}:AzureServiceBusResourceGroup=$AzureServiceBusResourceGroup"
@@ -91,7 +91,7 @@ try {
         $PrNumber = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
     }
 
-    Remove-Resources -Environment $Environment -RepoName $ServiceName -Pr $PrNumber
+    Remove-Resources -Environment $Environment -RepoName $TeamName -Pr $PrNumber
 
     $exitCode = 0
 }

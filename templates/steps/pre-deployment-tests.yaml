@@ -1,4 +1,5 @@
 parameters:
+  - name: teamName
   - name: serviceName
   - name: IsPrBuild
     displayName: Is PR Build
@@ -22,7 +23,7 @@ steps:
       arguments: > 
         -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
-        -ServiceName '${{ parameters.serviceName }}'
+        -TeamName '${{ parameters.teamName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
         -Environment '${{ parameters.appTestConfig.preDeployTest.envToTest }}'
         -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.preDeployTest.azureServiceBusResourceGroup }}'
@@ -74,7 +75,7 @@ steps:
       scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/test/Delete-Resources.ps1'
       arguments: > 
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
-        -ServiceName '${{ parameters.serviceName }}'
+        -TeamName '${{ parameters.teamName }}'
         -IsPrBuild '${{ parameters.IsPrBuild }}'
         -Environment '${{ parameters.appTestConfig.preDeployTest.envToTest }}'
         -AzureServiceBusResourceGroup '${{ parameters.appTestConfig.preDeployTest.azureServiceBusResourceGroup }}'
