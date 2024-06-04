@@ -253,6 +253,7 @@ stages:
           - ${{ if ne(parameters.appTestConfig, '') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
               parameters:
+                teamName: ${{ parameters.teamName }}
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
