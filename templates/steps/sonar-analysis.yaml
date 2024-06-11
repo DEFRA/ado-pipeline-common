@@ -2,7 +2,7 @@ steps:
 - task: SonarCloudAnalyze@2
   displayName: 'Run Sonar Code Analysis'
   inputs:
-    jdkversion: 'JAVA_HOME'
+    jdkversion: 'JAVA_HOME_21_X64'
   
 - task: SonarCloudPublish@2
   displayName: 'Publish Sonar Quality Gate Result'
