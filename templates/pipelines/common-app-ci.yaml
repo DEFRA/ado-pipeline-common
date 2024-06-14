@@ -428,6 +428,8 @@ stages:
                             TeamName: ${{ parameters.teamName }}
                             ServiceName: ${{ parameters.serviceName }}
                             EnvName: ${{ deploymentEnv.name }}
+                            KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }} 
+                            TenantId: ${{ deploymentEnv.tenantId }}
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
                         - template: /templates/steps/secrets-import-kv.yaml	                          
                           parameters:

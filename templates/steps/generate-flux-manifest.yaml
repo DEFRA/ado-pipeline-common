@@ -7,6 +7,10 @@ parameters:
   type: string
 - name: EnvName
   type: string
+- name: KeyVaultName
+  type: string
+- name: TenantId
+  type: string  
 steps:
   - task: PowerShell@2
     displayName: 'Generate Flux Manifest' 
@@ -19,6 +23,8 @@ steps:
         -TeamName "${{ parameters.TeamName }}"
         -ServiceName "${{ parameters.ServiceName }}"
         -EnvName "${{ parameters.EnvName }}"
+        -KeyVaultName "${{ parameters.KeyVaultName }}"
+        -TenantId "${{ parameters.TenantId }}""
       failOnStderr: false      
       pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'  

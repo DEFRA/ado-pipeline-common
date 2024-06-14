@@ -14,39 +14,103 @@ param(
     [string]$TenantId
 )
 
+function Invoke-FluxApi {
+    param (
+        [Parameter(Mandatory)]
+        [string]$Uri,
+        [Parameter(Mandatory)]
+        [string]$Method,
+        [string]$Body
+    )
+
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand.Name
+        Write-Debug "${functionName}:Entered"
+        if (-not $AccessToken) {
+            $AccessToken = Get-ApiAccessToken -KeyVaultName $KeyVaultName -TenantId $TenantId
+        }
+        $headers = @{
+            "Authorization" = "Bearer $AccessToken"
+        }
+        $contentType = "application/json"
+    }
+    process {
+        Write-Debug "${functionName}:Uri=$Uri"
+        Write-Debug "${functionName}:Method=$Method"
+        Write-Debug "${functionName}:Body=$Body"
+
+        $jsonBody = if ($Body) { $Body | ConvertTo-Json } else { $null }
+
+        $response = Invoke-RestMethod -Uri $Uri -Method $Method -Headers $headers -Body $jsonBody -ContentType $contentType
+        return $response
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
+function Get-ApiAccessToken {
+    param (
+        [Parameter(Mandatory)]
+        [string]$KeyVaultName,
+        [Parameter(Mandatory)]
+        [string]$TenantId
+    )
+
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand.Name
+        Write-Debug "${functionName}:Entered"
+        $secretNames = @("ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID", "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET", "API-AUTH-BACKEND-APP-REG-CLIENT-ID")
+        $secrets = @{}
+    }
+    process {
+        Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
+        Write-Debug "${functionName}:TenantId=$TenantId"
+
+        foreach ($name in $secretNames) {
+            $secrets[$name] = (Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $name -AsPlainText -ErrorAction Stop -Debug:$false).Trim()
+        }
+
+        $reqTokenBody = @{
+            Grant_Type    = "client_credentials"
+            Scope         = "api://$($secrets["API-AUTH-BACKEND-APP-REG-CLIENT-ID"])/.default"
+            client_Id     = $secrets["ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID"]
+            Client_Secret = $secrets["ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET"]
+        }
+
+        $accessToken = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $reqTokenBody -ErrorAction Stop
+        return $accessToken.access_token
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
 function Add-Environment {
     param (
         [Parameter(Mandatory)]
         [string]$ApiBaseUri,
-        [Parameter(Mandatory)]
-        [string]$AccessToken,
         [Parameter(Mandatory)]
         [string]$TeamName,
         [Parameter(Mandatory)]
         [string]$ServiceName,
         [Parameter(Mandatory)]
         [string]$Name
-
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+    }
+    process {
         Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
-        Write-Debug "${functionName}:AccessToken=******"
         Write-Debug "${functionName}:TeamName=$TeamName"
         Write-Debug "${functionName}:ServiceName=$ServiceName"
         Write-Debug "${functionName}:Name=$Name"
-        
-    }
-    process {
+
         $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/services/$ServiceName/environments"
         Write-Debug "${functionName}:Uri=$uri"
-
-        $headers = @{
-            "Authorization" = "Bearer $AccessToken"
-        }
-                
-        Invoke-RestMethod -Uri $uri -Headers $headers  -Method Post -Body (@($Name) | ConvertTo-Json) -ContentType "application/json"
+        
+        Invoke-FluxApi -Uri $uri -Method Post -Body @($Name)
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -58,8 +122,6 @@ function Get-Environment {
         [Parameter(Mandatory)]
         [string]$ApiBaseUri,
         [Parameter(Mandatory)]
-        [string]$AccessToken,
-        [Parameter(Mandatory)]
         [string]$TeamName,
         [Parameter(Mandatory)]
         [string]$ServiceName,
@@ -70,7 +132,6 @@ function Get-Environment {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
         Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
-        Write-Debug "${functionName}:AccessToken=******"
         Write-Debug "${functionName}:TeamName=$TeamName"
         Write-Debug "${functionName}:ServiceName=$ServiceName"
         Write-Debug "${functionName}:Name=$Name"
@@ -79,10 +140,7 @@ function Get-Environment {
         $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/services/$ServiceName/environments/$Name"
         Write-Debug "${functionName}:Uri=$uri"
         try {
-            $headers = @{
-                "Authorization" = "Bearer $AccessToken"
-            }
-            return Invoke-RestMethod -Uri $uri -Headers $headers -Method Get -ContentType "application/json"    
+            return Invoke-FluxApi -Uri $uri -Method Get 
         }
         catch {
             if ($_.Exception.Response.StatusCode -eq 404) {
@@ -102,8 +160,6 @@ function Add-FluxConfig {
     param (
         [Parameter(Mandatory)]
         [string]$ApiBaseUri,
-        [Parameter(Mandatory)]
-        [string]$AccessToken,
         [string]$TeamName,
         [Parameter(Mandatory)]
         [string]$ServiceName,
@@ -113,19 +169,17 @@ function Add-FluxConfig {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+    }
+    process {
         Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
-        Write-Debug "${functionName}:AccessToken=******"
         Write-Debug "${functionName}:TeamName=$TeamName"
         Write-Debug "${functionName}:ServiceName=$ServiceName"
         Write-Debug "${functionName}:EnvName=$EnvName"
-    }
-    process {
+
         $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/generate?serviceName=$ServiceName&environment=$EnvName"
         Write-Debug "${functionName}:Uri=$uri"
-        $headers = @{
-            "Authorization" = "Bearer $AccessToken"
-        }
-        Invoke-RestMethod -Uri $uri -Headers $headers -Method Post
+       
+        Invoke-FluxApi -Uri $uri -Method Post
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -136,8 +190,6 @@ function Update-EnvironmentManifest {
     param (
         [Parameter(Mandatory)]
         [string]$ApiBaseUri,
-        [Parameter(Mandatory)]
-        [string]$AccessToken,
         [string]$TeamName,
         [Parameter(Mandatory)]
         [string]$ServiceName,
@@ -147,61 +199,21 @@ function Update-EnvironmentManifest {
     begin {
         [string]$functionName = $MyInvocation.MyCommand
         Write-Debug "${functionName}:Entered"
+    }
+    process {
         Write-Debug "${functionName}:ApiBaseUri=$ApiBaseUri"
-        Write-Debug "${functionName}:AccessToken=******"
         Write-Debug "${functionName}:TeamName=$TeamName"
         Write-Debug "${functionName}:ServiceName=$ServiceName"
         Write-Debug "${functionName}:Name=$Name"
-    }
-    process {
-        $headers = @{
-            "Authorization" = "Bearer $AccessToken"
-        }
+
         $uri = "$ApiBaseUri/FluxTeamConfig/$TeamName/services/$ServiceName/environments/$Name/manifest"
         Write-Debug "${functionName}:Uri=$uri"
 
-        return Invoke-RestMethod -Uri $uri -Headers $headers -Method Patch -Body (@( { generate=$false }) | ConvertTo-Json)  -ContentType "application/json"
+        return Invoke-FluxApi -Uri $uri -Method Patch -Body @({ generate=$false })
     }
     end {
         Write-Debug "${functionName}:Exited"
     }
-}
-
-funcion Get-ApiAccessToken {
-    param (
-        [Parameter(Mandatory)]
-        [string]$KeyVaultName,
-        [Parameter(Mandatory)]
-        [string]$TenantId
-    )
-    begin {
-        [string]$functionName = $MyInvocation.MyCommand
-        Write-Debug "${functionName}:Entered"
-        Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
-        Write-Debug "${functionName}:TenantId=$TenantId"
-    }
-    process {
-        $secretNames = @("ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID", "ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET", "API-AUTH-BACKEND-APP-REG-CLIENT-ID")
-        $secrets = @{}
-    
-        foreach ($name in $secretNames) {
-            $secrets[$name] = (Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $name -AsPlainText -ErrorAction Stop -Debug:$false).Trim()
-        }
-    
-        $reqTokenBody = @{
-            Grant_Type    = "client_credentials"
-            Scope         = "api://$($secrets["API-AUTH-BACKEND-APP-REG-CLIENT-ID"])/.default"
-            client_Id     = $secrets["ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-ID"]
-            Client_Secret = $secrets["ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET"]
-        }
-    
-        $accessToken = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $reqTokenBody -ErrorAction Stop
-        return $accessToken.access_token
-    }        
-    end {
-        Write-Debug "${functionName}:Exited"
-    }
-
 }
 
 
@@ -232,24 +244,20 @@ Write-Debug "${functionName}:TenantId=$TenantId"
 
 try {
 
-    Write-Debug "Getting API Access Token"
-    $apiAccessToken = Get-ApiAccessToken -KeyVaultName $KeyVaultName -TenantId $TenantId
-    Write-Debug "API Access Token fetched successfully"
-
     Write-Host "Generating flux manifest for service '$ServiceName' for team '$TeamName' in environment '$EnvName'"
-    $response = Get-Environment -ApiBaseUri $ApiBaseUri -AccessToken $apiAccessToken  -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
+    $response = Get-Environment -ApiBaseUri $ApiBaseUri  -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
     $generate = $false
     
     if ($null -eq $response) {
-        Add-Environment -ApiBaseUri $ApiBaseUri -AccessToken $apiAccessToken -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
+        Add-Environment -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
     }
     elseif ($response.PSObject.Properties.Name -contains 'environment' -and $response.environment) {
         $generate = $null -eq $response.environment.manifest ? $true : $response.environment.manifest.generate -or ($response.environment.manifest.generatedVersion -lt $response.fluxTemplatesVersion)
     }
     
     if ($null -eq $response -or $generate) {
-        Add-FluxConfig -ApiBaseUri $ApiBaseUri -AccessToken $apiAccessToken -TeamName $TeamName -ServiceName $ServiceName -EnvName $EnvName
-        Update-EnvironmentManifest -ApiBaseUri $ApiBaseUri -AccessToken $apiAccessToken -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
+        Add-FluxConfig -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -EnvName $EnvName
+        Update-EnvironmentManifest -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
     }
     
     Write-Host "Flux manifest generated successfully."
