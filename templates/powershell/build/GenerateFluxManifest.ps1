@@ -20,7 +20,7 @@ function Invoke-FluxApi {
         [string]$Uri,
         [Parameter(Mandatory)]
         [string]$Method,
-        [string]$Body
+        [object]$Body
     )
 
     begin {
