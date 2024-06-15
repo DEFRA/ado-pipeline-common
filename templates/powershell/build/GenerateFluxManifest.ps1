@@ -26,11 +26,11 @@ function Invoke-FluxApi {
     begin {
         [string]$functionName = $MyInvocation.MyCommand.Name
         Write-Debug "${functionName}:Entered"
-        if (-not $AccessToken) {
-            $AccessToken = Get-ApiAccessToken -KeyVaultName $KeyVaultName -TenantId $TenantId
+        if (-not $accessToken) {
+            $accessToken = Get-ApiAccessToken -KeyVaultName $KeyVaultName -TenantId $TenantId
         }
         $headers = @{
-            "Authorization" = "Bearer $AccessToken"
+            "Authorization" = "Bearer $accessToken"
         }
         $contentType = "application/json"
     }
@@ -223,6 +223,7 @@ Set-StrictMode -Version 3.0
 [datetime]$startTime = [datetime]::UtcNow
 
 [int]$exitCode = -1
+[string]$accessToken = $null
 [bool]$setHostExitCode = (Test-Path -Path ENV:TF_BUILD) -and ($ENV:TF_BUILD -eq "true")
 [bool]$enableDebug = (Test-Path -Path ENV:SYSTEM_DEBUG) -and ($ENV:SYSTEM_DEBUG -eq "true")
 
