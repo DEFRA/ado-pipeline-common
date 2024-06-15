@@ -24,7 +24,7 @@ steps:
         -ServiceName "${{ parameters.ServiceName }}"
         -EnvName "${{ parameters.EnvName }}"
         -KeyVaultName "${{ parameters.KeyVaultName }}"
-        -TenantId "${{ parameters.TenantId }}""
+        -TenantId "${{ parameters.TenantId }}"
       failOnStderr: false      
       pwsh: true
       workingDirectory: '$(Pipeline.Workspace)/s'  
