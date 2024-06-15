@@ -26,9 +26,6 @@ function Invoke-FluxApi {
     begin {
         [string]$functionName = $MyInvocation.MyCommand.Name
         Write-Debug "${functionName}:Entered"
-        if (-not $accessToken) {
-            $accessToken = Get-ApiAccessToken -KeyVaultName $KeyVaultName -TenantId $TenantId
-        }
         $headers = @{
             "Authorization" = "Bearer $accessToken"
         }
@@ -247,6 +244,9 @@ Write-Debug "${functionName}:TenantId=$TenantId"
 try {
 
     Write-Host "Generating flux manifest for service '$ServiceName' for team '$TeamName' in environment '$EnvName'"
+    if (-not $accessToken) {
+        $accessToken = Get-ApiAccessToken -KeyVaultName $KeyVaultName -TenantId $TenantId
+    }
     $response = Get-Environment -ApiBaseUri $ApiBaseUri  -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
     $generate = $false
     
