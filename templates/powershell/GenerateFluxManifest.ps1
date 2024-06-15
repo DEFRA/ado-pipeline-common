@@ -38,8 +38,7 @@ function Invoke-FluxApi {
 
         $jsonBody = if ($Body) { $Body | ConvertTo-Json } else { $null }
 
-        $response = Invoke-RestMethod -Uri $Uri -Method $Method -Headers $headers -Body $jsonBody -ContentType $contentType
-        return $response
+        return Invoke-RestMethod -Uri $Uri -Method $Method -Headers $headers -Body $jsonBody -ContentType $contentType
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -244,9 +243,9 @@ Write-Debug "${functionName}:TenantId=$TenantId"
 try {
 
     Write-Host "Generating flux manifest for service '$ServiceName' for team '$TeamName' in environment '$EnvName'"
-    if (-not $accessToken) {
-        $accessToken = Get-ApiAccessToken -KeyVaultName $KeyVaultName -TenantId $TenantId
-    }
+    
+    $accessToken = Get-ApiAccessToken -KeyVaultName $KeyVaultName -TenantId $TenantId
+    
     $response = Get-Environment -ApiBaseUri $ApiBaseUri  -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
     $generate = $false
     
