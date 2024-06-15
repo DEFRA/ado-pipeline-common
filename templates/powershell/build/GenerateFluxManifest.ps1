@@ -145,10 +145,9 @@ function Get-Environment {
             return Invoke-FluxApi -Uri $uri -Method Get 
         }
         catch {
-            if ($_.Exception.Response.StatusCode -eq 404) {
+            if ($null -ne $_.Exception.Response -and $_.Exception.Response.StatusCode -eq 404) {
                 return $null
-            }
-            else {
+            } else {
                 throw $_
             }
         }
