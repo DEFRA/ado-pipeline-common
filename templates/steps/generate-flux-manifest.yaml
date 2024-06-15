@@ -20,7 +20,7 @@ steps:
     inputs:
       azureSubscription: "${{ parameters.SsvServiceConnection }}"
       scriptType: FilePath
-      scriptPath: "$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/GenerateFluxManifest.ps1"
+      scriptPath: "$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/GenerateFluxManifest.ps1"
       scriptArguments: >
         -ApiBaseUri "${{ parameters.ApiBaseUri }}"
         -TeamName "${{ parameters.TeamName }}"
