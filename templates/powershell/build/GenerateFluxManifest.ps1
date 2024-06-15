@@ -68,6 +68,7 @@ function Get-ApiAccessToken {
         Write-Debug "${functionName}:TenantId=$TenantId"
 
         foreach ($name in $secretNames) {
+            Write-Debug "${functionName}:Getting secret $name"
             $secrets[$name] = (Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $name -AsPlainText -ErrorAction Stop -Debug:$false).Trim()
         }
 
@@ -78,6 +79,7 @@ function Get-ApiAccessToken {
             Client_Secret = $secrets["ADOCALLBACK-API-CLIENT-APP-REG-CLIENT-SECRET"]
         }
 
+        Write-Debug "${functionName}:Getting access token"
         $accessToken = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$TenantId/oauth2/v2.0/token" -Method POST -Body $reqTokenBody -ErrorAction Stop
         return $accessToken.access_token
     }
