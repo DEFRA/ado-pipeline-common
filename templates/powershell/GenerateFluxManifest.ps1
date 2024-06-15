@@ -157,6 +157,7 @@ function Add-FluxConfig {
     param (
         [Parameter(Mandatory)]
         [string]$ApiBaseUri,
+        [Parameter(Mandatory)]
         [string]$TeamName,
         [Parameter(Mandatory)]
         [string]$ServiceName,
