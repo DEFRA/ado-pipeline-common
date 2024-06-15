@@ -424,7 +424,7 @@ stages:
                       - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
                         - template: /templates/steps/generate-flux-manifest.yaml
                           parameters:
-                            SsvServiceConnection: ${{ deploymentEnv.ssvServiceConnection }
+                            SsvServiceConnection: ${{ deploymentEnv.ssvServiceConnection }}
                             ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
                             TeamName: ${{ parameters.teamName }}
                             ServiceName: ${{ parameters.serviceName }}
