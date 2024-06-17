@@ -424,10 +424,13 @@ stages:
                       - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
                         - template: /templates/steps/generate-flux-manifest.yaml
                           parameters:
+                            SsvServiceConnection: ${{ deploymentEnv.ssvServiceConnection }}
                             ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
                             TeamName: ${{ parameters.teamName }}
                             ServiceName: ${{ parameters.serviceName }}
                             EnvName: ${{ deploymentEnv.name }}
+                            KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }} 
+                            TenantId: ${{ deploymentEnv.tenantId }}
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
                         - template: /templates/steps/secrets-import-kv.yaml	                          
                           parameters:
