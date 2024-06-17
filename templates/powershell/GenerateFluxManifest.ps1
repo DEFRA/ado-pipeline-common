@@ -36,7 +36,7 @@ function Invoke-FluxApi {
         Write-Debug "${functionName}:Method=$Method"
         Write-Debug "${functionName}:Body=$Body"
 
-        $jsonBody = if ($Body) { $Body | ConvertTo-Json } else { $null }
+        $jsonBody = if ($Body) { $Body | ConvertTo-Json -Depth 5 } else { $null }
 
         return Invoke-RestMethod -Uri $Uri -Method $Method -Headers $headers -Body $jsonBody -ContentType $contentType
     }
