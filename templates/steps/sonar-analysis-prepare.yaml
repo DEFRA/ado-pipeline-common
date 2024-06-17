@@ -21,7 +21,7 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)'
     pwsh: true
 
-- task: SonarCloudPrepare@1
+- task: SonarCloudPrepare@2
   displayName: 'Prepare Sonar analysis'
   inputs:
     SonarCloud: ${{ parameters.sonarConfig.sonarConnection }}
