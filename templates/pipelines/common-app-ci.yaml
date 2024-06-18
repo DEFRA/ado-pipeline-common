@@ -173,7 +173,14 @@ stages:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
                 failOnThreshold: ${{ parameters.npmConfig.failOnThreshold }}
                 packageFeedName: ${{ parameters.packageFeedName }}  
-                sonarConfig: ${{ parameters.sonarConfig }}  
+                sonarConfig: ${{ parameters.sonarConfig }}
+
+          - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'java') }}:
+            - template: /templates/steps/java-build.yaml
+              parameters:
+                frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
+                projectPath: ${{ parameters.appBuildConfig.projectPath }}
+                compiledPackagePath: ${{ parameters.appBuildConfig.compiledPackagePath }}
 
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis.yaml
@@ -189,7 +196,7 @@ stages:
 
       - job: BuildDockerImage
         displayName: 'Build Docker Image'
-        condition:  |
+        condition: |
           and(
             succeeded('Initialise'),
             ${{ eq(parameters.deployConfigOnly, false) }},
