@@ -130,12 +130,12 @@ try {
         } 
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'java' ) {
-        [xml]$app = Get-Content $path
+        [xml]$app = Get-Content $ProjectPath
         $appVersion = $app.project.version
         if ($IsDefaultBranchBuild -eq "False") {  
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
-                [xml]$oldApp = Get-Content $path
+                [xml]$oldApp = Get-Content $ProjectPath
                 $oldAppVersion = $oldApp.project.version
             }
         }
