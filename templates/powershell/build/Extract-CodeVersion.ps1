@@ -136,7 +136,7 @@ try {
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 [xml]$oldApp = Get-Content $ProjectPath
-                $oldAppVersion = $oldApp.project.version
+                $oldAppVersion = "4.2.8"
             }
         }
     }
