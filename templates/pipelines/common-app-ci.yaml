@@ -230,6 +230,7 @@ stages:
                  -ImageCachePath '$(Pipeline.Workspace)/docker' 
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                 -DockerFilePath ${{ coalesce(parameters.appBuildConfig.dockerfilePath, 'Dockerfile') }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
