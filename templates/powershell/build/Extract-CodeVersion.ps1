@@ -129,6 +129,17 @@ try {
             }      
         } 
     }
+    elseif ( $AppFrameworkType.ToLower() -eq 'java' ) {
+        [xml]$app = Get-Content $path
+        $appVersion = $app.project.version
+        if ($IsDefaultBranchBuild -eq "False") {  
+            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
+            if (Test-Path $ProjectPath -PathType Leaf) {
+                [xml]$oldApp = Get-Content $path
+                $oldAppVersion = $oldApp.project.version
+            }
+        }
+    }
     else {
         Write-Debug "${functionName}: Error identifying version"     
         $exitCode = -2
