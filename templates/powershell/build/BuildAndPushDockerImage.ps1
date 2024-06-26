@@ -210,6 +210,8 @@ Write-Debug "${functionName}:ImageCachePath=$ImageCachePath"
 Write-Debug "${functionName}:Command=$Command"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:DockerFilePath=$DockerFilePath"
+Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
+Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
 
 try {
     Import-Module $PSHelperDirectory -Force
@@ -228,13 +230,22 @@ try {
     } 
     
     if ( $Command.ToLower() -eq 'build' ) {
-        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -DockerFileName $DockerFilePath -TargetPlatform $TargetPlatform
+        Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath `
+                           -TagName $tagName -AcrName $AcrName `
+                           -DockerFileName $DockerFilePath -WorkingDirectory $WorkingDirectory `
+                           -TargetPlatform $TargetPlatform
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
-        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetPlatform $TargetPlatform
+        Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath `
+                          -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName `
+                          -DockerFileName $DockerFilePath -WorkingDirectory $WorkingDirectory `
+                          -TargetPlatform $TargetPlatform
     }
     else {
-        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName -DockerFileName $DockerFilePath -TargetPlatform $TargetPlatform    
+        Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath `
+                                  -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName `
+                                  -DockerFileName $DockerFilePath -WorkingDirectory $WorkingDirectory `
+                                  -TargetPlatform $TargetPlatform    
     }    
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.complete result=Failed;]DONE"
