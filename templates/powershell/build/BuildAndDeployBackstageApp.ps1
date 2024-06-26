@@ -26,8 +26,7 @@ param(
     [string]$ResourceGroup,
     [string]$Filepath,
     [Parameter(Mandatory)]
-    [string]$PSHelperDirectory,
-    [string]$WorkingDirectory = $PWD
+    [string]$PSHelperDirectory
 )
 
 Set-StrictMode -Version 3.0
@@ -57,8 +56,6 @@ Write-Output "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 try {
      
     Import-Module $PSHelperDirectory -Force   
-
-    Push-Location $WorkingDirectory
 
     if ("Build" -eq $Command) {
         yarn install --frozen-lockfile
@@ -103,6 +100,5 @@ finally {
         Write-Debug "${functionName}:Setting host exit code"
         $host.SetShouldExit($exitCode)
     }
-    Pop-Location
     exit $exitCode
 }

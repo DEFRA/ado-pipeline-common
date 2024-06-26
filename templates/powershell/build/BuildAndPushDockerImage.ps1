@@ -37,6 +37,7 @@ param(
     [Parameter(Mandatory)]
     [string]$PSHelperDirectory,
     [string]$DockerFilePath = "Dockerfile",
+    [string]$WorkingDirectory = $PWD,
     [string]$TargetPlatform = "linux/amd64"
 )
 
@@ -48,6 +49,7 @@ function Invoke-DockerBuild {
         [string]$TagName,
         [string]$AcrName = "" ,        
         [string]$DockerFileName = "Dockerfile",
+        [string]$WorkingDirectory = $PWD,
         [string]$TargetPlatform = "linux/amd64"
     )
     begin {
@@ -57,22 +59,30 @@ function Invoke-DockerBuild {
         Write-Debug "${functionName}:TagName=$TagName"
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
         Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
     }
     process {
-        # Build the image using ACR if ACR name is provided, if not use local docker build
-        if ("" -ne $AcrName) {
-            Invoke-CommandLine -Command "az acr login --name $AcrName"
-            Invoke-CommandLine -Command "az acr build -t $TagName -r $AcrName -f $DockerFileName ."
-            Invoke-CommandLine -Command "docker pull $AcrName.azurecr.io/$TagName"
-            Invoke-CommandLine -Command "docker tag $AcrName.azurecr.io/$TagName $TagName"
-            Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName --yes"            
+        try {
+            Push-Location -Path $WorkingDirectory
+            # Build the image using ACR if ACR name is provided, if not use local docker build
+            if ("" -ne $AcrName) {
+                Invoke-CommandLine -Command "az acr login --name $AcrName"
+                Invoke-CommandLine -Command "az acr build -t $TagName -r $AcrName -f $DockerFileName ."
+                Invoke-CommandLine -Command "docker pull $AcrName.azurecr.io/$TagName"
+                Invoke-CommandLine -Command "docker tag $AcrName.azurecr.io/$TagName $TagName"
+                Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName --yes"            
+            }
+            else {
+                Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
+            }
+            # Save the image for future jobs
+            Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"   
+
         }
-        else {
-            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
+        finally {
+            Pop-Location
         }
-        # Save the image for future jobs
-        Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"   
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -90,6 +100,7 @@ function Invoke-DockerPush {
         [Parameter(Mandatory)]
         [string]$AcrTagName,
         [string]$DockerFileName = "Dockerfile",
+        [string]$WorkingDirectory = $PWD,
         [string]$TargetPlatform = "linux/amd64"
     )
     begin {
@@ -100,20 +111,31 @@ function Invoke-DockerPush {
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
         Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
     }
     process {
-        # Load image if exists in cache
-        if (Test-Path $DockerCacheFilePath -PathType Leaf) {
-            Invoke-CommandLine -Command "docker load -i $DockerCacheFilePath"        
+
+        try {
+            
+            Push-Location   -Path $WorkingDirectory
+            # Load image if exists in cache
+            if (Test-Path $DockerCacheFilePath -PathType Leaf) {
+                Invoke-CommandLine -Command "docker load -i $DockerCacheFilePath"        
+            }
+            else {
+                Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."  
+                Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"          
+            }
+            Invoke-CommandLine -Command "az acr login --name $AcrName"
+            Invoke-CommandLine -Command "docker tag $TagName $AcrTagName"          
+            Invoke-CommandLine -Command "docker push $AcrTagName"   
+
         }
-        else {
-            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."  
-            Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"          
+        finally {
+            Pop-Location
         }
-        Invoke-CommandLine -Command "az acr login --name $AcrName"
-        Invoke-CommandLine -Command "docker tag $TagName $AcrTagName"          
-        Invoke-CommandLine -Command "docker push $AcrTagName"   
+
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -131,6 +153,7 @@ function Invoke-DockerBuildAndPush {
         [Parameter(Mandatory)]
         [string]$AcrTagName,
         [string]$DockerFileName = "Dockerfile",
+        [string]$WorkingDirectory = $PWD,
         [string]$TargetPlatform = "linux/amd64"
     )
     begin {
@@ -141,14 +164,21 @@ function Invoke-DockerBuildAndPush {
         Write-Debug "${functionName}:AcrName=$AcrName"
         Write-Debug "${functionName}:AcrTagName=$AcrTagName"
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+        Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
         Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
     }
     process {
-        Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
-        Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
-        Invoke-CommandLine -Command "az acr login --name $AcrName"
-        Invoke-CommandLine -Command "docker tag $TagName $AcrTagName"  
-        Invoke-CommandLine -Command "docker push $AcrTagName"    
+        try {
+            Push-Location -Path $WorkingDirectory
+            Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
+            Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
+            Invoke-CommandLine -Command "az acr login --name $AcrName"
+            Invoke-CommandLine -Command "docker tag $TagName $AcrTagName"  
+            Invoke-CommandLine -Command "docker push $AcrTagName"    
+        }
+        finally {
+            Pop-Location
+        }
     }
     end {
         Write-Debug "${functionName}:Exited"
