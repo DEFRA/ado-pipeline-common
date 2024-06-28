@@ -83,7 +83,6 @@ function Invoke-DockerBuild {
                 if(-not [string]::IsNullOrEmpty($BaseImagesAcrName.Trim())){
                     Invoke-CommandLine -Command "az acr login --name $($BaseImagesAcrName.Trim().ToLower())"
                 }
-                Invoke-CommandLine -Command "az acr login --name $AcrName"
                 Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
             }
             # Save the image for future jobs
