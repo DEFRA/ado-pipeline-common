@@ -73,7 +73,7 @@ function Invoke-DockerBuild {
         }
         # Save the image for future jobs
         Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"   
-        Get-ChildItem -Path $DockerCacheFilePath
+        # Get-ChildItem -Path $DockerCacheFilePath
     }
     end {
         Write-Debug "${functionName}:Exited"
