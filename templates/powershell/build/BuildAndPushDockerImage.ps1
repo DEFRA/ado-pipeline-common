@@ -19,6 +19,8 @@ Mandatory. Directory Path of PSHelper module
 Optional. Directory Path of Dockerfile
 .PARAMETER TargetPlatform
 Optional. Target Flatform for Docker build
+.PARAMETER BaseImagesAcrName
+Optional. Azure Container Registry used to pull the base images.
 
 .EXAMPLE
 .\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory> DockerFilePath <DockerFilePath> TargetPlatform <TargetPlatform>
@@ -38,7 +40,8 @@ param(
     [string]$PSHelperDirectory,
     [string]$DockerFilePath = "Dockerfile",
     [string]$WorkingDirectory = $PWD,
-    [string]$TargetPlatform = "linux/amd64"
+    [string]$TargetPlatform = "linux/amd64",
+    [string] $BaseImagesAcrName =$null
 )
 
 function Invoke-DockerBuild {
@@ -50,7 +53,8 @@ function Invoke-DockerBuild {
         [string]$AcrName = "" ,        
         [string]$DockerFileName = "Dockerfile",
         [string]$WorkingDirectory = $PWD,
-        [string]$TargetPlatform = "linux/amd64"
+        [string]$TargetPlatform = "linux/amd64",
+        [string] $BaseImagesAcrName =$null
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
@@ -65,6 +69,7 @@ function Invoke-DockerBuild {
     process {
         try {
             Push-Location -Path $WorkingDirectory
+
             # Build the image using ACR if ACR name is provided, if not use local docker build
             if ("" -ne $AcrName) {
                 Invoke-CommandLine -Command "az acr login --name $AcrName"
@@ -74,6 +79,10 @@ function Invoke-DockerBuild {
                 Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName --yes"            
             }
             else {
+                if($null -ne $BaseImagesAcrName){
+                    Invoke-CommandLine -Command "az acr login --name $(BaseImagesAcrName.ToLower)"
+                }
+                Invoke-CommandLine -Command "az acr login --name $AcrName"
                 Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
             }
             # Save the image for future jobs
@@ -101,7 +110,8 @@ function Invoke-DockerPush {
         [string]$AcrTagName,
         [string]$DockerFileName = "Dockerfile",
         [string]$WorkingDirectory = $PWD,
-        [string]$TargetPlatform = "linux/amd64"
+        [string]$TargetPlatform = "linux/amd64",
+        [string] $BaseImagesAcrName =$null
     )
     begin {
         [string]$functionName = $MyInvocation.MyCommand
@@ -124,6 +134,9 @@ function Invoke-DockerPush {
                 Invoke-CommandLine -Command "docker load -i $DockerCacheFilePath"        
             }
             else {
+                if($null -ne $BaseImagesAcrName){
+                    Invoke-CommandLine -Command "az acr login --name $(BaseImagesAcrName.ToLower)"
+                }
                 Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."  
                 Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"          
             }
@@ -212,6 +225,7 @@ Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 Write-Debug "${functionName}:DockerFilePath=$DockerFilePath"
 Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
 Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
+Write-Debug "${functionName}:BaseImagesAcrName=$BaseImagesAcrName"
 
 try {
     Import-Module $PSHelperDirectory -Force
@@ -234,12 +248,14 @@ try {
                            -TagName $tagName -AcrName $AcrName `
                            -DockerFileName $DockerFilePath -WorkingDirectory $WorkingDirectory `
                            -TargetPlatform $TargetPlatform
+                           -BaseImagesAcrName $BaseImagesAcrName
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
         Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath `
                           -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName `
                           -DockerFileName $DockerFilePath -WorkingDirectory $WorkingDirectory `
                           -TargetPlatform $TargetPlatform
+                          -BaseImagesAcrName $BaseImagesAcrName
     }
     else {
         Invoke-DockerBuildAndPush -DockerCacheFilePath $dockerCacheFilePath `
@@ -268,13 +284,22 @@ try {
         }
         
         if ( $Command.ToLower() -eq 'build' ) {
-            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -DockerFileName $dbMigrationDockerFileName  
+            Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath `
+                               -TagName $dbMigrationTagName -AcrName $AcrName `
+                               -DockerFileName $dbMigrationDockerFileName  -WorkingDirectory $WorkingDirectory `
+                               -BaseImagesAcrName =$BaseImagesAcrName
         }
         elseif ( $Command.ToLower() -eq 'push' ) {
-            Invoke-DockerPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName -DockerFileName $dbMigrationDockerFileName
+            Invoke-DockerPush -DockerCacheFilePath $dbDockerCacheFilePath `
+                              -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName `
+                              -DockerFileName $dbMigrationDockerFileName -WorkingDirectory $WorkingDirectory `
+                              -BaseImagesAcrName =$BaseImagesAcrName
         }
         else {
-            Invoke-DockerBuildAndPush -DockerCacheFilePath $dbDockerCacheFilePath -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName -DockerFileName $dbMigrationDockerFileName
+            Invoke-DockerBuildAndPush -DockerCacheFilePath $dbDockerCacheFilePath `
+                                      -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName `
+                                      -DockerFileName $dbMigrationDockerFileName -WorkingDirectory $WorkingDirectory `
+                                      -BaseImagesAcrName =$BaseImagesAcrName
         }    
         if ($LastExitCode -ne 0) {
             Write-Host "##vso[task.complete result=Failed;]DONE"

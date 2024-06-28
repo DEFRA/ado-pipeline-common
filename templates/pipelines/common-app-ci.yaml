@@ -223,6 +223,7 @@ stages:
                  -ImageCachePath '$(Pipeline.Workspace)/docker' 
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
+                 -BaseImagesAcrName '${{ parameters.appBuildConfig.baseImagesAcrName }}'
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
