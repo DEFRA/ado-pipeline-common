@@ -212,19 +212,20 @@ stages:
               path: $(Pipeline.Workspace)/docker
               cacheHitVar: CACHE_RESTORED
 
-          - task: PowerShell@2
+          - task: AzurePowerShell@5
             displayName: 'Docker Build Image'
             inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
-              arguments: >
+              azureSubscription: ${{ parameters.appBuildConfig.serviceConnection }} 
+              scriptType: FilePath
+              scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
+              scriptArguments: >
                  -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                  -ImageVersion  $(appVersion) 
                  -ImageCachePath '$(Pipeline.Workspace)/docker' 
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                  -BaseImagesAcrName '${{ parameters.appBuildConfig.baseImagesAcrName }}'
-              failOnStderr: false
+              FailOnStandardError: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
