@@ -72,8 +72,7 @@ function Invoke-DockerBuild {
             Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
         }
         # Save the image for future jobs
-        Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"   
-        # Get-ChildItem -Path $DockerCacheFilePath
+        Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -210,7 +209,7 @@ try {
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.complete result=Failed;]DONE"
         $exitCode = -2
-    }  
+    }
 
     #DB Migration Image
     [string]$dbMigrationDockerFileName = "db-migration.Dockerfile"
@@ -243,6 +242,7 @@ try {
     } 
     else {
         Write-Host "No DB Migration Docker file exist."
+        Get-ChildItem -Path $DockerCacheFilePath
     }
 
     $exitCode = 0          
