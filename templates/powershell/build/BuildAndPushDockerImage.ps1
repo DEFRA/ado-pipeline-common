@@ -80,8 +80,8 @@ function Invoke-DockerBuild {
                 Invoke-CommandLine -Command "az acr repository delete --name $AcrName --image $TagName --yes"            
             }
             else {
-                if($null -ne $BaseImagesAcrName){
-                    Invoke-CommandLine -Command "az acr login --name $($BaseImagesAcrName.ToLower())"
+                if(-not [string]::IsNullOrEmpty($BaseImagesAcrName.Trim())){
+                    Invoke-CommandLine -Command "az acr login --name $($BaseImagesAcrName.Trim().ToLower())"
                 }
                 Invoke-CommandLine -Command "az acr login --name $AcrName"
                 Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
@@ -136,8 +136,8 @@ function Invoke-DockerPush {
                 Invoke-CommandLine -Command "docker load -i $DockerCacheFilePath"        
             }
             else {
-                if($null -ne $BaseImagesAcrName){
-                    Invoke-CommandLine -Command "az acr login --name $($BaseImagesAcrName.ToLower())"
+                if(-not [string]::IsNullOrEmpty($BaseImagesAcrName.Trim())){
+                    Invoke-CommandLine -Command "az acr login --name $($BaseImagesAcrName.Trim().ToLower())"
                 }
                 Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."  
                 Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"          
@@ -249,14 +249,14 @@ try {
         Invoke-DockerBuild -DockerCacheFilePath $dockerCacheFilePath `
                            -TagName $tagName -AcrName $AcrName `
                            -DockerFileName $DockerFilePath -WorkingDirectory $WorkingDirectory `
-                           -TargetPlatform $TargetPlatform
+                           -TargetPlatform $TargetPlatform `
                            -BaseImagesAcrName $BaseImagesAcrName
     }
     elseif ( $Command.ToLower() -eq 'push' ) {
         Invoke-DockerPush -DockerCacheFilePath $dockerCacheFilePath `
                           -TagName $tagName -AcrName $AcrName -AcrTagName $AcrtagName `
                           -DockerFileName $DockerFilePath -WorkingDirectory $WorkingDirectory `
-                          -TargetPlatform $TargetPlatform
+                          -TargetPlatform $TargetPlatform `
                           -BaseImagesAcrName $BaseImagesAcrName
     }
     else {
