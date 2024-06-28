@@ -225,9 +225,11 @@ stages:
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                  -BaseImagesAcrName '${{ parameters.appBuildConfig.baseImagesAcrName }}'
-              FailOnStandardError: false
+              failOnStandardError: false
+              azurePowerShellVersion: 'LatestVersion'
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
+
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
             - template: /templates/steps/security-scan-container.yaml
               parameters:
