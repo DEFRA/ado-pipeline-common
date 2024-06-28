@@ -65,6 +65,7 @@ function Invoke-DockerBuild {
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
         Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
         Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
+        Write-Debug "${functionName}:BaseImagesAcrName=$BaseImagesAcrName"
     }
     process {
         try {
@@ -123,6 +124,7 @@ function Invoke-DockerPush {
         Write-Debug "${functionName}:DockerFileName=$DockerFileName"
         Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
         Write-Debug "${functionName}:TargetPlatform=$TargetPlatform"
+        Write-Debug "${functionName}:BaseImagesAcrName=$BaseImagesAcrName"
     }
     process {
 
@@ -287,19 +289,19 @@ try {
             Invoke-DockerBuild -DockerCacheFilePath $dbDockerCacheFilePath `
                                -TagName $dbMigrationTagName -AcrName $AcrName `
                                -DockerFileName $dbMigrationDockerFileName  -WorkingDirectory $WorkingDirectory `
-                               -BaseImagesAcrName =$BaseImagesAcrName
+                               -BaseImagesAcrName $BaseImagesAcrName
         }
         elseif ( $Command.ToLower() -eq 'push' ) {
             Invoke-DockerPush -DockerCacheFilePath $dbDockerCacheFilePath `
                               -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName `
                               -DockerFileName $dbMigrationDockerFileName -WorkingDirectory $WorkingDirectory `
-                              -BaseImagesAcrName =$BaseImagesAcrName
+                              -BaseImagesAcrName $BaseImagesAcrName
         }
         else {
             Invoke-DockerBuildAndPush -DockerCacheFilePath $dbDockerCacheFilePath `
                                       -TagName $dbMigrationTagName -AcrName $AcrName -AcrTagName $AcrDbMigrationTagName `
                                       -DockerFileName $dbMigrationDockerFileName -WorkingDirectory $WorkingDirectory `
-                                      -BaseImagesAcrName =$BaseImagesAcrName
+                                      -BaseImagesAcrName $BaseImagesAcrName
         }    
         if ($LastExitCode -ne 0) {
             Write-Host "##vso[task.complete result=Failed;]DONE"
