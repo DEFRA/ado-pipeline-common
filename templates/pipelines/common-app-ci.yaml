@@ -192,7 +192,7 @@ stages:
                 snykOrganizationName: ${{ parameters.snykConfig.snykOrganizationName }}
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
-                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}  
+                failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
       - job: BuildDockerImage
         displayName: 'Build Docker Image'
@@ -251,6 +251,7 @@ stages:
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
+                dockerfilePath: ${{ parameters.appBuildConfig.dockerfilePath }}
 
       - job: PreDeploymentTests
         displayName: 'Pre Deployment Tests'  
