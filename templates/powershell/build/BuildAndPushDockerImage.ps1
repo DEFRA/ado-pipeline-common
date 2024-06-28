@@ -242,7 +242,6 @@ try {
     } 
     else {
         Write-Host "No DB Migration Docker file exist."
-        Get-ChildItem -Path $DockerCacheFilePath
     }
 
     $exitCode = 0          
