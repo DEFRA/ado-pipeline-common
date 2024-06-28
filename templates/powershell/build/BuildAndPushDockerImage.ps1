@@ -80,7 +80,7 @@ function Invoke-DockerBuild {
             }
             else {
                 if($null -ne $BaseImagesAcrName){
-                    Invoke-CommandLine -Command "az acr login --name $(BaseImagesAcrName.ToLower)"
+                    Invoke-CommandLine -Command "az acr login --name $($BaseImagesAcrName.ToLower())"
                 }
                 Invoke-CommandLine -Command "az acr login --name $AcrName"
                 Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."
@@ -135,7 +135,7 @@ function Invoke-DockerPush {
             }
             else {
                 if($null -ne $BaseImagesAcrName){
-                    Invoke-CommandLine -Command "az acr login --name $(BaseImagesAcrName.ToLower)"
+                    Invoke-CommandLine -Command "az acr login --name $($BaseImagesAcrName.ToLower())"
                 }
                 Invoke-CommandLine -Command "docker buildx build -f $DockerFileName -t $TagName --platform=$TargetPlatform ."  
                 Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"          
