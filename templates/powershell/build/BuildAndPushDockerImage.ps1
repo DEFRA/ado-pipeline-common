@@ -17,13 +17,17 @@ Optional. Command to run, Build or Push or Default = BuildAndPush
 Mandatory. Directory Path of PSHelper module
 .PARAMETER DockerFilePath
 Optional. Directory Path of Dockerfile
+.PARAMETER WorkingDirectory
+Optional. Working Directory for Docker build
 .PARAMETER TargetPlatform
 Optional. Target Flatform for Docker build
 .PARAMETER BaseImagesAcrName
 Optional. Azure Container Registry used to pull the base images.
 
 .EXAMPLE
-.\BuildAndPushDockerImage.ps1  AcrName <AcrName> AcrRepoName <AcrRepoName> ImageVersion <ImageVersion> ImageCachePath <ImageCachePath> Command <Command> PSHelperDirectory <PSHelperDirectory> DockerFilePath <DockerFilePath> TargetPlatform <TargetPlatform>
+.\BuildAndPushDockerImage.ps1  -AcrName <AcrName> -AcrRepoName <AcrRepoName> -ImageVersion <ImageVersion> -ImageCachePath <ImageCachePath> `
+                               -Command <Command> -PSHelperDirectory -<PSHelperDirectory> -DockerFilePath <DockerFilePath> `
+                               -WorkingDirectory <WorkingDirectory> -TargetPlatform <TargetPlatform> -BaseImagesAcrName <BaseImagesAcrName>
 #> 
 
 [CmdletBinding()]
