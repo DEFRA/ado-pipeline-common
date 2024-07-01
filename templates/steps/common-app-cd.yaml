@@ -71,6 +71,7 @@ steps:
           -ImageCachePath $(Pipeline.Workspace)/docker 
           -Command "push" 
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
+          -BaseImagesAcrName ${{ parameters.environmentObj.baseImagesAcrName }}
         addSpnToEnvironment: true          
         failOnStandardError: false
         workingDirectory: '$(Pipeline.Workspace)/s'
