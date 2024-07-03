@@ -131,7 +131,7 @@ resources:
   repositories:
     - repository: PipelineCommon
       name: DEFRA/ADO-Pipeline-Common
-      endpoint: DEFRA
+      endpoint: DEFRA-ADP
       type: github
       ref: main
 
@@ -225,7 +225,7 @@ resources:
   repositories:
     - repository: DEFRA-ADPPipelineCommon
       name: DEFRA/adp-pipeline-common
-      endpoint: DEFRA
+      endpoint: DEFRA-ADP
       type: github
       ref: main
 extends:
@@ -297,7 +297,7 @@ resources:
   repositories:
     - repository: DEFRA-ADPPipelineCommon
       name: DEFRA/adp-pipeline-common
-      endpoint: DEFRA
+      endpoint: DEFRA-ADP
       type: github
       ref: main
 extends:
