@@ -157,7 +157,7 @@ try {
                 [xml]$oldApp = Get-Content $ProjectPath
                 $oldAppVersion = $oldApp.project.version
             }
-            $isSymenticVersion = Test-SemVersion -Version $appVersion -and Test-SemVersion -Version $oldAppVersion
+            $isSymenticVersion = (Test-SemVersion -Version $appVersion) -and (Test-SemVersion -Version $oldAppVersion)
         }
     }
     else {
