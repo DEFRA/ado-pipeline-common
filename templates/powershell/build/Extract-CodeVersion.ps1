@@ -26,6 +26,24 @@ param(
 
 Set-StrictMode -Version 3.0
 
+function Test-SemVersion {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true,
+            ValueFromPipeline = $true,
+            Position = 0,
+            HelpMessage = "Specifies the version to test.")]
+        [String]$Version
+    )
+    begin {}
+    process {
+        $regexPattern = '^(?<major>\d*)?(?:\.(?<minor>\d*))?(?:\.(?<patch>\d*))?(?:\.(?<build>\d*))$'
+        $result = [Regex]::Match($Version, $regexPattern)
+        return $result.Success
+    }
+    end {}
+}
+
 [string]$functionName = $MyInvocation.MyCommand
 [datetime]$startTime = [datetime]::UtcNow
 
@@ -57,8 +75,9 @@ try {
     else {
         Write-Host "powershell-yaml Module exist"
     }
-    $appVersion = ""    
+    $appVersion = ""
     $oldAppVersion = "0.1.0" #Assume version 0.1.0 for initial main branch
+    [bool]$isSymenticVersion = $true
     $exitCode = 0
     $versionFilePath = "./VERSION"
     $DefaultBranchName = Invoke-CommandLine -Command "git remote show origin | sed -n '/HEAD branch/s/.*: //p'"
@@ -86,7 +105,7 @@ try {
     elseif ( $AppFrameworkType.ToLower() -eq 'dotnet' ) {
         $xml = [Xml] (Get-Content $ProjectPath )
         if ($xml.Project.PropertyGroup.length -gt 1) {
-            $appVersion = $xml.Project.PropertyGroup[0].Version  
+            $appVersion = $xml.Project.PropertyGroup[0].Version
         }
         else {
             $appVersion = $xml.Project.PropertyGroup.Version
@@ -123,7 +142,7 @@ try {
     elseif ( $AppFrameworkType.ToLower() -eq 'helm' ) {
         $appVersion = (Get-Content $ProjectPath | ConvertFrom-Yaml).version
         if ($IsDefaultBranchBuild -eq "False") {  
-            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"           
+            Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 $oldAppVersion = (Get-Content $ProjectPath | ConvertFrom-Yaml).version
             }      
@@ -131,13 +150,14 @@ try {
     }
     elseif ( $AppFrameworkType.ToLower() -eq 'java' ) {
         [xml]$app = Get-Content $ProjectPath
-        $appVersion = $app.project.appVersion
+        $appVersion = $app.project.version
         if ($IsDefaultBranchBuild -eq "False") {  
             Invoke-CommandLine -Command "git checkout -b devops origin/$DefaultBranchName"
             if (Test-Path $ProjectPath -PathType Leaf) {
                 [xml]$oldApp = Get-Content $ProjectPath
-                $oldAppVersion = "4.2.7"
+                $oldAppVersion = $oldApp.project.version
             }
+            $isSymenticVersion = Test-SemVersion -Version $appVersion -and Test-SemVersion -Version $oldAppVersion
         }
     }
     else {
@@ -149,21 +169,26 @@ try {
     if ($IsDefaultBranchBuild -eq "False") {
         #$buildReason = $Env:BUILD_REASON # will be PullRequest for PR builds
 
-        if (([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
-            Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'." 
-            #uppend alpha and build id to version for feature branches which will be deployed to snd env   e.g 4.32.33-alpha.506789             
+        if ($isSymenticVersion -and ([version]$appVersion).CompareTo(([version]$oldAppVersion)) -gt 0) {
+            Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'."
+            #uppend alpha and build id to version for feature branches which will be deployed to snd env   e.g 4.32.33-alpha.506789
             $appVersion = "$appVersion-alpha.$buildId"   
+            Write-Output "${functionName}: Build Version Tagged with alpha and build id :-> '$appVersion'." 
+        }
+        if ((-not $isSymenticVersion) -and $appVersion -gt $oldAppVersion) {
+            Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'."
+            #uppend alpha and build id to version for feature branches which will be deployed to snd env   e.g 4.32.33-alpha.506789
+            $appVersion = "$appVersion-alpha.$buildId"
             Write-Output "${functionName}: Build Version Tagged with alpha and build id :-> '$appVersion'." 
         }
         else {
             Write-Output "${functionName}:Version increment invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process."
             Write-Host "##vso[task.logissue type=error]${functionName}:Version increment is invalid '$oldAppVersion' -> '$appVersion'. Please increment the version to run the CI process. Check logs for further details."
             $exitCode = -2
-        }            
-           
+        }
     }
 
-    Write-Output "${functionName}:IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName"    
+    Write-Output "${functionName}:IsDefaultBranchBuild=$IsDefaultBranchBuild;DefaultBranchName=$DefaultBranchName"
     Write-Output "${functionName}:CurrentBranchName=$CurrentBranchName;"    
     Write-Output "##vso[task.setvariable variable=appVersion;isOutput=true]$appVersion"
     Write-Output "##vso[task.setvariable variable=oldAppVersion;isOutput=true]$oldAppVersion"
