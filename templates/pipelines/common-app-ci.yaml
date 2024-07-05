@@ -234,15 +234,6 @@ stages:
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'
-          - task: PowerShell@2
-            inputs:
-              targetType: 'inline'
-              script: |
-                # Write your PowerShell commands here.
-                
-                Write-Host "Hello World"
-                Get-ChildItem -Path "$(Pipeline.Workspace)/docker"
-              pwsh: true
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
             - template: /templates/steps/security-scan-container.yaml
               parameters:
