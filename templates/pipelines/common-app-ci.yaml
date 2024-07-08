@@ -557,7 +557,7 @@ stages:
                     - task: AzureCLI@2
                       displayName: 'Create Team RoleAssignments'
                       inputs:
-                        azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                        azureSubscription: ${{ deploymentEnv.ssvServiceConnection }}
                         scriptType: pscore
                         scriptLocation: scriptPath
                         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Team-Resources-RoleAssignments.ps1'
