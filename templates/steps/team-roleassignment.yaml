@@ -1,0 +1,43 @@
+parameters:
+- name: teamName
+  type: string
+- name: serviceName
+  type: string  
+- name: deploymentEnv
+  displayName: deployment env
+  type: object
+
+steps:
+  - task: AzureCLI@2
+    displayName: 'Get Team Access Group Object ID'
+    inputs:
+      azureSubscription: ${{ parameters.deploymentEnv.ssvServiceConnection }}
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-TeamAccessGroup-ObjectId.ps1'
+      arguments: > 
+        -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
+        -TeamName '${{ parameters.teamName }}'
+      addSpnToEnvironment: true
+      failOnStandardError: false
+      workingDirectory: '$(Pipeline.Workspace)/s'
+
+  - task: AzureCLI@2
+    displayName: 'Create Team RoleAssignments'
+    inputs:
+      azureSubscription: ${{ parameters.deploymentEnv.serviceConnection }}
+      scriptType: pscore
+      scriptLocation: scriptPath
+      scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Team-Resources-RoleAssignments.ps1'
+      arguments: > 
+        -SubscriptionId '${{ parameters.deploymentEnv.subscriptionId }}'
+        -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
+        -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
+        -TeamName '${{ parameters.teamName }}'
+        -ServiceResourceGroup '${{ parameters.deploymentEnv.serviceResourceGroup }}'
+        -AzureServiceBusResourceGroup '${{ parameters.deploymentEnv.serviceResourceGroup }}'
+        -AzureServiceBusNamespace '${{ parameters.deploymentEnv.serviceBusNamespace }}'
+        -TeamContributorAcccessGroupId $(TeamContributorAcccessGroupId)
+      addSpnToEnvironment: true
+      failOnStandardError: false
+      workingDirectory: '$(Pipeline.Workspace)/s'    
