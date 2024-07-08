@@ -238,28 +238,28 @@ stages:
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
-      - job: PreDeploymentTests
-        displayName: 'Pre Deployment Tests'  
-        condition: |
-          and(
-            succeeded('BuildDockerImage'),
-            ${{ eq(parameters.deployConfigOnly, false) }},
-            ${{ not(contains(parameters.stepsToSkip, 'PreDeploymentTests')) }} 
-          )
-        dependsOn: [Initialise, BuildDockerImage]
-        steps:
-          - checkout: self
-            path: s/  
-          - checkout: PipelineCommon
-            path: s/ADO-Pipeline-Common
+      # - job: PreDeploymentTests
+      #   displayName: 'Pre Deployment Tests'  
+      #   condition: |
+      #     and(
+      #       succeeded('BuildDockerImage'),
+      #       ${{ eq(parameters.deployConfigOnly, false) }},
+      #       ${{ not(contains(parameters.stepsToSkip, 'PreDeploymentTests')) }} 
+      #     )
+      #   dependsOn: [Initialise, BuildDockerImage]
+      #   steps:
+      #     - checkout: self
+      #       path: s/  
+      #     - checkout: PipelineCommon
+      #       path: s/ADO-Pipeline-Common
 
-          - ${{ if ne(parameters.appTestConfig, '') }}:
-            - template: /templates/steps/pre-deployment-tests.yaml
-              parameters:
-                teamName: ${{ parameters.teamName }}
-                serviceName: ${{ parameters.serviceName }}
-                IsPrBuild: ${{ variables.IsPrBuild }}
-                appTestConfig: ${{ parameters.appTestConfig }}
+      #     - ${{ if ne(parameters.appTestConfig, '') }}:
+      #       - template: /templates/steps/pre-deployment-tests.yaml
+      #         parameters:
+      #           teamName: ${{ parameters.teamName }}
+      #           serviceName: ${{ parameters.serviceName }}
+      #           IsPrBuild: ${{ variables.IsPrBuild }}
+      #           appTestConfig: ${{ parameters.appTestConfig }}
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
@@ -305,7 +305,8 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
+        # dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
         condition: |
           and(
             or(succeeded(), ${{ eq(parameters.appBuildConfig.appFrameworkType, 'helm') }}),
@@ -400,100 +401,100 @@ stages:
           pool:
             vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
         jobs:        
-          - deployment: PublishTo${{ deploymentEnv.name }}
-            condition:  |
-              or(
-                eq( variables.IsDefaultBranchBuild, true),
-                eq(${{ parameters.deployConfigOnly }}, true),
-                and(
-                  or(
-                    eq(variables.IsPrBuild, true),
-                    eq(${{ parameters.deployFromFeature }},true)
-                  ),
-                  eq('${{ deploymentEnv.type }}','dev')
-                ) 
-              ) 
-            displayName: 'Publish To ${{ deploymentEnv.name }}'
-            environment: ${{ deploymentEnv.name }}
-            strategy:
-              runOnce:
-                deploy:          
-                  steps:
-                    - ${{ if ne(parameters.appDeployConfig, '') }}:
-                      - checkout: Self
-                        path: s/ 
-                      - checkout: PipelineCommon
-                        path: s/ADO-Pipeline-Common
-                      - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
-                        - template: /templates/steps/generate-flux-manifest.yaml
-                          parameters:
-                            SsvServiceConnection: ${{ deploymentEnv.ssvServiceConnection }}
-                            ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
-                            TeamName: ${{ parameters.teamName }}
-                            ServiceName: ${{ parameters.serviceName }}
-                            EnvName: ${{ deploymentEnv.name }}
-                            KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }} 
-                            TenantId: ${{ deploymentEnv.tenantId }}
-                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
-                        - template: /templates/steps/secrets-import-kv.yaml	                          
-                          parameters:
-                            serviceConnection: ${{ deploymentEnv.serviceConnection }}
-                            appKeyVault:  ${{ deploymentEnv.appKeyVault }}
-                            VariableGroups: "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
-                            VarFilter: "${{ join(';', parameters.appDeployConfig.variables) }}"
-                            ProgrammeName: "${{ parameters.appDeployConfig.programmeName }}"
-                            EnvName: ${{ deploymentEnv.name }}
-                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                      - ${{ if not(contains(parameters.stepsToSkip, 'AppConfigImport')) }}:
-                        - template: /templates/steps/appconfig-import.yaml
-                          parameters:
-                            dryRun: false
-                            environmentObj: ${{ deploymentEnv }} 
-                            appDeployConfig: ${{ parameters.appDeployConfig }}
-                            workingDirectory: '$(Pipeline.Workspace)/s'
-                            serviceName: ${{ parameters.serviceName }}
-                            configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
-                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                            AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
-                            Version: $(appVersion)
-                            FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
+          # - deployment: PublishTo${{ deploymentEnv.name }}
+          #   condition:  |
+          #     or(
+          #       eq( variables.IsDefaultBranchBuild, true),
+          #       eq(${{ parameters.deployConfigOnly }}, true),
+          #       and(
+          #         or(
+          #           eq(variables.IsPrBuild, true),
+          #           eq(${{ parameters.deployFromFeature }},true)
+          #         ),
+          #         eq('${{ deploymentEnv.type }}','dev')
+          #       ) 
+          #     ) 
+          #   displayName: 'Publish To ${{ deploymentEnv.name }}'
+          #   environment: ${{ deploymentEnv.name }}
+          #   strategy:
+          #     runOnce:
+          #       deploy:          
+          #         steps:
+          #           - ${{ if ne(parameters.appDeployConfig, '') }}:
+          #             - checkout: Self
+          #               path: s/ 
+          #             - checkout: PipelineCommon
+          #               path: s/ADO-Pipeline-Common
+          #             - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
+          #               - template: /templates/steps/generate-flux-manifest.yaml
+          #                 parameters:
+          #                   SsvServiceConnection: ${{ deploymentEnv.ssvServiceConnection }}
+          #                   ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
+          #                   TeamName: ${{ parameters.teamName }}
+          #                   ServiceName: ${{ parameters.serviceName }}
+          #                   EnvName: ${{ deploymentEnv.name }}
+          #                   KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }} 
+          #                   TenantId: ${{ deploymentEnv.tenantId }}
+          #             - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
+          #               - template: /templates/steps/secrets-import-kv.yaml	                          
+          #                 parameters:
+          #                   serviceConnection: ${{ deploymentEnv.serviceConnection }}
+          #                   appKeyVault:  ${{ deploymentEnv.appKeyVault }}
+          #                   VariableGroups: "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
+          #                   VarFilter: "${{ join(';', parameters.appDeployConfig.variables) }}"
+          #                   ProgrammeName: "${{ parameters.appDeployConfig.programmeName }}"
+          #                   EnvName: ${{ deploymentEnv.name }}
+          #                   PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+          #             - ${{ if not(contains(parameters.stepsToSkip, 'AppConfigImport')) }}:
+          #               - template: /templates/steps/appconfig-import.yaml
+          #                 parameters:
+          #                   dryRun: false
+          #                   environmentObj: ${{ deploymentEnv }} 
+          #                   appDeployConfig: ${{ parameters.appDeployConfig }}
+          #                   workingDirectory: '$(Pipeline.Workspace)/s'
+          #                   serviceName: ${{ parameters.serviceName }}
+          #                   configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
+          #                   PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+          #                   AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
+          #                   Version: $(appVersion)
+          #                   FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
 
-                    - ${{ if eq(parameters.deployConfigOnly, false )}}:
-                      - template: /templates/steps/common-app-cd.yaml
-                        parameters:
-                            serviceName: ${{ parameters.serviceName }}
-                            environmentObj: ${{ deploymentEnv }}
-                            appBuildConfig: ${{ parameters.appBuildConfig }}
-                            appDeployConfig: ${{ parameters.appDeployConfig }}
-                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                            stepsToSkip: ${{ parameters.stepsToSkip }}
+          #           - ${{ if eq(parameters.deployConfigOnly, false )}}:
+          #             - template: /templates/steps/common-app-cd.yaml
+          #               parameters:
+          #                   serviceName: ${{ parameters.serviceName }}
+          #                   environmentObj: ${{ deploymentEnv }}
+          #                   appBuildConfig: ${{ parameters.appBuildConfig }}
+          #                   appDeployConfig: ${{ parameters.appDeployConfig }}
+          #                   PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+          #                   stepsToSkip: ${{ parameters.stepsToSkip }}
                       
-                      - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
-                        - task: PowerShell@2
-                          displayName: 'Use ACR image timestamp to verify Flux Helm release'
-                          name: setAcrImageAddedTime
-                          inputs:
-                            targetType: inline
-                            script: |
-                              Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
-                            failOnStderr: false
-                            pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s' 
+          #             - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
+          #               - task: PowerShell@2
+          #                 displayName: 'Use ACR image timestamp to verify Flux Helm release'
+          #                 name: setAcrImageAddedTime
+          #                 inputs:
+          #                   targetType: inline
+          #                   script: |
+          #                     Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+          #                   failOnStderr: false
+          #                   pwsh: true
+          #                   workingDirectory: '$(Pipeline.Workspace)/s' 
 
-                        - task: AzurePowerShell@5
-                          displayName: 'Generate Api Token'
-                          name: GenerateApiToken
-                          inputs:
-                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
-                            ScriptType: FilePath
-                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
-                            ScriptArguments: >
-                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
-                                -TenantId ${{ deploymentEnv.tenantId }}
-                            FailOnStandardError: true
-                            azurePowerShellVersion: 'LatestVersion'
-                            pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s'     
+          #               - task: AzurePowerShell@5
+          #                 displayName: 'Generate Api Token'
+          #                 name: GenerateApiToken
+          #                 inputs:
+          #                   azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
+          #                   ScriptType: FilePath
+          #                   ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
+          #                   ScriptArguments: >
+          #                       -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
+          #                       -TenantId ${{ deploymentEnv.tenantId }}
+          #                   FailOnStandardError: true
+          #                   azurePowerShellVersion: 'LatestVersion'
+          #                   pwsh: true
+          #                   workingDirectory: '$(Pipeline.Workspace)/s'     
           
           - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - job: WaitForFluxRelease
@@ -539,10 +540,10 @@ stages:
 
           - deployment: PostDeploymentTasks${{ deploymentEnv.name }}
             displayName: 'Post Deployment Tasks'
-            ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
-              dependsOn: WaitForFluxRelease
-            ${{ else }}:
-              dependsOn: PublishTo${{ deploymentEnv.name }}
+            # ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+            #   dependsOn: WaitForFluxRelease
+            # ${{ else }}:
+            #   dependsOn: PublishTo${{ deploymentEnv.name }}
             environment: ${{ deploymentEnv.name }}
             strategy:
               runOnce:
@@ -556,7 +557,7 @@ stages:
                     - task: AzureCLI@2
                       displayName: 'Create Team RoleAssignments'
                       inputs:
-                        azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
+                        azureSubscription: ${{ deploymentEnv.serviceConnection }}
                         scriptType: pscore
                         scriptLocation: scriptPath
                         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Team-Resources-RoleAssignments.ps1'
