@@ -475,32 +475,32 @@ stages:
                           serviceName: ${{ parameters.serviceName }}
                           deploymentEnv: ${{ deploymentEnv }}                           
                       
-                      - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
-                        - task: PowerShell@2
-                          displayName: 'Use ACR image timestamp to verify Flux Helm release'
-                          name: setAcrImageAddedTime
-                          inputs:
-                            targetType: inline
-                            script: |
-                              Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
-                            failOnStderr: false
-                            pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s' 
+                    - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
+                      - task: PowerShell@2
+                        displayName: 'Use ACR image timestamp to verify Flux Helm release'
+                        name: setAcrImageAddedTime
+                        inputs:
+                          targetType: inline
+                          script: |
+                            Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+                          failOnStderr: false
+                          pwsh: true
+                          workingDirectory: '$(Pipeline.Workspace)/s' 
 
-                        - task: AzurePowerShell@5
-                          displayName: 'Generate Api Token'
-                          name: GenerateApiToken
-                          inputs:
-                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
-                            ScriptType: FilePath
-                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
-                            ScriptArguments: >
-                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
-                                -TenantId ${{ deploymentEnv.tenantId }}
-                            FailOnStandardError: true
-                            azurePowerShellVersion: 'LatestVersion'
-                            pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s'     
+                      - task: AzurePowerShell@5
+                        displayName: 'Generate Api Token'
+                        name: GenerateApiToken
+                        inputs:
+                          azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
+                          ScriptType: FilePath
+                          ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
+                          ScriptArguments: >
+                              -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
+                              -TenantId ${{ deploymentEnv.tenantId }}
+                          FailOnStandardError: true
+                          azurePowerShellVersion: 'LatestVersion'
+                          pwsh: true
+                          workingDirectory: '$(Pipeline.Workspace)/s'     
           
           - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - job: WaitForFluxRelease
