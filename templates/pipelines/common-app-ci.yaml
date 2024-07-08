@@ -496,14 +496,13 @@ stages:
                             pwsh: true
                             workingDirectory: '$(Pipeline.Workspace)/s'        
 
-                      - template: /templates/steps/team-roleassignment.yaml
-                        parameters:
-                            teamName: ${{ parameters.teamName }}
-                            serviceName: ${{ parameters.serviceName }}
-                            deploymentEnv: ${{ deploymentEnv }}                           
-                      
-                       
-          
+                      - ${{ if eq(coalesce(deploymentEnv.teamResourcesPermissions.grantTeamAccessGroupPermissionToTeamResourceGroup, 'false'), true) }}:
+                        - template: /templates/steps/team-roleassignment.yaml
+                          parameters:
+                              teamName: ${{ parameters.teamName }}
+                              serviceName: ${{ parameters.serviceName }}
+                              deploymentEnv: ${{ deploymentEnv }}                           
+                                                       
           - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - job: WaitForFluxRelease
               displayName: 'Wait For Flux Release'
