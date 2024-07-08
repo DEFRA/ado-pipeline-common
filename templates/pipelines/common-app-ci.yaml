@@ -537,40 +537,42 @@ stages:
                       }
                     waitForCompletion: 'true'
 
-            - deployment: PostDeploymentTasks${{ deploymentEnv.name }}
-              displayName: 'Post Deployment Tasks'
-              ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
-                dependsOn: WaitForFluxRelease
-              environment: ${{ deploymentEnv.name }}
-              strategy:
-                runOnce:
-                  deploy:          
-                    steps:                      
-                      - checkout: Self
-                        path: s/ 
-                      - checkout: PipelineCommon
-                        path: s/ADO-Pipeline-Common
+          - deployment: PostDeploymentTasks${{ deploymentEnv.name }}
+            displayName: 'Post Deployment Tasks'
+            ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+              dependsOn: WaitForFluxRelease
+            ${{ else }}:
+              dependsOn: PublishTo${{ deploymentEnv.name }}
+            environment: ${{ deploymentEnv.name }}
+            strategy:
+              runOnce:
+                deploy:          
+                  steps:                      
+                    - checkout: Self
+                      path: s/ 
+                    - checkout: PipelineCommon
+                      path: s/ADO-Pipeline-Common
 
-                      - task: AzureCLI@2
-                        displayName: 'Create Team RoleAssignments'
-                        inputs:
-                          azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
-                          scriptType: pscore
-                          scriptLocation: scriptPath
-                          scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Team-Resources-RoleAssignments.ps1'
-                          arguments: > 
-                            -SubscriptionId '${{ deploymentEnv.subscriptionId }}'
-                            -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
-                            -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
-                            -TeamName '${{ parameters.teamName }}'
-                            -ServiceResourceGroup '${{ deploymentEnv.serviceResourceGroup }}'
-                            -AzureServiceBusResourceGroup '${{ deploymentEnv.serviceResourceGroup }}'
-                            -AzureServiceBusNamespace '${{ deploymentEnv.serviceBusNamespace }}'
-                          addSpnToEnvironment: true
-                          failOnStandardError: false
-                          workingDirectory: '$(Pipeline.Workspace)/s'   
-                           
-                      - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest), not(contains(parameters.stepsToSkip, 'PostDeploymentTasks')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
-                        - template: /templates/steps/post-deployment-tests.yaml
-                          parameters:
-                            url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
+                    - task: AzureCLI@2
+                      displayName: 'Create Team RoleAssignments'
+                      inputs:
+                        azureSubscription: ${{ parameters.appTestConfig.preDeployTest.serviceConnection }}
+                        scriptType: pscore
+                        scriptLocation: scriptPath
+                        scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Team-Resources-RoleAssignments.ps1'
+                        arguments: > 
+                          -SubscriptionId '${{ deploymentEnv.subscriptionId }}'
+                          -InfraChartHomeDir '$(Pipeline.Workspace)/s/helm/${{ parameters.serviceName }}-infra'
+                          -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
+                          -TeamName '${{ parameters.teamName }}'
+                          -ServiceResourceGroup '${{ deploymentEnv.serviceResourceGroup }}'
+                          -AzureServiceBusResourceGroup '${{ deploymentEnv.serviceResourceGroup }}'
+                          -AzureServiceBusNamespace '${{ deploymentEnv.serviceBusNamespace }}'
+                        addSpnToEnvironment: true
+                        failOnStandardError: false
+                        workingDirectory: '$(Pipeline.Workspace)/s'   
+                          
+                    - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest), not(contains(parameters.stepsToSkip, 'PostDeploymentTasks')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+                      - template: /templates/steps/post-deployment-tests.yaml
+                        parameters:
+                          url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
