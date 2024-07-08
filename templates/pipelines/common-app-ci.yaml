@@ -238,28 +238,28 @@ stages:
                 acrRepoTagVersion: $(appVersion)
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
 
-      # - job: PreDeploymentTests
-      #   displayName: 'Pre Deployment Tests'  
-      #   condition: |
-      #     and(
-      #       succeeded('BuildDockerImage'),
-      #       ${{ eq(parameters.deployConfigOnly, false) }},
-      #       ${{ not(contains(parameters.stepsToSkip, 'PreDeploymentTests')) }} 
-      #     )
-      #   dependsOn: [Initialise, BuildDockerImage]
-      #   steps:
-      #     - checkout: self
-      #       path: s/  
-      #     - checkout: PipelineCommon
-      #       path: s/ADO-Pipeline-Common
+      - job: PreDeploymentTests
+        displayName: 'Pre Deployment Tests'  
+        condition: |
+          and(
+            succeeded('BuildDockerImage'),
+            ${{ eq(parameters.deployConfigOnly, false) }},
+            ${{ not(contains(parameters.stepsToSkip, 'PreDeploymentTests')) }} 
+          )
+        dependsOn: [Initialise, BuildDockerImage]
+        steps:
+          - checkout: self
+            path: s/  
+          - checkout: PipelineCommon
+            path: s/ADO-Pipeline-Common
 
-      #     - ${{ if ne(parameters.appTestConfig, '') }}:
-      #       - template: /templates/steps/pre-deployment-tests.yaml
-      #         parameters:
-      #           teamName: ${{ parameters.teamName }}
-      #           serviceName: ${{ parameters.serviceName }}
-      #           IsPrBuild: ${{ variables.IsPrBuild }}
-      #           appTestConfig: ${{ parameters.appTestConfig }}
+          - ${{ if ne(parameters.appTestConfig, '') }}:
+            - template: /templates/steps/pre-deployment-tests.yaml
+              parameters:
+                teamName: ${{ parameters.teamName }}
+                serviceName: ${{ parameters.serviceName }}
+                IsPrBuild: ${{ variables.IsPrBuild }}
+                appTestConfig: ${{ parameters.appTestConfig }}
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
@@ -305,8 +305,7 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        # dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
-        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
         condition: |
           and(
             or(succeeded(), ${{ eq(parameters.appBuildConfig.appFrameworkType, 'helm') }}),
@@ -468,7 +467,7 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
-
+                      
                       - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
                         - task: PowerShell@2
                           displayName: 'Use ACR image timestamp to verify Flux Helm release'
