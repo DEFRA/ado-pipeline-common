@@ -18,6 +18,8 @@ Mandatory. Service ResourceGroup Name
 Mandatory. Azure Service Bus Resource Group
 .PARAMETER AzureServiceBusNamespace
 Mandatory. Azure Service Bus Namespace
+.PARAMETER TeamContributorAcccessGroupId
+Mandatory. Team Contributor AcccessGroup Id
 #> 
 
 [CmdletBinding()]
@@ -35,7 +37,9 @@ param(
 	[Parameter(Mandatory)]
 	[string]$AzureServiceBusResourceGroup,
 	[Parameter(Mandatory)]
-	[string]$AzureServiceBusNamespace
+	[string]$AzureServiceBusNamespace,
+	[Parameter(Mandatory)]
+	[string]$TeamContributorAcccessGroupId
 )
 
 #------------------------------START : LOCAL TESTING VARIABLES----------------------------------#
@@ -46,6 +50,7 @@ param(
 # $ServiceResourceGroup = 'SNDADPINFRG1401'
 # $AzureServiceBusResourceGroup = 'SNDADPINFRG1401'
 # $AzureServiceBusNamespace = 'SNDADPINFSB1401'
+# $TeamContributorAcccessGroupId = ""
 #------------------------------END : LOCAL TESTING VARIABLES----------------------------------#
 
 Set-StrictMode -Version 3.0
@@ -73,6 +78,7 @@ Write-Debug "${functionName}:TeamName=$TeamName"
 Write-Debug "${functionName}:ServiceResourceGroup=$ServiceResourceGroup"
 Write-Debug "${functionName}:AzureServiceBusResourceGroup=$AzureServiceBusResourceGroup"
 Write-Debug "${functionName}:AzureServiceBusNamespace=$AzureServiceBusNamespace"
+Write-Debug "${functionName}:TeamContributorAcccessGroupId=$TeamContributorAcccessGroupId"
 
 function Set-ResourceGroupRoleAssignment {
 	param(
@@ -193,9 +199,6 @@ try {
 	[System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $PipelineCommonDirectory -ChildPath "templates/powershell/modules/ps-helpers"
 	Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
 	Import-Module $moduleDir.FullName -Force
-	[string]$TeamContributorAcccessGroupName = "AAG-Azure-ADP-$TeamName-Resources-Contributor".ToUpper()
-	[string]$command = "az ad group show --group $TeamContributorAcccessGroupName --query id"
-	[string]$TeamContributorAcccessGroupId = Invoke-CommandLine -Command $command -IgnoreErrorCode
 
 	if ([string]::IsNullOrEmpty($TeamContributorAcccessGroupId)) {
 		Write-Host "##vso[task.logissue type=warning]Team Access group '$TeamContributorAcccessGroupName' does not exist."

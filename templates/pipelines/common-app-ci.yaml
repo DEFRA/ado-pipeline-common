@@ -555,9 +555,23 @@ stages:
                       path: s/ADO-Pipeline-Common
 
                     - task: AzureCLI@2
-                      displayName: 'Create Team RoleAssignments'
+                      displayName: 'Get Team Access Group Object ID'
                       inputs:
                         azureSubscription: ${{ deploymentEnv.ssvServiceConnection }}
+                        scriptType: pscore
+                        scriptLocation: scriptPath
+                        scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-TeamAccessGroup-ObjectId.ps1'
+                        arguments: > 
+                          -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
+                          -TeamName '${{ parameters.teamName }}'
+                        addSpnToEnvironment: true
+                        failOnStandardError: false
+                        workingDirectory: '$(Pipeline.Workspace)/s'
+
+                    - task: AzureCLI@2
+                      displayName: 'Create Team RoleAssignments'
+                      inputs:
+                        azureSubscription: ${{ deploymentEnv.serviceConnection }}
                         scriptType: pscore
                         scriptLocation: scriptPath
                         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Team-Resources-RoleAssignments.ps1'
@@ -569,6 +583,7 @@ stages:
                           -ServiceResourceGroup '${{ deploymentEnv.serviceResourceGroup }}'
                           -AzureServiceBusResourceGroup '${{ deploymentEnv.serviceResourceGroup }}'
                           -AzureServiceBusNamespace '${{ deploymentEnv.serviceBusNamespace }}'
+                          -TeamContributorAcccessGroupId $(TeamContributorAcccessGroupId)
                         addSpnToEnvironment: true
                         failOnStandardError: false
                         workingDirectory: '$(Pipeline.Workspace)/s'   
