@@ -42,7 +42,7 @@ param(
 # $SubscriptionId = '55f3b8c6-6800-41c7-a40d-2adb5e4e1bd1'
 # $InfraChartHomeDir = 'G:\project\defra-adp\repo\github\defra\services\ffc-demo-calculation-service\helm\ffc-demo-calculation-service-infra'
 # $PipelineCommonDirectory = '.'
-# $TeamName = 'ffc-demo'
+# $TeamName = 'fcp-demo'
 # $ServiceResourceGroup = 'SNDADPINFRG1401'
 # $AzureServiceBusResourceGroup = 'SNDADPINFRG1401'
 # $AzureServiceBusNamespace = 'SNDADPINFSB1401'
@@ -200,7 +200,8 @@ try {
 	if ([string]::IsNullOrEmpty($TeamContributorAcccessGroupId)) {
 		Write-Host "##vso[task.logissue type=warning]Team Access group '$TeamContributorAcccessGroupName' does not exist."
 		Write-Warning "Team Access group '$TeamContributorAcccessGroupName' does not exist."
-		exit 0															
+		$exitCode = 0
+		exit $exitCode														
 	}
 	
 	Set-ResourceGroupRoleAssignment -TeamName $TeamName -ServiceResourceGroup $ServiceResourceGroup -SubscriptionId $SubscriptionId -TeamContributorAcccessGroupId $TeamContributorAcccessGroupId
