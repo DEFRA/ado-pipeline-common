@@ -469,38 +469,40 @@ stages:
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
 
-                    - template: /templates/steps/team-roleassignment.yaml
-                      parameters:
-                          teamName: ${{ parameters.teamName }}
-                          serviceName: ${{ parameters.serviceName }}
-                          deploymentEnv: ${{ deploymentEnv }}                           
-                      
-                    - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
-                      - task: PowerShell@2
-                        displayName: 'Use ACR image timestamp to verify Flux Helm release'
-                        name: setAcrImageAddedTime
-                        inputs:
-                          targetType: inline
-                          script: |
-                            Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
-                          failOnStderr: false
-                          pwsh: true
-                          workingDirectory: '$(Pipeline.Workspace)/s' 
+                      - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
+                        - task: PowerShell@2
+                          displayName: 'Use ACR image timestamp to verify Flux Helm release'
+                          name: setAcrImageAddedTime
+                          inputs:
+                            targetType: inline
+                            script: |
+                              Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+                            failOnStderr: false
+                            pwsh: true
+                            workingDirectory: '$(Pipeline.Workspace)/s' 
 
-                      - task: AzurePowerShell@5
-                        displayName: 'Generate Api Token'
-                        name: GenerateApiToken
-                        inputs:
-                          azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
-                          ScriptType: FilePath
-                          ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
-                          ScriptArguments: >
-                              -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
-                              -TenantId ${{ deploymentEnv.tenantId }}
-                          FailOnStandardError: true
-                          azurePowerShellVersion: 'LatestVersion'
-                          pwsh: true
-                          workingDirectory: '$(Pipeline.Workspace)/s'     
+                        - task: AzurePowerShell@5
+                          displayName: 'Generate Api Token'
+                          name: GenerateApiToken
+                          inputs:
+                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
+                            ScriptType: FilePath
+                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
+                            ScriptArguments: >
+                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
+                                -TenantId ${{ deploymentEnv.tenantId }}
+                            FailOnStandardError: true
+                            azurePowerShellVersion: 'LatestVersion'
+                            pwsh: true
+                            workingDirectory: '$(Pipeline.Workspace)/s'        
+
+                      - template: /templates/steps/team-roleassignment.yaml
+                        parameters:
+                            teamName: ${{ parameters.teamName }}
+                            serviceName: ${{ parameters.serviceName }}
+                            deploymentEnv: ${{ deploymentEnv }}                           
+                      
+                       
           
           - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - job: WaitForFluxRelease
@@ -544,13 +546,10 @@ stages:
                       }
                     waitForCompletion: 'true'
           
-          - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest), not(contains(parameters.stepsToSkip, 'PostDeploymentTasks')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
-            - deployment: PostDeploymentTasks${{ deploymentEnv.name }}
-              displayName: 'Post Deployment Tasks'
-              ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
-                dependsOn: WaitForFluxRelease
-              ${{ else }}:
-                dependsOn: PublishTo${{ deploymentEnv.name }}
+          - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest), not(contains(parameters.stepsToSkip, 'PostDeploymentTests')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+            - deployment: PostDeploymentTests${{ deploymentEnv.name }}
+              displayName: 'Post Deployment Tests'
+              dependsOn: WaitForFluxRelease
               environment: ${{ deploymentEnv.name }}
               strategy:
                 runOnce:
@@ -559,8 +558,8 @@ stages:
                       - checkout: Self
                         path: s/ 
                       - checkout: PipelineCommon
-                        path: s/ADO-Pipeline-Common                      
-                                                
+                        path: s/ADO-Pipeline-Common
+
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
