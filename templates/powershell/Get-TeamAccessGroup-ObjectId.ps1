@@ -58,7 +58,7 @@ try {
 		Write-Host "##vso[task.logissue type=warning]Team Access group '$TeamContributorAcccessGroupName' does not exist."
 		Write-Warning "Team Access group '$TeamContributorAcccessGroupName' does not exist."													
 	}
-	Write-Host "##vso[task.setvariable variable=TeamContributorAcccessGroupId;isoutput=true]$TeamContributorAcccessGroupId"
+	Write-Host "##vso[task.setvariable variable=TeamContributorAcccessGroupId;]$TeamContributorAcccessGroupId"
 	$exitCode = 0
 }
 catch {
