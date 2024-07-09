@@ -2,8 +2,8 @@
 .SYNOPSIS
 Creates Team RoleAssignment
 .DESCRIPTION
-Assign project team AD group "contributor" permission to access the teams dedicated resource groups
-Assign project team AD group "scoped permissions" to service bus queues and topics
+Assign project team AD group "contributor" permission to access the teams dedicated resource groups (SND1, SND2, SND3, SND4)
+Assign project team AD group "reader" permission to access the teams dedicated resource groups (DEV, TST1)
 .PARAMETER SubscriptionId
 Mandatory. Subscription Id
 .PARAMETER InfraChartHomeDir
@@ -18,8 +18,10 @@ Mandatory. Service ResourceGroup Name
 Mandatory. Azure Service Bus Resource Group
 .PARAMETER AzureServiceBusNamespace
 Mandatory. Azure Service Bus Namespace
-.PARAMETER TeamContributorAcccessGroupId
-Mandatory. Team Contributor AcccessGroup Id
+.PARAMETER TeamAccessGroupId
+Mandatory. Team AccessGroup Id
+.PARAMETER TeamResourceGroupRole
+Mandatory. Team ResourceGroup Role
 #> 
 
 [CmdletBinding()]
@@ -39,19 +41,10 @@ param(
 	[Parameter(Mandatory)]
 	[string]$AzureServiceBusNamespace,
 	[Parameter(Mandatory)]
-	[string]$TeamContributorAcccessGroupId
+	[string]$TeamAccessGroupId,
+	[Parameter(Mandatory)]
+	[string]$TeamResourceGroupRole
 )
-
-#------------------------------START : LOCAL TESTING VARIABLES----------------------------------#
-# $SubscriptionId = '55f3b8c6-6800-41c7-a40d-2adb5e4e1bd1'
-# $InfraChartHomeDir = 'G:\project\defra-adp\repo\github\defra\services\ffc-demo-calculation-service\helm\ffc-demo-calculation-service-infra'
-# $PipelineCommonDirectory = '.'
-# $TeamName = 'fcp-demo'
-# $ServiceResourceGroup = 'SNDADPINFRG1401'
-# $AzureServiceBusResourceGroup = 'SNDADPINFRG1401'
-# $AzureServiceBusNamespace = 'SNDADPINFSB1401'
-# $TeamContributorAcccessGroupId = ""
-#------------------------------END : LOCAL TESTING VARIABLES----------------------------------#
 
 Set-StrictMode -Version 3.0
 
@@ -78,7 +71,8 @@ Write-Debug "${functionName}:TeamName=$TeamName"
 Write-Debug "${functionName}:ServiceResourceGroup=$ServiceResourceGroup"
 Write-Debug "${functionName}:AzureServiceBusResourceGroup=$AzureServiceBusResourceGroup"
 Write-Debug "${functionName}:AzureServiceBusNamespace=$AzureServiceBusNamespace"
-Write-Debug "${functionName}:TeamContributorAcccessGroupId=$TeamContributorAcccessGroupId"
+Write-Debug "${functionName}:TeamAccessGroupId=$TeamAccessGroupId"
+Write-Debug "${functionName}:TeamResourceGroupRole=$TeamResourceGroupRole"
 
 function Set-ResourceGroupRoleAssignment {
 	param(
@@ -89,7 +83,9 @@ function Set-ResourceGroupRoleAssignment {
 		[Parameter(Mandatory)]
 		[string]$SubscriptionId,
 		[Parameter(Mandatory)]
-		[string]$TeamContributorAcccessGroupId
+		[string]$TeamAccessGroupId,
+		[Parameter(Mandatory)]
+		[string]$Role
 	)
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
@@ -97,7 +93,7 @@ function Set-ResourceGroupRoleAssignment {
 		Write-Debug "${functionName}:TeamName=$TeamName"
 		Write-Debug "${functionName}:ServiceResourceGroup=$ServiceResourceGroup"
 		Write-Debug "${functionName}:SubscriptionId=$SubscriptionId"
-		Write-Debug "${functionName}:TeamContributorAcccessGroupId=$TeamContributorAcccessGroupId"
+		Write-Debug "${functionName}:TeamAccessGroupId=$TeamAccessGroupId"
 	}
 	process {
 		[string]$TeamResourceGroup = "$ServiceResourceGroup-$TeamName".ToLower();		
@@ -109,7 +105,7 @@ function Set-ResourceGroupRoleAssignment {
 		Write-Host "Resource group exists: $resourceGroupExists."
 
 		if (([bool]::Parse($resourceGroupExists))) {
-			New-RoleAssignment -Scope $Scope -ObjectId $TeamContributorAcccessGroupId -RoleDefinitionName "Contributor" -AssigneePrincipalType "Group"	
+			New-RoleAssignment -Scope $Scope -ObjectId $TeamAccessGroupId -RoleDefinitionName $Role -AssigneePrincipalType "Group"	
 		}
 		else {
 			Write-Host "##vso[task.logissue type=warning]$TeamResourceGroup does not exist. RoleAssignment creation skipped."
@@ -119,38 +115,6 @@ function Set-ResourceGroupRoleAssignment {
 	end {
 		Write-Debug "${functionName}:Exited"
 	}    
-}
-
-function Test-InfraChartHasServiceBusEntities {
-	begin {
-		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:Entered"
-		Write-Debug "${functionName}:Global:InfraChartHomeDir=$Global:InfraChartHomeDir"
-	}
-	process {
-		[bool]$hasResourcesToProvision = $false
-		if (Test-Path $Global:InfraChartHomeDir) {
-
-			if (-not (Get-Module -ListAvailable -Name 'powershell-yaml')) {
-				Write-Host "powershell-yaml Module does not exists. Installing now.."
-				Install-Module powershell-yaml -Force
-				Write-Host "powershell-yaml Installed Successfully."
-			}
-
-			$valuesYamlPath = "$Global:InfraChartHomeDir\values.yaml"
-			[string]$content = Get-Content -Raw -Path $valuesYamlPath
-			Write-Debug "$valuesYamlPath content: $content"
-			if ($content) {
-				$valuesObject = ConvertFrom-YAML $content -Ordered
-				$hasResourcesToProvision = ($valuesObject) -and ($valuesObject.Contains('namespaceQueues') -or $valuesObject.Contains('namespaceTopics'))
-			}
-		}
-
-		return $hasResourcesToProvision
-	}
-	end {
-		Write-Debug "${functionName}:Exited"
-	}
 }
 
 function New-RoleAssignment {
@@ -200,15 +164,15 @@ try {
 	Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
 	Import-Module $moduleDir.FullName -Force
 
-	if ([string]::IsNullOrEmpty($TeamContributorAcccessGroupId)) {
-		Write-Host "##vso[task.logissue type=warning]Team Access group '$TeamContributorAcccessGroupName' does not exist."
-		Write-Warning "Team Access group '$TeamContributorAcccessGroupName' does not exist."
-		$exitCode = 0
-		exit $exitCode														
+	#Team Resource group permissions
+	if ([string]::IsNullOrEmpty($TeamAccessGroupId)) {
+		Write-Host "##vso[task.logissue type=warning]Team Access group does not exist. ResourceGroupRoleAssignment skipped."
+		Write-Warning "Team Access group does not exist. ResourceGroupRoleAssignment skipped."													
 	}
-	
-	Set-ResourceGroupRoleAssignment -TeamName $TeamName -ServiceResourceGroup $ServiceResourceGroup -SubscriptionId $SubscriptionId -TeamContributorAcccessGroupId $TeamContributorAcccessGroupId
-	
+	else {
+		Set-ResourceGroupRoleAssignment -TeamName $TeamName -ServiceResourceGroup $ServiceResourceGroup -SubscriptionId $SubscriptionId -TeamAccessGroupId $TeamAccessGroupId -Role $TeamResourceGroupRole
+	}
+		
 	$exitCode = 0
 }
 catch {

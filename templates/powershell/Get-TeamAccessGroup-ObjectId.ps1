@@ -1,13 +1,16 @@
 <#
 .SYNOPSIS
-Creates Team RoleAssignment
+Get the Access group object ID.
 .DESCRIPTION
-Assign project team AD group "contributor" permission to access the teams dedicated resource groups
-Assign project team AD group "scoped permissions" to service bus queues and topics
+Get the Access group object ID and set the value in Task variable.
 .PARAMETER PipelineCommonDirectory
 Mandatory. Directory Path of ADO Pipeline common repo
 .PARAMETER TeamName
 Mandatory. Team Name
+.PARAMETER AccessGroupName
+Mandatory. AccessGroup Name
+.PARAMETER AccessGroupIdVariableName
+Mandatory. Access GroupId VariableName
 #> 
 
 [CmdletBinding()]
@@ -15,13 +18,12 @@ param(
 	[Parameter(Mandatory)]
 	[string]$PipelineCommonDirectory,
 	[Parameter(Mandatory)]
-	[string]$TeamName
+	[string]$TeamName,
+	[Parameter(Mandatory)]
+	[string]$AccessGroupName,	
+	[Parameter(Mandatory)]
+	[string]$AccessGroupIdVariableName
 )
-
-#------------------------------START : LOCAL TESTING VARIABLES----------------------------------#
-# $PipelineCommonDirectory = '.'
-# $TeamName = 'fcp-demo'
-#------------------------------END : LOCAL TESTING VARIABLES----------------------------------#
 
 Set-StrictMode -Version 3.0
 
@@ -43,6 +45,8 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:PipelineCommonDirectory=$PipelineCommonDirectory"
 Write-Debug "${functionName}:TeamName=$TeamName"
+Write-Debug "${functionName}:AccessGroupName=$AccessGroupName"
+Write-Debug "${functionName}:AccessGroupIdVariableName=$AccessGroupIdVariableName"
 
 try {
 
@@ -50,15 +54,16 @@ try {
 	Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
 	Import-Module $moduleDir.FullName -Force
 
-	[string]$TeamContributorAcccessGroupName = "AAG-Azure-ADP-$TeamName-Resources-Contributor".ToUpper()
-	[string]$command = "az ad group show --group $TeamContributorAcccessGroupName --query id"
-	[string]$TeamContributorAcccessGroupId = Invoke-CommandLine -Command $command -IgnoreErrorCode
+	$AccessGroupName = $AccessGroupName.Replace("{TeamName}", $TeamName).ToUpper()
+	Write-Host "Access group name resolved to $AccessGroupName"
+	[string]$command = "az ad group show --group $AccessGroupName --query id"
+	[string]$AccessGroupId = Invoke-CommandLine -Command $command -IgnoreErrorCode
 
-	if ([string]::IsNullOrEmpty($TeamContributorAcccessGroupId)) {
-		Write-Host "##vso[task.logissue type=warning]Team Access group '$TeamContributorAcccessGroupName' does not exist."
-		Write-Warning "Team Access group '$TeamContributorAcccessGroupName' does not exist."													
+	if ([string]::IsNullOrEmpty($AccessGroupId)) {
+		Write-Host "##vso[task.logissue type=warning]Access group '$AccessGroupName' does not exist."
+		Write-Warning "Access group '$AccessGroupName' does not exist."													
 	}
-	Write-Host "##vso[task.setvariable variable=TeamContributorAcccessGroupId;]$TeamContributorAcccessGroupId"
+	Write-Host "##vso[task.setvariable variable=$AccessGroupIdVariableName;]$AccessGroupId"
 	$exitCode = 0
 }
 catch {
