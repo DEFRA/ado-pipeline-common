@@ -18,8 +18,8 @@ steps:
       arguments: > 
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
         -TeamName '${{ parameters.teamName }}'
-        -$AccessGroupName '${{ parameters.deploymentEnv.teamResourcesPermissions.teamAccessGroupName }}'
-        -$AccessGroupIdVariableName "Team${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}AccessGroupId"
+        -AccessGroupName '${{ parameters.deploymentEnv.teamResourcesPermissions.teamAccessGroupName }}'
+        -AccessGroupIdVariableName "Team${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}AccessGroupId"
       addSpnToEnvironment: true
       failOnStandardError: false
       workingDirectory: '$(Pipeline.Workspace)/s'
