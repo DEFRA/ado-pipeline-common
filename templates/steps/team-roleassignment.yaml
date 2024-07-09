@@ -37,8 +37,6 @@ steps:
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
         -TeamName '${{ parameters.teamName }}'
         -ServiceResourceGroup '${{ parameters.deploymentEnv.serviceResourceGroup }}'
-        -AzureServiceBusResourceGroup '${{ parameters.deploymentEnv.serviceResourceGroup }}'
-        -AzureServiceBusNamespace '${{ parameters.deploymentEnv.serviceBusNamespace }}'
         -TeamAccessGroupId $(Team${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}AccessGroupId)
         -TeamResourceGroupRole '${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}'
       addSpnToEnvironment: true

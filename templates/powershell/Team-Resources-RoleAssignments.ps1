@@ -14,10 +14,6 @@ Mandatory. Directory Path of ADO Pipeline common repo
 Mandatory. Team Name
 .PARAMETER ServiceResourceGroup
 Mandatory. Service ResourceGroup Name
-.PARAMETER AzureServiceBusResourceGroup
-Mandatory. Azure Service Bus Resource Group
-.PARAMETER AzureServiceBusNamespace
-Mandatory. Azure Service Bus Namespace
 .PARAMETER TeamAccessGroupId
 Mandatory. Team AccessGroup Id
 .PARAMETER TeamResourceGroupRole
@@ -36,10 +32,6 @@ param(
 	[string]$TeamName,
 	[Parameter(Mandatory)]
 	[string]$ServiceResourceGroup,
-	[Parameter(Mandatory)]
-	[string]$AzureServiceBusResourceGroup,
-	[Parameter(Mandatory)]
-	[string]$AzureServiceBusNamespace,
 	[Parameter(Mandatory)]
 	[string]$TeamAccessGroupId,
 	[Parameter(Mandatory)]
@@ -69,8 +61,6 @@ Write-Debug "${functionName}:InfraChartHomeDir=$InfraChartHomeDir"
 Write-Debug "${functionName}:PipelineCommonDirectory=$PipelineCommonDirectory"
 Write-Debug "${functionName}:TeamName=$TeamName"
 Write-Debug "${functionName}:ServiceResourceGroup=$ServiceResourceGroup"
-Write-Debug "${functionName}:AzureServiceBusResourceGroup=$AzureServiceBusResourceGroup"
-Write-Debug "${functionName}:AzureServiceBusNamespace=$AzureServiceBusNamespace"
 Write-Debug "${functionName}:TeamAccessGroupId=$TeamAccessGroupId"
 Write-Debug "${functionName}:TeamResourceGroupRole=$TeamResourceGroupRole"
 
@@ -157,8 +147,6 @@ function New-RoleAssignment {
 try {
 
 	$Global:InfraChartHomeDir = $InfraChartHomeDir
-	$Global:AzureServiceBusResourceGroup = $AzureServiceBusResourceGroup
-	$Global:AzureServiceBusNamespace = $AzureServiceBusNamespace
 
 	[System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $PipelineCommonDirectory -ChildPath "templates/powershell/modules/ps-helpers"
 	Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
