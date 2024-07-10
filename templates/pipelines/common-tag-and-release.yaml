@@ -52,14 +52,15 @@ jobs:
           script: |
             Write-Host "##vso[build.updatebuildnumber]$(GetVersionForTag.tagVersion)-$(runDate)-$(revision)"
 
-        - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
-          parameters:
-            appBuildConfig: $(appBuildConfig)
-            appVersion: '$(GetVersionForTag.tagVersion)'
-            PSHelperDirectory: $(psHelperDirectory)
 
-        - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
-          parameters:
-            appBuildConfig: $(appBuildConfig)
-            appVersion: '$(GetVersionForTag.latestTagVersion)'
-            PSHelperDirectory: $(psHelperDirectory)
+      - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
+        parameters:
+          appBuildConfig: $(appBuildConfig)
+          appVersion: '$(GetVersionForTag.tagVersion)'
+          PSHelperDirectory: $(psHelperDirectory)
+
+      - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
+        parameters:
+          appBuildConfig: $(appBuildConfig)
+          appVersion: '$(GetVersionForTag.latestTagVersion)'
+          PSHelperDirectory: $(psHelperDirectory)
