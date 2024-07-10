@@ -10,7 +10,7 @@ steps:
   path: s/source
   persistCredentials: true
 
-- task: AzureKeyVault@2
+- task: AzureKeyVault@4
   displayName: Read KV Secrets
   inputs:
     ConnectedServiceName: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
