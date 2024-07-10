@@ -37,7 +37,8 @@ jobs:
         inputs:
           targetType: 'inline'
           script: |
-            $pwshSymanticVersion= $(GetAppVersion.appVersion).replace('-alpha','').replace('-beta','').replace('-rc','')
+            $version = $(GetAppVersion.appVersion)
+            $pwshSymanticVersion= $version.replace('-alpha','').replace('-beta','').replace('-rc','')
             $major = ([version]"$pwshSymanticVersion").Major
             $latestAppVersion =   "$major.0.0-latest"
             $appVersion =  "$(GetAppVersion.appVersion)"
