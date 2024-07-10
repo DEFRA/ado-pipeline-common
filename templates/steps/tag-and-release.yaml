@@ -10,10 +10,10 @@ steps:
   path: s/source
   persistCredentials: true
 
-- task: AzureKeyVault@4
+- task: AzureKeyVault@2
   displayName: Read KV Secrets
   inputs:
-    ConnectedServiceName: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
+    azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
     KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
     ${{ if ne(parameters.appBuildConfig.keyVaultSecretFilter, '') }}:
       SecretsFilter: ${{ parameters.appBuildConfig.keyVaultSecretFilter }}
