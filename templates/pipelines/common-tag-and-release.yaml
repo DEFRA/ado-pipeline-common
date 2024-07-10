@@ -41,7 +41,7 @@ jobs:
             $pwshSymanticVersion= $appVersion.replace('-alpha','').replace('-beta','').replace('-rc','')
             $major = ([version]"$pwshSymanticVersion").Major
             $latestAppVersion =   "$major.0.0-latest"            
-            Write-Host "AppVersion: $appVersion    LatestAppVersion: $latestAppVersion"
+            Write-Host "AppVersion: $appVersion    LatestAppVersion: $latestAppVersion ${{ parameters.appBuildConfig.keyVaultServiceConnection }}"
             Write-Output "##vso[task.setvariable variable=tagVersion;isOutput=true]$appVersion"
             Write-Output "##vso[task.setvariable variable=latestTagVersion;isOutput=true]$latestAppVersion"
 
@@ -52,15 +52,15 @@ jobs:
           script: |
             Write-Host "##vso[build.updatebuildnumber]$(GetVersionForTag.tagVersion)-$(runDate)-$(revision)"
 
+      - ${{ if eq(variables.IsDefaultBranchBuild, false) }}:
+        - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
+          parameters:
+            appBuildConfig: $(appBuildConfig)
+            appVersion: '$(GetVersionForTag.tagVersion)'
+            PSHelperDirectory: $(psHelperDirectory)
 
-      - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
-        parameters:
-          appBuildConfig: $(appBuildConfig)
-          appVersion: '$(GetVersionForTag.tagVersion)'
-          PSHelperDirectory: $(psHelperDirectory)
-
-      - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
-        parameters:
-          appBuildConfig: $(appBuildConfig)
-          appVersion: '$(GetVersionForTag.latestTagVersion)'
-          PSHelperDirectory: $(psHelperDirectory)
+        - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
+          parameters:
+            appBuildConfig: $(appBuildConfig)
+            appVersion: '$(GetVersionForTag.latestTagVersion)'
+            PSHelperDirectory: $(psHelperDirectory)
