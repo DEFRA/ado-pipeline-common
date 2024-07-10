@@ -4,13 +4,13 @@ Get the Access group object ID.
 .DESCRIPTION
 Get the Access group object ID and set the value in Task variable.
 .PARAMETER PipelineCommonDirectory
-Mandatory. Directory Path of ADO Pipeline common repo
+Mandatory. Directory Path of ADO Pipeline common repo.
 .PARAMETER TeamName
-Mandatory. Team Name
+Mandatory. Team Name.
 .PARAMETER AccessGroupName
-Mandatory. AccessGroup Name
+Mandatory. AccessGroup Name.
 .PARAMETER AccessGroupIdVariableName
-Mandatory. Access GroupId VariableName
+Mandatory. Access GroupId VariableName.
 #> 
 
 [CmdletBinding()]
