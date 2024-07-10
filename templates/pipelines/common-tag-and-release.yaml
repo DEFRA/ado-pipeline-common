@@ -1,0 +1,65 @@
+parameters:
+- name: appBuildConfig
+  type: object
+
+variables:
+- name: psHelperDirectory
+  value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
+- name: RunDate
+  value: $[format('{0:yyyyMMdd}', pipeline.startTime)]
+- name: Revision
+  value: $[counter(variables['RunDate'], 0)]
+- name: IsDefaultBranchBuild
+  value: ${{ or( in(variables['Build.SourceBranch'], 'refs/heads/main','refs/heads/master'), contains(variables['Build.SourceBranch'],'refs/tags') ) }}
+
+jobs:
+  - job: CreateReleaseTag
+    steps:
+      - checkout: self
+        path: s/source
+        persistCredentials: true
+      - checkout: AdoPipelineCommon
+        path: s/ADO-Pipeline-Common
+
+      - task: PowerShell@2
+        inputs:
+          targetType: filePath
+          filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Extract-CodeVersion.ps1'
+          arguments: -AppFrameworkType "other" -ProjectPath "." -PSHelperDirectory  $(psHelperDirectory)
+          failOnStderr: false
+          pwsh: true
+          workingDirectory: '$(Pipeline.Workspace)/s/source'
+        displayName: GetAppVersion      
+        name: GetAppVersion   
+
+      - task: PowerShell@2
+        name: GetVersionForTag
+        inputs:
+          targetType: 'inline'
+          script: |
+            Write-Host ${{ parameters.CreateLatestTag }}
+            $major = ([version]"$(GetAppVersion.appVersion)").Major
+            $latestAppVersion =   "$major.0.0-latest" 
+            $appVersion =  "$(GetAppVersion.appVersion)"          
+            Write-Output "##vso[task.setvariable variable=tagVersion;isOutput=true]$appVersion"
+            Write-Output "##vso[task.setvariable variable=latestTagVersion;isOutput=true]$latestAppVersion"
+
+      - task: PowerShell@2
+        displayName: UpdateBuildNumber
+        inputs:
+          targetType: 'inline'
+          script: |
+            Write-Host "##vso[build.updatebuildnumber]$(GetVersionForTag.tagVersion)-$(runDate)-$(revision)"
+
+      - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
+        - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
+          parameters:
+            appBuildConfig: $(appBuildConfig)
+            appVersion: '$(GetVersionForTag.tagVersion)'
+            PSHelperDirectory: $(psHelperDirectory)
+
+        - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
+          parameters:
+            appBuildConfig: $(appBuildConfig)
+            appVersion: '$(GetVersionForTag.latestTagVersion)'
+            PSHelperDirectory: $(psHelperDirectory)
