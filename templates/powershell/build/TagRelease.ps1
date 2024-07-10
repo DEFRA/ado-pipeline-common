@@ -50,7 +50,7 @@ try {
     if ($exists) { 
         Write-Host "Tag already exists"
     }    
-    Invoke-CommandLine -Command "git tag $AppVersion --force"
+    Invoke-CommandLine -Command "git tag -fa $AppVersion"
     Invoke-CommandLine -Command "git push origin $AppVersion"
 
     Write-Host "Tag $AppVersion updated to latest commit"
