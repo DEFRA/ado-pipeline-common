@@ -4,7 +4,7 @@ resources:
   repositories:
     - repository: PipelineCommon
       name: DEFRA/ado-pipeline-common
-      endpoint: DEFRA-ADP
+      endpoint: DEFRA
       type: github
       ref: ${{ variables['Build.SourceBranch'] }}
 
