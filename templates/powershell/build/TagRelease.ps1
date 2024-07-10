@@ -77,7 +77,7 @@ try {
         throw $_.Exception
     }
     
-    if ($latestReleaseTag -eq $AppVersion) {
+    if ($latestReleaseTag -match $AppVersion) {
         Write-Host "Release already exists"
         Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
     }
