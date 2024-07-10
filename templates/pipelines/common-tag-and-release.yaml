@@ -41,7 +41,7 @@ jobs:
             $pwshSymanticVersion= $appVersion.replace('-alpha','').replace('-beta','').replace('-rc','')
             $major = ([version]"$pwshSymanticVersion").Major
             $latestAppVersion =   "$major.0.0-latest"            
-            Write-Host "AppVersion: $appVersion    LatestAppVersion:"
+            Write-Host "AppVersion: $appVersion    LatestAppVersion: $latestAppVersion"
             Write-Output "##vso[task.setvariable variable=tagVersion;isOutput=true]$appVersion"
             Write-Output "##vso[task.setvariable variable=latestTagVersion;isOutput=true]$latestAppVersion"
 
