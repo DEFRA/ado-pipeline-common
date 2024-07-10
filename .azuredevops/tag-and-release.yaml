@@ -17,6 +17,6 @@ resources:
       type: github
       #ref: refs/tags/1.0.0-latest
       ref: sm/408693/automate-tagging-adp-pipeline-common
-            
+
 extends:
   template: pipelines/common-tag-and-release.yaml@DEFRA-ADPPipelineCommon
