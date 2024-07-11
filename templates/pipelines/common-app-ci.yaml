@@ -544,7 +544,7 @@ stages:
                       }
                     waitForCompletion: 'true'
 
-          - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest), not(contains(parameters.stepsToSkip, 'PostDeploymentTests')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+          - ${{ if and(contains(parameters.appTestConfig.postDeployTest.envToTest,deploymentEnv.name), not(contains(parameters.stepsToSkip, 'PostDeploymentTests')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - deployment: PostDeploymentTests${{ deploymentEnv.name }}
               displayName: 'Post Deployment Tests'
               dependsOn: WaitForFluxRelease

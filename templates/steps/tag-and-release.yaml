@@ -5,6 +5,12 @@ parameters:
     type: string 
   - name: PSHelperDirectory
     type: string
+  - name: Command
+    type: string
+    default: 'TagAndRelease'
+    values:
+      - 'TagAndRelease'
+      - 'TagOnly'
 steps:  
 - checkout: self
   path: s/source
@@ -29,14 +35,15 @@ steps:
     pwsh: true
     workingDirectory: '$(Pipeline.Workspace)/s/source'
 
-- task: GitHubRelease@1
-  displayName: 'GitHub-Release'
-  condition: eq(variables.ReleaseExists, 'false')
-  inputs:
-    gitHubConnection: ${{ parameters.appBuildConfig.githubreleaseconnection}}
-    repositoryName: '$(Build.Repository.Name)'
-    tagSource: userSpecifiedTag
-    tag: ${{ parameters.appVersion }}
-    title: 'Release ${{ parameters.appVersion }}'
-    releaseNotesSource: inline
-    isPreRelease: false
+- ${{ if eq(parameters.Command, 'TagAndRelease') }}:
+  - task: GitHubRelease@1
+    displayName: 'GitHub-Release'
+    condition: eq(variables.ReleaseExists, 'false')
+    inputs:
+      gitHubConnection: ${{ parameters.appBuildConfig.githubreleaseconnection}}
+      repositoryName: '$(Build.Repository.Name)'
+      tagSource: userSpecifiedTag
+      tag: ${{ parameters.appVersion }}
+      title: 'Release ${{ parameters.appVersion }}'
+      releaseNotesSource: inline
+      isPreRelease: false
