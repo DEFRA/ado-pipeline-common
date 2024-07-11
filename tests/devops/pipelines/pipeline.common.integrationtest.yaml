@@ -21,16 +21,6 @@ parameters:
         value: test
       - template: /tests/devops/vars/custom.yaml@self
 
-pr:
-  branches:
-    include:
-      - main
-
-trigger:
-  batch: true
-  branches:
-    include:
-      - "none"
 
 lockBehavior: sequential
 
