@@ -37,7 +37,7 @@ steps:
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
         -TeamName '${{ parameters.teamName }}'
         -ServiceResourceGroup '${{ parameters.deploymentEnv.serviceResourceGroup }}'
-        -TeamAccessGroupId ${{ coalesce( $(Team${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}AccessGroupId), "") }}
+        -TeamAccessGroupId ${{ coalesce( $(format('Team{0}AccessGroupId', parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole)), "") }}
         -TeamResourceGroupRole '${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}'
       addSpnToEnvironment: true
       failOnStandardError: false
