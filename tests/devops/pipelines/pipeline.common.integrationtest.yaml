@@ -25,30 +25,12 @@ pr:
   branches:
     include:
       - main
-  paths:
-    include:
-      - templates/pipelines/common-infrastructure-deploy.yaml
-      - templates/steps/initialize.yaml
-      - templates/steps/powershell.yaml
-      - templates/steps/validate-deploy-arm-template.yaml
-      - templates/powershell/common-module
-      - templates/steps/common-module.yaml
-  drafts: false
 
 trigger:
   batch: true
   branches:
     include:
-      - "*"
-  paths:
-    include:
-      - templates/pipelines/common-infrastructure-deploy.yaml
-      - templates/steps/initialize.yaml
-      - templates/steps/powershell.yaml
-      - templates/steps/validate-deploy-arm-template.yaml
-      - templates/steps/validate-deploy-arm-template.yaml
-      - templates/powershell/common-module      
-      - tests/*
+      - "none"
 
 lockBehavior: sequential
 
