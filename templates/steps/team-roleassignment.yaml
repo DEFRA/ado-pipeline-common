@@ -26,7 +26,6 @@ steps:
 
   - task: AzureCLI@2
     displayName: 'Create Team RoleAssignments'
-    condition: and(succeeded(), ne('$(Team${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}AccessGroupId)', ''))
     inputs:
       azureSubscription: ${{ parameters.deploymentEnv.serviceConnection }}
       scriptType: pscore
