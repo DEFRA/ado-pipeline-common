@@ -26,6 +26,7 @@ steps:
 
   - task: AzureCLI@2
     displayName: 'Create Team RoleAssignments'
+    condition: and(succeeded(), ne('$(Team${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}AccessGroupId)', ''))
     inputs:
       azureSubscription: ${{ parameters.deploymentEnv.serviceConnection }}
       scriptType: pscore
@@ -37,7 +38,7 @@ steps:
         -PipelineCommonDirectory '$(Pipeline.Workspace)/s/ADO-Pipeline-Common'
         -TeamName '${{ parameters.teamName }}'
         -ServiceResourceGroup '${{ parameters.deploymentEnv.serviceResourceGroup }}'
-        -TeamAccessGroupId ${{ coalesce( $(format('Team{0}AccessGroupId', parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole)), "") }}
+        -TeamAccessGroupId '$(Team${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}AccessGroupId)'
         -TeamResourceGroupRole '${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}'
       addSpnToEnvironment: true
       failOnStandardError: false
