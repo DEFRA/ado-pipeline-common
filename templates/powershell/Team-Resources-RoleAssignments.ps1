@@ -32,7 +32,7 @@ param(
 	[string]$TeamName,
 	[Parameter(Mandatory)]
 	[string]$ServiceResourceGroup,
-	[Parameter(Mandatory)]
+	[Parameter()]
 	[string]$TeamAccessGroupId,
 	[Parameter(Mandatory)]
 	[string]$TeamResourceGroupRole
