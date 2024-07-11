@@ -58,9 +58,11 @@ jobs:
             appBuildConfig: ${{ parameters.appBuildConfig }}
             appVersion: '$(GetVersionForTag.tagVersion)'
             PSHelperDirectory: $(psHelperDirectory)
+            Command: 'TagAndRelease'
 
         - template: /templates/steps/tag-and-release.yaml@AdoPipelineCommon
           parameters:
             appBuildConfig: ${{ parameters.appBuildConfig }}
             appVersion: '$(GetVersionForTag.latestTagVersion)'
             PSHelperDirectory: $(psHelperDirectory)
+            Command: 'TagOnly'
