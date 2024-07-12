@@ -217,16 +217,19 @@ function Update-DbMigrationDockerfileVariables {
     }
     process {
         Write-Debug "${functionName}:Updating Dockerfile $DockerFileName"
-        $dockerFileContent = Get-Content -Path $DockerFileName -Raw
         if($Variables){
+            
+            $dockerFileContent = Get-Content -Path $DockerFileName -Raw
+
             foreach ($key in $Variables.Keys) {
                 $placeholder = "{{" + $key + "}}"
                 Write-Debug "${functionName}:Replacing $placeholder with $($Variables[$key])"
                 $dockerFileContent = $dockerFileContent.Replace($placeholder, $Variables[$key])
             }
+            
+            Set-Content -Path $DockerFileName -Value $dockerFileContent -Force
+            Write-Debug "${functionName}:Updated Dockerfile $DockerFileName"
         }
-        Set-Content -Path $DockerFileName -Value $dockerFileContent -Force
-        Write-Debug "${functionName}:Updated Dockerfile $DockerFileName"
     }
     end {
         Write-Debug "${functionName}:Exited"
