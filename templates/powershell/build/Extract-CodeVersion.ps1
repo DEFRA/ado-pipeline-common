@@ -35,13 +35,9 @@ function Test-SemVersion {
             HelpMessage = "Specifies the version to test.")]
         [String]$Version
     )
-    begin {}
-    process {
-        $regexPattern = '^(?<major>\d*)?(?:\.(?<minor>\d*))?(?:\.(?<patch>\d*))?(?:\.(?<build>\d*))$'
-        $result = [Regex]::Match($Version, $regexPattern)
-        return $result.Success
-    }
-    end {}
+    $regexPattern = '^(?<major>\d*)?(?:\.(?<minor>\d*))?(?:\.(?<patch>\d*))?(?:\.(?<build>\d*))$'
+    $result = [Regex]::Match($Version, $regexPattern)
+    return $result.Success
 }
 
 [string]$functionName = $MyInvocation.MyCommand
