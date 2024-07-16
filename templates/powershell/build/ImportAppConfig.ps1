@@ -48,6 +48,7 @@ param(
     [bool]$FullBuild
 )
 
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -81,11 +82,13 @@ try {
     Import-Module $PSHelperDirectory -Force
     Import-Module $AppConfigModuleDirectory -Force
     if (Test-Path $ConfigFilePath -PathType Leaf) {
-        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId -Version $Version -FullBuild $FullBuild
-        Write-Host "${functionName} : App config file import completed successfully"
+        Write-Host "Importing app config file from $ConfigFilePath" 
+        Import-AppConfigValues -Path $ConfigFilePath -ConfigStore $AppConfig -Label $ServiceName -KeyVaultName $KeyVault -BuildId $BuildId -Version $Version -FullBuild $FullBuild -DeleteEntriesNotInFile
+
+        Write-Host "App config file import completed successfully"
     }
     else {
-        Write-Host "${functionName} : No app config file found to import"
+        Write-Host "No app config file found to import"
     }
    
     $exitCode = 0

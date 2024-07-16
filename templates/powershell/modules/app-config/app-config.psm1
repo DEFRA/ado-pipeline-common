@@ -1,28 +1,3 @@
-class AppConfigDifferences {
-	[array]$Add = @()
-	[array]$Update = @()
-	[array]$Remove = @()
-}
-
-class AppConfigEntry {
-	[string]$Key
-	[string]$Value
-	[string]$Label
-	[string]$ContentType
-	[bool] IsKeyVault() {
-		return (-not [string]::IsNullOrEmpty($this.Value) -and $this.Value.StartsWith("{")) 
-	}
-	[string] GetSecretIdentifier() {
-		[string]$result = $null
-		if ($this.IsKeyVault()) {
-			[hashtable]$item = ConvertFrom-Json -InputObject $this.Value -AsHashtable
-			[string]$itemKey = $item.Keys[0]
-			$result = $item[$itemKey]
-		}
-		return $result
-	}
-}
-
 <# 
   .SYNOPSIS 
     Converts the InputObject into an [AppConfigEntry].
@@ -442,7 +417,7 @@ function Get-AppConfigValuesFromYamlFile {
 		$ConfigFileContent = $content | ConvertFrom-YAML
 		foreach ($configFileObj in $ConfigFileContent) {
 			$configFileObj.Label = $DefaultLabel
-			if ($configFileObj.ContainsKey("type") -and $configFileObj.type -eq "keyvault" ) {
+			if ($configFileObj.ContainsKey("type") -and ($configFileObj.type -eq "keyvault" -or $configFileObj.type -eq "keyvaultsecret") ) {
 				$configFileObj.ContentType = $kvContentType
 
 				[System.Text.StringBuilder]$kvBuilder = [System.Text.StringBuilder]::new("{ `"uri`" : `"https://")
@@ -551,14 +526,17 @@ function Import-AppConfigValues {
 	process {
 		Write-Debug "${functionName}:process:Start"
 		[AppConfigEntry[]]$existingItems = Get-AppConfigValues -ConfigStore $ConfigStore -Label $Label
-		if ($importFile.FullName.EndsWith(".json")) {
-			[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromFile -Path $importFile.FullName
-		}
-		elseif ($importFile.FullName.EndsWith(".yaml")) {
-			[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromYamlFile -Path $importFile.FullName -DefaultLabel $Label -KeyVault $KeyVaultName 
-		}
-		else {
-			throw [System.IO.InvalidDataException]::new($importFile.FullName)
+
+		switch ($importFile.Extension) {
+			".json" {
+				[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromFile -Path $importFile.FullName
+			}
+			".yaml" {
+				[AppConfigEntry[]]$desiredItems = Get-AppConfigValuesFromYamlFile -Path $importFile.FullName -DefaultLabel $Label -KeyVault $KeyVaultName 
+			}
+			default {
+				throw [System.IO.InvalidDataException]::new($importFile.FullName)
+			}
 		}
 
 		#Validate if each record has a label matching the service
@@ -663,12 +641,12 @@ function New-AppConfigDifference {
 
 	process {
 		Write-Debug "${functionName}:process:Start"
-		[string]$sentinelKey = 'Sentinel'
+		[string]$sentinelKey = 'Sentinel:'
 
 		$sourceAppConfig.Keys | ForEach-Object {
 			Write-Debug "${functionName}:process:sourceKey=$_"
 			[AppConfigEntry]$sourceItem = $SourceAppConfig[$_]
-			if ($_.Key -ne $sentinelKey) {
+			if (-not $_.StartsWith($sentinelKey)) {
 				if ($destinationAppConfig.ContainsKey($_)) {
 					[AppConfigEntry]$destinationItem = $destinationAppConfig[$_]
 					[string]$sourceValue = $sourceItem.Value
@@ -702,7 +680,7 @@ function New-AppConfigDifference {
 			[bool]$exists = $sourceAppConfig.ContainsKey($_)
 			Write-Debug "${functionName}:process:${exists}:destinationKey=$_"
 
-			if (-not $exists -and $_.Key -ne $sentinelKey) {
+			if (-not $exists -and -not $_.StartsWith($sentinelKey)) {
 				Write-Verbose "$_ surplus - needs removed"
 				$removeEntries.Add($_, $destinationAppConfig[$_])
 			}
@@ -906,53 +884,60 @@ function Set-AppConfigValue {
 }
 
 function Test-Yaml {
-	[CmdletBinding(DefaultParameterSetName = '__AllParameterSets', HelpUri = 'https://go.microsoft.com/fwlink/?LinkID=2096609')]
 	param(
-		[Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
-		[string]
-		${Yaml},
-
-		[Parameter(ParameterSetName = 'SchemaString', Position = 1)]
-		[ValidateNotNullOrEmpty()]
-		[string]
-		${Schema},
-
-		[Parameter(ParameterSetName = 'SchemaFile', Position = 1)]
-		[ValidateNotNullOrEmpty()]
-		[string]
-		${SchemaFile})
+		[Parameter(Mandatory)]
+		[string] $Yaml
+		)
 
 	begin {
-		
-		Install-Module powershell-yaml -Force
+		[string]$functionName = $MyInvocation.MyCommand
+		Write-Debug "${functionName}:Start"
+		Write-Debug "${functionName}:Yaml=$Yaml"
 
-		function Yaml2Json ($Yaml) { $Yaml | ConvertFrom-Yaml | ConvertTo-Json -Depth 64 }
-		$outBuffer = $null
-		if ($PSBoundParameters.TryGetValue('OutBuffer', [ref]$outBuffer)) { $PSBoundParameters['OutBuffer'] = 1 }
-		$Parameters = @{}
-		foreach ($PSBoundParameters in $PSBoundParameters.GetEnumerator()) {
-			switch ($PSBoundParameters.Key) {
-				'Yaml' { $Parameters['Json'] = Yaml2Json $PSBoundParameters.Value }
-				'Schema' { $Parameters['Schema'] = Yaml2Json $PSBoundParameters.Value }
-				'SchemaFile' { $Parameters['Schema'] = Yaml2Json (Get-Content -Raw -LiteralPath $PSBoundParameters.Value) }
-				Default { $Parameters[$PSBoundParameters.Key] = $PSBoundParameters.Value }
-			}
+		if (!(Get-Module -ListAvailable -Name powershell-yaml)) {
+			Install-Module -Name powershell-yaml -Force
 		}
-
-		$wrappedCmd = $ExecutionContext.InvokeCommand.GetCommand('Microsoft.PowerShell.Utility\Test-Json', [System.Management.Automation.CommandTypes]::Cmdlet)
-		$scriptCmd = { & $wrappedCmd @Parameters }
-
-		$steppablePipeline = $scriptCmd.GetSteppablePipeline($myInvocation.CommandOrigin)
-		$steppablePipeline.Begin($PSCmdlet)
 	}
 
 	process {
-		$Json = Yaml2Json $_
-		$steppablePipeline.Process($Json)
+		$secretNameRegex = '^{{serviceName}}-[a-zA-Z0-9][a-zA-Z0-9-]{0,74}[a-zA-Z0-9]$'
+		$keyvaultSecretRule = { param($item) 
+			$keyValid = $item.key -is [string]
+			$valueValid = $item.value -is [string] -and $item.value -match $secretNameRegex
+			$valid = $keyValid -and $valueValid
+			$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a valid. The secret name must be unique within a Key Vault. The name must be a 1-127 character string, starting with a letter and containing only 0-9, a-z, A-Z, - and the name must start with '{{serviceName}}-'" } else { $null }
+			return $valid, $reason
+		}
+
+		$rules = @{
+			'string' = { param($item) 
+				$keyValid = $item.key -is [string]
+				$valueValid = $item.value -is [string]
+				$valid = $keyValid -and $valueValid
+				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a string" } else { $null }
+				return $valid, $reason
+			}
+			'keyvault' = $keyvaultSecretRule
+    		'keyvaultsecret' = $keyvaultSecretRule
+		}
+		
+		$data = ConvertFrom-Yaml $Yaml
+		
+		foreach ($item in $data) {
+			$type = if ($item.ContainsKey('type')) { $item.type.ToLower() } else { 'string' }
+			if ($rules.ContainsKey($type)) {
+				$valid, $reason = & $rules[$type] $item
+				if (-not $valid) {
+					Write-Output "Validation failed for item $($item | ConvertTo-Json -Compress) : $($reason)"
+				}
+			}
+			else {
+				Write-Output "Validation failed for item $($item | ConvertTo-Json -Compress): unknown type '$type'"
+			}
+		}
 	}
 
 	end {
-		$steppablePipeline.End()
-
+		Write-Debug "${functionName}:End"
 	}	
 }

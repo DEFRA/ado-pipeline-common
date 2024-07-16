@@ -21,6 +21,7 @@ parameters:
         value: test
       - template: /tests/devops/vars/custom.yaml@self
 
+
 lockBehavior: sequential
 
 variables:

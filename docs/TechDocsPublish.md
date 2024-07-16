@@ -53,7 +53,7 @@ resources:
   repositories:
     - repository: PipelineCommon
       name: DEFRA/ADO-Pipeline-Common
-      endpoint: DEFRA
+      endpoint: DEFRA-ADP
       type: github
       ref: refs/heads/main
 
@@ -98,7 +98,7 @@ resources:
   repositories:
     - repository: DEFRA-ADPPipelineCommon
       name: DEFRA/adp-pipeline-common
-      endpoint: DEFRA
+      endpoint: DEFRA-ADP
       type: github
       ref: refs/heads/main
 

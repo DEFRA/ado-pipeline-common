@@ -1,0 +1,21 @@
+pr:
+  branches:
+    include:
+      - main
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - "main"
+
+resources:
+  repositories:
+    - repository: DEFRA-ADPPipelineCommon
+      name: DEFRA/adp-pipeline-common
+      endpoint: DEFRA
+      type: github
+      ref: main
+
+extends:
+  template: pipelines/common-tag-and-release.yaml@DEFRA-ADPPipelineCommon

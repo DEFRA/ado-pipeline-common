@@ -4,30 +4,46 @@ parameters:
   - name: appVersion
     type: string 
   - name: PSHelperDirectory
-    type: string 
+    type: string
+  - name: Command
+    type: string
+    default: 'TagAndRelease'
+    values:
+      - 'TagAndRelease'
+      - 'TagOnly'
 steps:  
 - checkout: self
   path: s/source
   persistCredentials: true
+
+- task: AzureKeyVault@2
+  displayName: Read KV Secrets
+  inputs:
+    azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
+    KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
+    ${{ if ne(parameters.appBuildConfig.keyVaultSecretFilter, '') }}:
+      SecretsFilter: ${{ parameters.appBuildConfig.keyVaultSecretFilter }}
+    RunAsPreJob: false
 
 - task: PowerShell@2
   displayName: Git-Tag  
   inputs:
     targetType: filePath
     filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/TagRelease.ps1'
-    arguments: -AppVersion ${{ parameters.appVersion }} -PSHelperDirectory  ${{ parameters.PSHelperDirectory }}
+    arguments: -AppVersion ${{ parameters.appVersion }} -PSHelperDirectory  ${{ parameters.PSHelperDirectory }} -GithubPat $(ADP-PLATFORM-GITHUB-PatToken)
     failOnStderr: false
     pwsh: true
     workingDirectory: '$(Pipeline.Workspace)/s/source'
 
-- task: GitHubRelease@1
-  displayName: 'GitHub-Release'
-  condition: eq(variables.ReleaseExists, 'false')
-  inputs:
-    gitHubConnection: ${{ parameters.appBuildConfig.githubreleaseconnection}}
-    repositoryName: '$(Build.Repository.Name)'
-    tagSource: userSpecifiedTag
-    tag: ${{ parameters.appVersion }}
-    title: 'Release ${{ parameters.appVersion }}'
-    releaseNotesSource: inline
-    isPreRelease: false
+- ${{ if eq(parameters.Command, 'TagAndRelease') }}:
+  - task: GitHubRelease@1
+    displayName: 'GitHub-Release'
+    condition: eq(variables.ReleaseExists, 'false')
+    inputs:
+      gitHubConnection: ${{ parameters.appBuildConfig.githubreleaseconnection}}
+      repositoryName: '$(Build.Repository.Name)'
+      tagSource: userSpecifiedTag
+      tag: ${{ parameters.appVersion }}
+      title: 'Release ${{ parameters.appVersion }}'
+      releaseNotesSource: inline
+      isPreRelease: false

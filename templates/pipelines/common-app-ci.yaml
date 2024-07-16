@@ -1,4 +1,6 @@
 parameters:
+- name: teamName
+  type: string
 - name: serviceName
   type: string
 - name: deployFromFeature
@@ -6,7 +8,7 @@ parameters:
   default: false  
 - name: deployConfigOnly
   type: boolean
-  default: false   
+  default: false
 - name: agentImage
   type: string
   default: 'ubuntu-latest'
@@ -54,7 +56,7 @@ variables:
 
 stages:
   - stage: Application_CI
-    displayName: 'Application CI'
+    displayName: 'Build'
     ${{ if ne(parameters.privateAgentName, '') }}:
       pool:
         name: ${{ parameters.privateAgentName }}
@@ -221,20 +223,23 @@ stages:
               path: $(Pipeline.Workspace)/docker
               cacheHitVar: CACHE_RESTORED
 
-          - task: PowerShell@2
+          - task: AzureCLI@2
             displayName: 'Docker Build Image'
             inputs:
-              targetType: filePath
-              filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
+              azureSubscription: ${{ parameters.appBuildConfig.serviceConnection }} 
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
               arguments: >
                  -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
                  -ImageVersion  $(appVersion) 
                  -ImageCachePath '$(Pipeline.Workspace)/docker' 
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
-              failOnStderr: false
-              pwsh: true
+                 -BaseImagesAcrName '${{ parameters.appBuildConfig.baseImagesAcrName }}'
+              failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
+
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
             - template: /templates/steps/security-scan-container.yaml
               parameters:
@@ -262,6 +267,7 @@ stages:
           - ${{ if ne(parameters.appTestConfig, '') }}:
             - template: /templates/steps/pre-deployment-tests.yaml
               parameters:
+                teamName: ${{ parameters.teamName }}
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
@@ -292,7 +298,7 @@ stages:
               cacheHitVar: CACHE_RESTORED
 
           - task: PowerShell@2
-            displayName: 'Helm Lint & Build'
+            displayName: 'Helm Validate & Build'
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/HelmLintAndPublish.ps1'
@@ -303,13 +309,14 @@ stages:
                 -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
                 -chartHomeDir '$(Pipeline.Workspace)/s/helm'
                 -ServiceName ${{ parameters.serviceName }}
+                -ApiBaseUri: ${{ parameters.appBuildConfig.fluxManifestApiBaseUri }}
               failOnStderr: false
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s'  
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
         condition: |
           and(
             or(succeeded(), ${{ eq(parameters.appBuildConfig.appFrameworkType, 'helm') }}),
@@ -382,7 +389,7 @@ stages:
         dependsOn:
           - Application_CI
           - ${{ deploymentEnv.dependsOn }}
-        displayName: 'Application CD: ${{ deploymentEnv.name }}'
+        displayName: '${{ upper(deploymentEnv.name) }}'
         variables:       
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
@@ -428,6 +435,16 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
+                      - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
+                        - template: /templates/steps/generate-flux-manifest.yaml
+                          parameters:
+                            SsvServiceConnection: ${{ deploymentEnv.ssvServiceConnection }}
+                            ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
+                            TeamName: ${{ parameters.teamName }}
+                            ServiceName: ${{ parameters.serviceName }}
+                            EnvName: ${{ deploymentEnv.name }}
+                            KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }} 
+                            TenantId: ${{ deploymentEnv.tenantId }}
                       - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
                         - template: /templates/steps/secrets-import-kv.yaml	                          
                           parameters:
@@ -462,7 +479,96 @@ stages:
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
 
-                      - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest),not(contains(parameters.stepsToSkip, 'PostDeploymentTests'))) }}:
-                        - template: /templates/steps/post-deployment-tests.yaml
+                      - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
+                        - task: PowerShell@2
+                          displayName: 'Use ACR image timestamp to verify Flux Helm release'
+                          name: setAcrImageAddedTime
+                          inputs:
+                            targetType: inline
+                            script: |
+                              Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
+                            failOnStderr: false
+                            pwsh: true
+                            workingDirectory: '$(Pipeline.Workspace)/s' 
+
+                        - task: AzurePowerShell@5
+                          displayName: 'Generate Api Token'
+                          name: GenerateApiToken
+                          inputs:
+                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
+                            ScriptType: FilePath
+                            ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
+                            ScriptArguments: >
+                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
+                                -TenantId ${{ deploymentEnv.tenantId }}
+                            FailOnStandardError: true
+                            azurePowerShellVersion: 'LatestVersion'
+                            pwsh: true
+                            workingDirectory: '$(Pipeline.Workspace)/s'        
+
+                      - ${{ if eq(coalesce(deploymentEnv.teamResourcesPermissions.grantTeamAccessGroupPermissionToTeamResourceGroup, 'false'), true) }}:
+                        - template: /templates/steps/team-roleassignment.yaml
                           parameters:
-                            url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
+                              teamName: ${{ parameters.teamName }}
+                              serviceName: ${{ parameters.serviceName }}
+                              deploymentEnv: ${{ deploymentEnv }}                           
+                                                       
+          - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+            - job: WaitForFluxRelease
+              displayName: 'Wait For Flux Release'
+              dependsOn: PublishTo${{ deploymentEnv.name }}
+              pool: server
+              variables:
+                - name: helmImageAddedToACRTime
+                  value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
+                - name: token
+                  value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
+              timeoutInMinutes: 20
+              steps:                  
+                - task: InvokeRESTAPI@1
+                  displayName: 'Check If Release Has Succeeded (reconciled)'
+                  inputs:
+                    serviceConnection: 'AZD-ADP-AdoCallbackApi-${{ deploymentEnv.adoCallBackApiEnv }}'
+                    urlSuffix: 'api/AdoTask/execute'
+                    method: POST
+                    headers: |
+                      {
+                      "Content-Type": "application/json",
+                      "PlanUrl": "$(system.CollectionUri)",
+                      "ProjectId": "$(system.TeamProjectId)",
+                      "HubName": "$(system.HostType)",
+                      "PlanId": "$(system.PlanId)",
+                      "JobId": "$(system.JobId)",
+                      "TimelineId": "$(system.TimelineId)",
+                      "TaskInstanceId": "$(system.TaskInstanceId)",
+                      "AuthToken": "$(system.AccessToken)",
+                      "Authorization": "$(token)",
+                      "Accept": "application/json"
+                      }
+                    body: |
+                      {
+                      "serviceName": "${{ parameters.serviceName }}",
+                      "helmReleaseName": "${{ parameters.serviceName }}",
+                      "helmReleaseVersion": "$(appVersion)",
+                      "environment": "${{ deploymentEnv.name }}",
+                      "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
+                      }
+                    waitForCompletion: 'true'
+
+          - ${{ if and(contains(parameters.appTestConfig.postDeployTest.envToTest,deploymentEnv.name), not(contains(parameters.stepsToSkip, 'PostDeploymentTests')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+            - deployment: PostDeploymentTests${{ deploymentEnv.name }}
+              displayName: 'Post Deployment Tests'
+              dependsOn: WaitForFluxRelease
+              environment: ${{ deploymentEnv.name }}
+              strategy:
+                runOnce:
+                  deploy:          
+                    steps:                      
+                      - checkout: Self
+                        path: s/ 
+                      - checkout: PipelineCommon
+                        path: s/ADO-Pipeline-Common
+
+                      - template: /templates/steps/post-deployment-tests.yaml
+                        parameters:
+                          url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"

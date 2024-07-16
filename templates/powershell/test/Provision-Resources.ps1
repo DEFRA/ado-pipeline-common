@@ -8,7 +8,7 @@ Dynamic resources like Azure service bus queue, topic and databases will be crea
 Mandatory. Directory Path of Infra Chart HomeDirectory
 .PARAMETER PipelineCommonDirectory
 Mandatory. Directory Path of ADO Pipeline common repo
-.PARAMETER ServiceName
+.PARAMETER TeamName
 Mandatory. Service Name
 .PARAMETER IsPrBuild
 Mandatory. Is PR Build flag
@@ -27,7 +27,7 @@ param(
     [Parameter(Mandatory)]
     [string]$PipelineCommonDirectory,
     [Parameter(Mandatory)]
-    [string]$ServiceName,
+    [string]$TeamName,
     [Parameter(Mandatory)]
     [string]$IsPrBuild,
     [Parameter(Mandatory)]
@@ -42,7 +42,7 @@ param(
 # $Environment = 'snd1'
 # $InfraChartHomeDir = '.\ffc-demo-web\helm\ffc-demo-web-infra'
 # $PipelineCommonDirectory = '.\ado-pipeline-common'
-# $ServiceName = 'ffc-demo-web'
+# $TeamName = 'ffc-demo'
 # $ENV:BUILD_BUILDID = 438708
 # $IsPrBuild = 'true'
 # $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = 305
@@ -70,7 +70,7 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:InfraChartHomeDir=$InfraChartHomeDir"
 Write-Debug "${functionName}:PipelineCommonDirectory=$PipelineCommonDirectory"
-Write-Debug "${functionName}:ServiceName=$ServiceName"
+Write-Debug "${functionName}:TeamName=$TeamName"
 Write-Debug "${functionName}:IsPrBuild=$IsPrBuild"
 Write-Debug "${functionName}:Environment=$Environment"
 Write-Debug "${functionName}:AzureServiceBusResourceGroup=$AzureServiceBusResourceGroup"
@@ -96,7 +96,7 @@ try {
         $PrNumber = $ENV:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
     }
 
-    New-Resources -Environment $Environment -RepoName $ServiceName -Pr $PrNumber
+    New-Resources -Environment $Environment -RepoName $TeamName -Pr $PrNumber
 
     $exitCode = 0
 }
