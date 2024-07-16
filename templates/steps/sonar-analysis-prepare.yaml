@@ -69,3 +69,19 @@ steps:
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+
+    ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'java') }}:
+      scannerMode: 'Other'
+      ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+        extraProperties: |
+          sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectVersion=${{ parameters.appVersion}}
+      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+        extraProperties: |
+          sonar.projectKey=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectName=${{ parameters.sonarConfig.projectKeyPrefix }}${{ parameters.appBuildConfig.imageRepoName}}
+          sonar.projectVersion=${{ parameters.appVersion}}
+          sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
+          sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
+          sonar.pullrequest.base=$(System.PullRequest.TargetBranch)

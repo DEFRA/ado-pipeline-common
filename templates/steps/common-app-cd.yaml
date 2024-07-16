@@ -68,7 +68,8 @@ steps:
           -AcrName ${{ parameters.environmentObj.acrName }} 
           -AcrRepoName "${{ parameters.appBuildConfig.imageRepoName }}" 
           -ImageVersion  $(GetAppVersion.appVersion) 
-          -ImageCachePath $(Pipeline.Workspace)/docker 
+          -ImageCachePath $(Pipeline.Workspace)/docker
+          -DockerfilePath "${{ parameters.appBuildConfig.dockerfilePath }}"
           -Command "push" 
           -PSHelperDirectory ${{ parameters.PSHelperDirectory }}
           -BaseImagesAcrName ${{ parameters.environmentObj.baseImagesAcrName }}

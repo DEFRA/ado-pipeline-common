@@ -1,0 +1,33 @@
+parameters:
+  - name: frameworkVersion
+    displayName: JDK Version
+    type: string
+  - name: projectPath
+    displayName: .Net Project File Path
+    type: string
+    default: '**/pom.xml'
+  - name: compiledPackagePath
+    type: string
+    default: ''
+
+steps:
+  - task: Maven@4
+    displayName: 'Maven build'
+    inputs:
+      mavenPomFile: ${{ parameters.projectPath }}
+      mavenOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: ${{ coalesce(parameters.frameworkVersion, '1.8') }}
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: false
+      testResultsFiles: '**/TEST-*.xml'
+      goals: 'clean install -DskipTests -DschemasCopy=true -T 2C'
+
+  - task: CopyFiles@2
+    displayName: 'Copy Files'
+    inputs:
+      SourceFolder: '$(System.DefaultWorkingDirectory)'
+      Contents: |
+        ${{ parameters.compiledPackagePath }}
+      TargetFolder: $(Build.ArtifactStagingDirectory)
+      flattenFolders: true
