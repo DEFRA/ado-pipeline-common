@@ -305,10 +305,9 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
         condition: |
           and(
-            in(dependencies.PreDeploymentTests.result, 'Succeeded', 'Skipped'),
             or(succeeded(), ${{ eq(parameters.appBuildConfig.appFrameworkType, 'helm') }}),
             or(
               eq( variables.IsDefaultBranchBuild , true),
