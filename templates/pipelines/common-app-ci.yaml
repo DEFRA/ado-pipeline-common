@@ -193,6 +193,7 @@ stages:
                 acrRepoName: ${{ parameters.appBuildConfig.imageRepoName }}
                 manifestPath: ${{ parameters.appBuildConfig.manifestPath }}
                 failOnThreshold: ${{ parameters.snykConfig.failOnThreshold }}
+                appBuildConfig: ${{ parameters.appBuildConfig }}
 
       - job: BuildDockerImage
         displayName: 'Build Docker Image'

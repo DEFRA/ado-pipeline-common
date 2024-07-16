@@ -11,6 +11,8 @@ parameters:
   - name: manifestPath
     type: string
     default: ''         
+  - name: appBuildConfig
+    type: object
 
 steps:
 - ${{ each projectManifestPath in split(parameters.manifestPath, ';') }}:
@@ -18,13 +20,17 @@ steps:
     displayName: 'Snyk Application scan'
     inputs:
       serviceConnectionEndpoint: ${{ parameters.snykConnection }} 
-      testDirectory: '$(Build.SourcesDirectory)'
-      ${{ if ne(projectManifestPath, '') }}:
-        targetFile: '${{ projectManifestPath }}'
+      testDirectory: '$(Build.SourcesDirectory)'      
       failOnIssues: true
       monitorOnBuild: false
       projectName: '${{ parameters.acrRepoName }}'
       organization: '${{ parameters.snykOrganizationName }}'
-      failOnThreshold: '${{ parameters.failOnThreshold }}'
+      ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'java') }}:
+        testType: code
+        codeSeverityThreshold: '${{ parameters.failOnThreshold }}'
+      ${{ else  }}:        
+        failOnThreshold: '${{ parameters.failOnThreshold }}'
+        ${{ if ne(projectManifestPath, '') }}:
+          targetFile: '${{ projectManifestPath }}'        
     enabled: true
     continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
