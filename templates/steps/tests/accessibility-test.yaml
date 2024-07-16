@@ -27,7 +27,7 @@ steps:
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:    
     - pwsh: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
-        export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
