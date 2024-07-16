@@ -17,13 +17,15 @@ steps:
         typeOfTest: 'PostDeploy'
         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/scripts/jtl_junit_converter.py'     
         url: ${{ parameters.url }}
-  - ${{ if contains(parameters.testEnvs.acceptanceTests.sanity, parameters.envName) }}:
-    - template: /templates/steps/tests/acceptance-test.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-        typeOfTest: 'PostDeploy'
-        url: ${{ parameters.url }}
+  - ${{ each testEnvTags in parameters.testEnvs.acceptanceTests }}:          
+    - ${{ if contains(testEnvTags.env, parameters.envName) }}:
+      - template: /templates/steps/tests/acceptance-test.yaml
+        parameters:
+          testDir : '$(Pipeline.Workspace)/s'
+          testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+          typeOfTest: 'PostDeploy'
+          url: ${{ parameters.url }}
+          tags: ${{ testEnvTags.tags }}
   - ${{ if contains(parameters.testEnvs.accessibilityTests, parameters.envName) }}:
     - template: /templates/steps/tests/accessibility-test.yaml
       parameters:
