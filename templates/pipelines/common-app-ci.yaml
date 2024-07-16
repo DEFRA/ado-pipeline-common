@@ -305,7 +305,7 @@ stages:
 
       - job: PublishArtifacts
         displayName: 'Publish Artifacts'   
-        dependsOn: [Initialise,Build,BuildDockerImage,PreDeploymentTests,BuildHelmChart]
+        dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
         condition: |
           and(
             or(succeeded(), ${{ eq(parameters.appBuildConfig.appFrameworkType, 'helm') }}),
