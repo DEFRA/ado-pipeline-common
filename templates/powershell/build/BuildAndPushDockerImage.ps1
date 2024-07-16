@@ -96,6 +96,8 @@ function Invoke-DockerBuild {
         finally {
             Pop-Location
         }
+        # Save the image for future jobs
+        Invoke-CommandLine -Command "docker save -o $DockerCacheFilePath $TagName"
     }
     end {
         Write-Debug "${functionName}:Exited"
@@ -304,7 +306,7 @@ try {
     if ($LastExitCode -ne 0) {
         Write-Host "##vso[task.complete result=Failed;]DONE"
         $exitCode = -2
-    }  
+    }
 
     #DB Migration Image
     [string]$dbMigrationDockerFileName = "db-migration.Dockerfile"

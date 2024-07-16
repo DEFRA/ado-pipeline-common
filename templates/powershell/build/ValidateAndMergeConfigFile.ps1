@@ -111,9 +111,10 @@ Write-Debug "${functionName}:AppConfigModuleDirectory=$AppConfigModuleDirectory"
 try {
 
     Import-Module $AppConfigModuleDirectory -Force
-
+    
+    [bool]$commonConfigFileExists = $false
     if (Test-Path $CommonConfigFilePath -PathType Leaf) {
-        [bool]$commonConfigFileExists = $true
+        $commonConfigFileExists = $true
         [string]$CommonConfigFileContent = Get-Content -Raw -Path $CommonConfigFilePath 
         Test-FileContent -FilePath $CommonConfigFilePath -FileContent $CommonConfigFileContent
     }
