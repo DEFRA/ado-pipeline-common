@@ -51,7 +51,7 @@ try {
         Write-Host "Tag already exists"
     }    
     Invoke-CommandLine -Command "git tag $AppVersion --force"
-    Invoke-CommandLine -Command "git push origin $AppVersion"
+    Invoke-CommandLine -Command "git push origin $AppVersion --force"
 
     Write-Host "Tag $AppVersion updated to latest commit"
 
@@ -77,7 +77,7 @@ try {
         throw $_.Exception
     }
     
-    if ($latestReleaseTag -eq $AppVersion) {
+    if ($latestReleaseTag -match $AppVersion) {
         Write-Host "Release already exists"
         Write-Output "##vso[task.setvariable variable=ReleaseExists]true"
     }

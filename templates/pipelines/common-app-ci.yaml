@@ -476,7 +476,7 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
-                      
+
                       - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
                         - task: PowerShell@2
                           displayName: 'Use ACR image timestamp to verify Flux Helm release'
@@ -502,8 +502,15 @@ stages:
                             FailOnStandardError: true
                             azurePowerShellVersion: 'LatestVersion'
                             pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s'     
-          
+                            workingDirectory: '$(Pipeline.Workspace)/s'        
+
+                      - ${{ if eq(coalesce(deploymentEnv.teamResourcesPermissions.grantTeamAccessGroupPermissionToTeamResourceGroup, 'false'), true) }}:
+                        - template: /templates/steps/team-roleassignment.yaml
+                          parameters:
+                              teamName: ${{ parameters.teamName }}
+                              serviceName: ${{ parameters.serviceName }}
+                              deploymentEnv: ${{ deploymentEnv }}                           
+                                                       
           - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - job: WaitForFluxRelease
               displayName: 'Wait For Flux Release'
@@ -546,7 +553,7 @@ stages:
                       }
                     waitForCompletion: 'true'
 
-          - ${{ if and(eq(deploymentEnv.name, parameters.appTestConfig.postDeployTest.envToTest), not(contains(parameters.stepsToSkip, 'PostDeploymentTests')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+          - ${{ if and(contains(parameters.appTestConfig.postDeployTest.envToTest,deploymentEnv.name), not(contains(parameters.stepsToSkip, 'PostDeploymentTests')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - deployment: PostDeploymentTests${{ deploymentEnv.name }}
               displayName: 'Post Deployment Tests'
               dependsOn: WaitForFluxRelease
