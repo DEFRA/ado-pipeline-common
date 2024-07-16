@@ -203,6 +203,39 @@ function Invoke-DockerBuildAndPush {
     }
 }
 
+function Update-DbMigrationDockerfileVariables {
+    param(
+        [Parameter(Mandatory)]
+        [string]$DockerFileName,
+        [Parameter(Mandatory)]
+        [hashtable]$Variables
+    )
+    begin {
+        [string]$functionName = $MyInvocation.MyCommand
+        Write-Debug "${functionName}:Entered"
+        Write-Debug "${functionName}:DockerFileName=$DockerFileName"
+    }
+    process {
+        Write-Debug "${functionName}:Updating Dockerfile $DockerFileName"
+        if($Variables){
+            
+            $dockerFileContent = Get-Content -Path $DockerFileName -Raw
+
+            foreach ($key in $Variables.Keys) {
+                $placeholder = "{{" + $key + "}}"
+                Write-Debug "${functionName}:Replacing $placeholder with $($Variables[$key])"
+                $dockerFileContent = $dockerFileContent.Replace($placeholder, $Variables[$key])
+            }
+            
+            Set-Content -Path $DockerFileName -Value $dockerFileContent -Force
+            Write-Debug "${functionName}:Updated Dockerfile $DockerFileName"
+        }
+    }
+    end {
+        Write-Debug "${functionName}:Exited"
+    }
+}
+
 Set-StrictMode -Version 3.0
 
 [string]$functionName = $MyInvocation.MyCommand
@@ -278,6 +311,8 @@ try {
     if (Test-Path $dbMigrationDockerFileName -PathType Leaf) {
 
         Write-Host "Processing DB Migration Docker file: $dbMigrationDockerFileName"
+        Update-DbMigrationDockerfileVariables -DockerFileName $dbMigrationDockerFileName -Variables @{adpSharedAcrName = $BaseImagesAcrName}
+
         [string]$dbMigrationTagName = $AcrRepoName + "-dbmigration:" + $ImageVersion
         [string]$AcrDbMigrationTagName = $AcrName + ".azurecr.io/image/" + $dbMigrationTagName
         Write-Debug "${functionName}:DB Migration Docker Image=$dbMigrationTagName"
