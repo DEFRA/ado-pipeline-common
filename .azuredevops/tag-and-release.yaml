@@ -15,7 +15,7 @@ resources:
       name: DEFRA/adp-pipeline-common
       endpoint: DEFRA
       type: github
-      ref: main
+      ref: refs/tags/1.0.0-latest
 
 extends:
   template: pipelines/common-tag-and-release.yaml@DEFRA-ADPPipelineCommon
