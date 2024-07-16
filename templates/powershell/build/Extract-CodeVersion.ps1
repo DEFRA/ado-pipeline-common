@@ -171,7 +171,7 @@ try {
             $appVersion = "$appVersion-alpha.$buildId"   
             Write-Output "${functionName}: Build Version Tagged with alpha and build id :-> '$appVersion'." 
         }
-        if ((-not $isSymenticVersion) -and $appVersion -gt $oldAppVersion) {
+        elseif ((-not $isSymenticVersion) -and $appVersion -gt $oldAppVersion) {
             Write-Output "${functionName}:Version increment valid '$oldAppVersion' -> '$appVersion'."
             #uppend alpha and build id to version for feature branches which will be deployed to snd env   e.g 4.32.33-alpha.506789
             $appVersion = "$appVersion-alpha.$buildId"
