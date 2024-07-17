@@ -28,6 +28,7 @@ steps:
 
         echo '127.0.0.1 host.docker.internal' | sudo tee -a /etc/hosts
         IP_ADDRESS=$(ip addr show | grep "\binet\b.*\bdocker0\b" | awk '{print $2}' | cut -d '/' -f 1)
+        
         export TEST_ENVIRONMENT_ROOT_URL=http://${IP_ADDRESS}:3000
         cd test/acceptance
         docker-compose build
