@@ -571,3 +571,5 @@ stages:
                       - template: /templates/steps/post-deployment-tests.yaml
                         parameters:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
+                          testEnvs: ${{ parameters.appTestConfig.postDeployTest.testEnvs }}
+                          envName: ${{ deploymentEnv.name }}
