@@ -60,7 +60,6 @@ try {
 	[string]$AccessGroupId = Invoke-CommandLine -Command $command -IgnoreErrorCode
 
 	if ([string]::IsNullOrEmpty($AccessGroupId)) {
-		Write-Host "##vso[task.logissue type=warning]Access group '$AccessGroupName' does not exist."
 		Write-Warning "Access group '$AccessGroupName' does not exist."													
 	}
 	Write-Host "##vso[task.setvariable variable=$AccessGroupIdVariableName;]$AccessGroupId"
