@@ -159,6 +159,7 @@ try {
 
 	#Team Resource group permissions
 	if ([string]::IsNullOrEmpty($TeamAccessGroupId)) {
+		$AccessGroupName = $AccessGroupName.Replace("{TeamName}", $TeamName).ToUpper()
 		Write-Host "##vso[task.logissue type=warning]Team Access group '$AccessGroupName' does not exist. ResourceGroupRoleAssignment skipped."
 		Write-Warning "Team Access group '$AccessGroupName' does not exist. ResourceGroupRoleAssignment skipped."													
 	}
