@@ -54,13 +54,12 @@ try {
 	Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
 	Import-Module $moduleDir.FullName -Force
 
-	$AccessGroupName = $AccessGroupName.Replace("{TeamName}", $TeamName).ToUpper()
+	$AccessGroupName = $AccessGroupName.Replace("{TeamName}", 'GG').ToUpper()
 	Write-Host "Access group name resolved to $AccessGroupName"
 	[string]$command = "az ad group show --group $AccessGroupName --query id"
 	[string]$AccessGroupId = Invoke-CommandLine -Command $command -IgnoreErrorCode
 
 	if ([string]::IsNullOrEmpty($AccessGroupId)) {
-		Write-Host "##vso[task.logissue type=warning]Access group '$AccessGroupName' does not exist."
 		Write-Warning "Access group '$AccessGroupName' does not exist."													
 	}
 	Write-Host "##vso[task.setvariable variable=$AccessGroupIdVariableName;]$AccessGroupId"

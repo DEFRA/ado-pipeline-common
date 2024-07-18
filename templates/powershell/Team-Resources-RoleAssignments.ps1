@@ -16,6 +16,8 @@ Mandatory. Team Name
 Mandatory. Service ResourceGroup Name
 .PARAMETER TeamAccessGroupId
 Mandatory. Team AccessGroup Id
+.PARAMETER AccessGroupName
+Mandatory. Team Access Group Name
 .PARAMETER TeamResourceGroupRole
 Mandatory. Team ResourceGroup Role
 #> 
@@ -34,6 +36,8 @@ param(
 	[string]$ServiceResourceGroup,
 	[Parameter()]
 	[string]$TeamAccessGroupId = "",
+	[Parameter(Mandatory)]
+	[string]$AccessGroupName,
 	[Parameter(Mandatory)]
 	[string]$TeamResourceGroupRole
 )
@@ -62,6 +66,7 @@ Write-Debug "${functionName}:PipelineCommonDirectory=$PipelineCommonDirectory"
 Write-Debug "${functionName}:TeamName=$TeamName"
 Write-Debug "${functionName}:ServiceResourceGroup=$ServiceResourceGroup"
 Write-Debug "${functionName}:TeamAccessGroupId=$TeamAccessGroupId"
+Write-Debug "${functionName}:AccessGroupName=$AccessGroupName"
 Write-Debug "${functionName}:TeamResourceGroupRole=$TeamResourceGroupRole"
 
 function Set-ResourceGroupRoleAssignment {
@@ -154,8 +159,8 @@ try {
 
 	#Team Resource group permissions
 	if ([string]::IsNullOrEmpty($TeamAccessGroupId)) {
-		Write-Host "##vso[task.logissue type=warning]Team Access group does not exist. ResourceGroupRoleAssignment skipped."
-		Write-Warning "Team Access group does not exist. ResourceGroupRoleAssignment skipped."													
+		Write-Host "##vso[task.logissue type=warning]Team Access group '$AccessGroupName' does not exist. ResourceGroupRoleAssignment skipped."
+		Write-Warning "Team Access group '$AccessGroupName' does not exist. ResourceGroupRoleAssignment skipped."													
 	}
 	else {
 		Set-ResourceGroupRoleAssignment -TeamName $TeamName -ServiceResourceGroup $ServiceResourceGroup -SubscriptionId $SubscriptionId -TeamAccessGroupId $TeamAccessGroupId -Role $TeamResourceGroupRole

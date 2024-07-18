@@ -38,6 +38,7 @@ steps:
         -TeamName '${{ parameters.teamName }}'
         -ServiceResourceGroup '${{ parameters.deploymentEnv.serviceResourceGroup }}'
         -TeamAccessGroupId '$(Team${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}AccessGroupId)'
+        -AccessGroupName '${{ parameters.deploymentEnv.teamResourcesPermissions.teamAccessGroupName }}'
         -TeamResourceGroupRole '${{ parameters.deploymentEnv.teamResourcesPermissions.teamResourceGroupRole }}'
       addSpnToEnvironment: true
       failOnStandardError: false
