@@ -527,7 +527,7 @@ stages:
                 - task: InvokeRESTAPI@1
                   displayName: 'Check If Release Has Succeeded (reconciled)'
                   inputs:
-                    serviceConnection: 'AZD-ADP-AdoCallbackApi-${{ deploymentEnv.adoCallBackApiEnv }}'
+                    serviceConnection: '${{ deploymentEnv.adoCallBackApiServiceConnection }}'
                     urlSuffix: 'api/AdoTask/execute'
                     method: POST
                     headers: |
