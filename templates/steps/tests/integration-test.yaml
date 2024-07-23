@@ -13,6 +13,7 @@ parameters:
     default: ''
   - name: appBuildConfig
     type: object
+    default: null
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.test.yaml"){
