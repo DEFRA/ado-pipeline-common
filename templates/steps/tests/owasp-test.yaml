@@ -26,11 +26,11 @@ steps:
       condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
     - pwsh: |
-      sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
-      sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
-      $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
-      docker-compose -f docker-compose.zap.yaml -p zap-baseline-scan down
-      docker-compose -f docker-compose.zap.yaml run --rm zap-baseline-scan
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+        sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
+        $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
+        docker-compose -f docker-compose.zap.yaml -p zap-baseline-scan down
+        docker-compose -f docker-compose.zap.yaml run --rm zap-baseline-scan
     displayName: OWASP Test - Run
     condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
   - task: PublishPipelineArtifact@1
