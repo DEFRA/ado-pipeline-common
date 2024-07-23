@@ -33,14 +33,14 @@ steps:
       inputs:
         azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
         KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
-        SecretsFilter: 'PACT_BROKER_URL,PACT_BROKER_USERNAME,PACT_BROKER_PASSWORD'
+        SecretsFilter: 'PACT-BROKER-URL,PACT-BROKER-USERNAME,PACT-BROKER-PASSWORD'
         RunAsPreJob: false
     - pwsh: |
         sudo mkdir -R 777 ${{ parameters.testOutputDir }}
         $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
-        $Env:PACT_BROKER_URL="https://$(PACT_BROKER_URL)"
-        $Env:PACT_BROKER_USERNAME="https://$(PACT_BROKER_USERNAME)"
-        $Env:PACT_BROKER_PASSWORD="https://$(PACT_BROKER_PASSWORD)"
+        $Env:PACT_BROKER_URL="https://$(PACT-BROKER-URL)"
+        $Env:PACT_BROKER_USERNAME="https://$(PACT-BROKER-USERNAME)"
+        $Env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       condition: eq(variables.docker_compose_dot_test_yaml, 'true')
