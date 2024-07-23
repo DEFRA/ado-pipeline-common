@@ -9,6 +9,26 @@ steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
       DockerCompose : true
+- ${{ if contains(parameters.testEnvs.integrationTests, parameters.envName) }}:
+    - template: /templates/steps/tests/integration-test.yaml
+      parameters:
+        service : '${{ parameters.serviceName }}'
+        testDir : '$(Pipeline.Workspace)/s'
+        typeOfTest: 'PostDeploy'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+  - ${{ if contains(parameters.testEnvs.serviceAcceptanceTests, parameters.envName) }}:
+    - template: /templates/steps/tests/service-acceptance-test.yaml
+      parameters:
+        service : '${{ parameters.serviceName }}'
+        testDir : '$(Pipeline.Workspace)/s'
+        typeOfTest: 'PostDeploy'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
+  - ${{ if contains(parameters.testEnvs.owaspTests, parameters.envName) }}:
+    - template: /templates/steps/tests/owasp-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        typeOfTest: 'PostDeploy'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'     
   - ${{ if contains(parameters.testEnvs.performanceTests, parameters.envName) }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
