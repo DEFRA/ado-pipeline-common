@@ -16,14 +16,23 @@ steps:
         Write-Output "##vso[task.setvariable variable=docker_compose_dot_zap_yaml]true"
       }
     displayName: OWASP Test - File Validation
-  - pwsh: |
+  - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
+    - pwsh: |
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+        sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
+        docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
+        docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
+      displayName: OWASP Test - Run
+      condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
+  - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
+    - pwsh: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
       sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
-      docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
-      docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
+      $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
+      docker-compose -f docker-compose.zap.yaml -p zap-baseline-scan down
+      docker-compose -f docker-compose.zap.yaml run --rm zap-baseline-scan
     displayName: OWASP Test - Run
     condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
-
   - task: PublishPipelineArtifact@1
     displayName: OWASP Test - Publish Test Report
     inputs:

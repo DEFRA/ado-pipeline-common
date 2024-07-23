@@ -7,6 +7,8 @@ parameters:
     type: string
   - name: serviceName
     type: string
+  - name: appBuildConfig
+    type: object
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
@@ -17,7 +19,8 @@ steps:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
         typeOfTest: 'PostDeploy'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
+        appBuildConfig: ${{ parameters.appBuildConfig }}
   - ${{ if contains(parameters.testEnvs.serviceAcceptanceTests, parameters.envName) }}:
     - template: /templates/steps/tests/service-acceptance-test.yaml
       parameters:
