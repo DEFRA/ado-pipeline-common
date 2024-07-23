@@ -9,7 +9,7 @@ steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
       DockerCompose : true
-- ${{ if contains(parameters.testEnvs.integrationTests, parameters.envName) }}:
+  - ${{ if contains(parameters.testEnvs.integrationTests, parameters.envName) }}:
     - template: /templates/steps/tests/integration-test.yaml
       parameters:
         service : '${{ parameters.serviceName }}'
