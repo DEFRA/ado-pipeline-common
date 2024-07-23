@@ -573,3 +573,4 @@ stages:
                           url: "${{ parameters.serviceName }}.${{ deploymentEnv.name }}.${{ parameters.appTestConfig.postDeployTest.domain }}"
                           testEnvs: ${{ parameters.appTestConfig.postDeployTest.testEnvs }}
                           envName: ${{ deploymentEnv.name }}
+                          serviceName: ${{ parameters.serviceName }}

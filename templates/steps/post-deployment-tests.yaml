@@ -5,6 +5,8 @@ parameters:
     type: object
   - name: envName
     type: string
+  - name: serviceName
+    type: string
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
