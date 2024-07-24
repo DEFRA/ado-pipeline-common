@@ -22,6 +22,15 @@ steps:
       $datestring=Get-Date -Format yyyyMMdd-hhmm
       Write-Output "##vso[task.setvariable variable=rundatestring]$datestring"
     displayName: Get Run Date String
+  - ${{ if and(contains(parameters.testEnvs.accessibilityTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'accessibility')) }}:
+    - template: /templates/steps/tests/accessibility-test.yaml
+      parameters:
+        testDir : '$(Pipeline.Workspace)/s'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        typeOfTest: 'PostDeploy'
+        url: ${{ parameters.url }}
+        artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
+        continueOnError: ${{ parameters.continueOnError }}    
   - ${{ if and(contains(parameters.testEnvs.integrationTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'integration')) }}:
     - template: /templates/steps/tests/integration-test.yaml
       parameters:
@@ -70,12 +79,3 @@ steps:
           tags: ${{ testEnvTags.tags }}
           artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
           continueOnError: ${{ parameters.continueOnError }}
-  - ${{ if and(contains(parameters.testEnvs.accessibilityTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'accessibility')) }}:
-    - template: /templates/steps/tests/accessibility-test.yaml
-      parameters:
-        testDir : '$(Pipeline.Workspace)/s'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-        typeOfTest: 'PostDeploy'
-        url: ${{ parameters.url }}
-        artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
-        continueOnError: ${{ parameters.continueOnError }}
