@@ -11,9 +11,6 @@ parameters:
     type: object
   - name: appTestConfig
     type: object
-  - name: artifactNameSuffix
-    type: string
-    default: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)-${{ parameters.envName }}
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
@@ -26,7 +23,7 @@ steps:
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
         appBuildConfig: ${{ parameters.appBuildConfig }}
-        artifactNameSuffix: ${{ parameters.artifactNameSuffix }}
+        artifactNameSuffix: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)-${{ parameters.envName }}
   - ${{ if and(contains(parameters.testEnvs.serviceAcceptanceTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'service-acceptance')) }}:
     - template: /templates/steps/tests/service-acceptance-test.yaml
       parameters:
@@ -34,14 +31,14 @@ steps:
         testDir : '$(Pipeline.Workspace)/s'
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-        artifactNameSuffix: ${{ parameters.artifactNameSuffix }}
+        artifactNameSuffix: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)-${{ parameters.envName }}
   - ${{ if and(contains(parameters.testEnvs.owaspTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'owasp')) }}:
     - template: /templates/steps/tests/owasp-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
-        artifactNameSuffix: ${{ parameters.artifactNameSuffix }}
+        artifactNameSuffix: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)-${{ parameters.envName }}
   - ${{ if and(contains(parameters.testEnvs.performanceTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'performance')) }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
@@ -50,7 +47,7 @@ steps:
         typeOfTest: 'PostDeploy'
         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/scripts/jtl_junit_converter.py'
         url: ${{ parameters.url }}
-        artifactNameSuffix: ${{ parameters.artifactNameSuffix }}
+        artifactNameSuffix: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)-${{ parameters.envName }}
   - ${{ each testEnvTags in parameters.testEnvs.acceptanceTests }}:
     - ${{ if and(contains(testEnvTags.env, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'acceptance')) }}:
       - template: /templates/steps/tests/acceptance-test.yaml
@@ -60,7 +57,7 @@ steps:
           typeOfTest: 'PostDeploy'
           url: ${{ parameters.url }}
           tags: ${{ testEnvTags.tags }}
-          artifactNameSuffix: ${{ parameters.artifactNameSuffix }}
+          artifactNameSuffix: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)-${{ parameters.envName }}
   - ${{ if and(contains(parameters.testEnvs.accessibilityTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'accessibility')) }}:
     - template: /templates/steps/tests/accessibility-test.yaml
       parameters:
@@ -68,4 +65,4 @@ steps:
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         typeOfTest: 'PostDeploy'
         url: ${{ parameters.url }}
-        artifactNameSuffix: ${{ parameters.artifactNameSuffix }}
+        artifactNameSuffix: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)-${{ parameters.envName }}
