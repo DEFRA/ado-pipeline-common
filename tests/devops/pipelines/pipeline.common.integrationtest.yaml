@@ -1,5 +1,17 @@
 name: $(BuildID)
 
+pr:
+  branches:
+    include:
+      - none
+
+trigger:
+  batch: true
+  branches:
+    include:
+      - "none"
+  drafts: false
+  
 resources:
   repositories:
     - repository: PipelineCommon
