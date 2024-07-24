@@ -17,26 +17,33 @@ parameters:
   - name: artifactNameSuffix
     type: string
     default: $(build.buildid)
+  - name: continueOnError
+    type: boolean
+    default: false    
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.test.yaml"){
         Write-Output "##vso[task.setvariable variable=docker_compose_dot_test_yaml]true"
       }
     displayName: Intg Test - File Validation
+  - task: AzureKeyVault@2
+    displayName: Read KV Secrets
+    inputs:
+      azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
+      KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
+      SecretsFilter: 'PACT-BROKER-URL,PACT-BROKER-USERNAME,PACT-BROKER-PASSWORD'
+      RunAsPreJob: false
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
     - pwsh: |
         sudo mkdir -R 777 ${{ parameters.testOutputDir }}
+        $Env:PACT_BROKER_URL="https://$(PACT-BROKER-URL)"
+        $Env:PACT_BROKER_USERNAME="https://$(PACT-BROKER-USERNAME)"
+        $Env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"        
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_test_yaml, 'true')
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
-    - task: AzureKeyVault@2
-      displayName: Read KV Secrets
-      inputs:
-        azureSubscription: ${{ parameters.appBuildConfig.keyVaultServiceConnection }}
-        KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
-        SecretsFilter: 'PACT-BROKER-URL,PACT-BROKER-USERNAME,PACT-BROKER-PASSWORD'
-        RunAsPreJob: false
     - pwsh: |
         sudo mkdir -R 777 ${{ parameters.testOutputDir }}
         $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
@@ -45,6 +52,7 @@ steps:
         $Env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_test_yaml, 'true')
   - task: PublishPipelineArtifact@1
     displayName: Intg Test - Publish Report

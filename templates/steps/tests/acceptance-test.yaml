@@ -15,6 +15,9 @@ parameters:
   - name: artifactNameSuffix
     type: string
     default: $(build.buildid)
+  - name: continueOnError
+    type: boolean
+    default: false    
 steps:  
 
   - pwsh: |
@@ -36,6 +39,7 @@ steps:
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
       displayName: Acceptance Test - Run
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
 
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
@@ -47,6 +51,7 @@ steps:
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
       displayName: Acceptance Test - ${{ parameters.tags }}
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
 
   - task: PublishPipelineArtifact@1

@@ -14,6 +14,9 @@ parameters:
   - name: artifactNameSuffix
     type: string
     default: $(build.buildid)
+  - name: continueOnError
+    type: boolean
+    default: false    
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.acceptance.yaml"){
@@ -28,7 +31,7 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.migrate.yaml -p "${{ parameters.service }}-acceptance-test" run --rm database-up
         docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" run --rm "${{ parameters.service }}-test-runner"
       displayName: Service Acceptance Test - Run
-      enabled: false
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_acceptance_yaml, 'true')
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
     - pwsh: |
@@ -38,7 +41,7 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" build
         docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" run --rm "${{ parameters.service }}-test-runner"
       displayName: Service Acceptance Test - Run
-      enabled: false
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_acceptance_yaml, 'true')
   - task: PublishPipelineArtifact@1
     displayName: Service Acceptance Test - Publish Report

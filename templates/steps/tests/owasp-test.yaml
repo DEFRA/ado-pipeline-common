@@ -12,6 +12,9 @@ parameters:
   - name: artifactNameSuffix
     type: string
     default: $(build.buildid)
+  - name: continueOnError
+    type: boolean
+    default: false    
 steps:  
 
   - pwsh: |
@@ -26,6 +29,7 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
       displayName: OWASP Test - Run
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
     - pwsh: |
@@ -35,6 +39,7 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
       displayName: OWASP Test - Run
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
   - task: PublishPipelineArtifact@1
     displayName: OWASP Test - Publish Test Report
