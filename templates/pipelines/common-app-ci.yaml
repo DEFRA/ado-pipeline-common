@@ -575,3 +575,4 @@ stages:
                           envName: ${{ deploymentEnv.name }}
                           serviceName: ${{ parameters.serviceName }}
                           appBuildConfig: ${{ parameters.appBuildConfig }}
+                          appTestConfig: ${{ parameters.appTestConfig }}

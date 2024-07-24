@@ -9,6 +9,8 @@ parameters:
     type: string
   - name: appBuildConfig
     type: object
+  - name: appTestConfig
+    type: object    
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
