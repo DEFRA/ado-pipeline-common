@@ -13,7 +13,7 @@ steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
       DockerCompose : true
-  - ${{ if contains(parameters.testEnvs.integrationTests, parameters.envName) }}:
+  - ${{ if and(contains(parameters.testEnvs.integrationTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'integration')) }}:
     - template: /templates/steps/tests/integration-test.yaml
       parameters:
         service : '${{ parameters.serviceName }}'
@@ -21,20 +21,20 @@ steps:
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
         appBuildConfig: ${{ parameters.appBuildConfig }}
-  - ${{ if contains(parameters.testEnvs.serviceAcceptanceTests, parameters.envName) }}:
+  - ${{ if and(contains(parameters.testEnvs.serviceAcceptanceTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'service-acceptance')) }}:
     - template: /templates/steps/tests/service-acceptance-test.yaml
       parameters:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
-  - ${{ if contains(parameters.testEnvs.owaspTests, parameters.envName) }}:
+  - ${{ if and(contains(parameters.testEnvs.owaspTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'owasp')) }}:
     - template: /templates/steps/tests/owasp-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'     
-  - ${{ if contains(parameters.testEnvs.performanceTests, parameters.envName) }}:
+  - ${{ if and(contains(parameters.testEnvs.performanceTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'performance')) }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s/test/performance'
@@ -43,7 +43,7 @@ steps:
         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/scripts/jtl_junit_converter.py'
         url: ${{ parameters.url }}
   - ${{ each testEnvTags in parameters.testEnvs.acceptanceTests }}:
-    - ${{ if contains(testEnvTags.env, parameters.envName) }}:
+    - ${{ if and(contains(testEnvTags.env, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'acceptance')) }}:
       - template: /templates/steps/tests/acceptance-test.yaml
         parameters:
           testDir : '$(Pipeline.Workspace)/s'
@@ -51,7 +51,7 @@ steps:
           typeOfTest: 'PostDeploy'
           url: ${{ parameters.url }}
           tags: ${{ testEnvTags.tags }}
-  - ${{ if contains(parameters.testEnvs.accessibilityTests, parameters.envName) }}:
+  - ${{ if and(contains(parameters.testEnvs.accessibilityTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'accessibility')) }}:
     - template: /templates/steps/tests/accessibility-test.yaml
       parameters:
         testDir : '$(Pipeline.Workspace)/s'

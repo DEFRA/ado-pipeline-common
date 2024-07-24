@@ -26,7 +26,6 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       condition: eq(variables.docker_compose_dot_test_yaml, 'true')
-      enabled: false
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
     - task: AzureKeyVault@2
       displayName: Read KV Secrets
@@ -35,7 +34,6 @@ steps:
         KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
         SecretsFilter: 'PACT-BROKER-URL,PACT-BROKER-USERNAME,PACT-BROKER-PASSWORD'
         RunAsPreJob: false
-      enabled: false
     - pwsh: |
         sudo mkdir -R 777 ${{ parameters.testOutputDir }}
         $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
@@ -45,11 +43,9 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       condition: eq(variables.docker_compose_dot_test_yaml, 'true')
-      enabled: false
   - task: PublishPipelineArtifact@1
     displayName: Intg Test - Publish Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}
       artifact: $(build.buildid)-int-results
     condition: eq(variables.docker_compose_dot_test_yaml, 'true')
-    enabled: false
