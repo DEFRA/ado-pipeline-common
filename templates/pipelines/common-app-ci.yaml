@@ -182,8 +182,8 @@ stages:
                 projectPath: ${{ parameters.appBuildConfig.projectPath }}
                 compiledPackagePath: ${{ parameters.appBuildConfig.compiledPackagePath }}
 
-          - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
-            - template: /templates/steps/sonar-analysis.yaml
+          # - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
+          #   - template: /templates/steps/sonar-analysis.yaml
 
           - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
             - template: /templates/steps/security-scan-application.yaml
