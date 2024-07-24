@@ -54,7 +54,7 @@ steps:
   - task: PublishTestResults@2
     inputs:
       testResultsFormat: 'JUnit'
-      testRunTitle: 'Performance Test Result-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
+      testRunTitle: 'Performance Test Result-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}'
       testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
       failTaskOnFailedTests: true
     displayName: 'Perf Test Publish Test Results'
