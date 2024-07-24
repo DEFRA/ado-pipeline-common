@@ -14,12 +14,12 @@ parameters:
     default: ''
   - name: artifactNameSuffix
     type: string
-    default: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)
+    default: $(build.buildid)
 steps:  
 
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/test/acceptance/docker-compose.yaml"){
-        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]true"
+        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]true"        
       }
     displayName: Acceptance Test - File Validation
 

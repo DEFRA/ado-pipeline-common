@@ -13,7 +13,7 @@ parameters:
     default: ''
   - name: artifactNameSuffix
     type: string
-    default: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)
+    default: $(build.buildid)
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.acceptance.yaml"){
