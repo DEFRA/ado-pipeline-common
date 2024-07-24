@@ -11,6 +11,9 @@ parameters:
     default: ''
   - name: scriptPath
     type: string
+  - name: artifactNameSuffix
+    type: string
+    default: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.jmeter.yaml"){
@@ -51,10 +54,11 @@ steps:
   - task: PublishTestResults@2
     inputs:
       testResultsFormat: 'JUnit'
-      testRunTitle: 'Performance Test Result- -${{ parameters.typeOfTest }}'
+      testRunTitle: 'Performance Test Result-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
       testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
       failTaskOnFailedTests: true
     displayName: 'Perf Test Publish Test Results'
+    continueOnError: true
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1

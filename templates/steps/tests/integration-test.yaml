@@ -14,6 +14,9 @@ parameters:
   - name: appBuildConfig
     type: object
     default: null
+  - name: artifactNameSuffix
+    type: string
+    default: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.test.yaml"){
@@ -47,5 +50,6 @@ steps:
     displayName: Intg Test - Publish Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}
-      artifact: $(build.buildid)-int-results
+      artifact: int-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
+    continueOnError: true
     condition: eq(variables.docker_compose_dot_test_yaml, 'true')

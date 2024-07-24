@@ -9,6 +9,9 @@ parameters:
   - name: url
     type: string
     default: ''
+  - name: artifactNameSuffix
+    type: string
+    default: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.axe.yaml"){
@@ -37,5 +40,6 @@ steps:
     displayName: Accessibility Test AXE - Publish Test
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/axe
-      artifact: $(build.buildid)-axe-results
+      artifact: axe-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
+    continueOnError: true      
     condition: eq(variables.docker_compose_dot_axe_yaml, 'true')

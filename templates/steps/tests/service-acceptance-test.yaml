@@ -11,6 +11,9 @@ parameters:
   - name: url
     type: string
     default: ''
+  - name: artifactNameSuffix
+    type: string
+    default: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.acceptance.yaml"){
@@ -41,8 +44,9 @@ steps:
     displayName: Service Acceptance Test - Publish Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}
-      artifact: $(build.buildid)-service-acceptance-results
+      artifact: service-acceptance-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
     enabled: false
+    continueOnError: true
     condition: eq(variables.docker_compose_dot_acceptance_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1

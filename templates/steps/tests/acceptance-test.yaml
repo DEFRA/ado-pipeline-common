@@ -12,6 +12,9 @@ parameters:
   - name: tags
     type: string
     default: ''
+  - name: artifactNameSuffix
+    type: string
+    default: $(build.buildid)-$(Get-Date -Format yyyyMMddhhmm)
 steps:  
 
   - pwsh: |
@@ -50,7 +53,8 @@ steps:
     displayName: Acceptance Test - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/html-reports
-      artifact: $(build.buildid)-acceptance-results-${{ parameters.typeOfTest }}
+      artifact: acceptance-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
+    continueOnError: true
     condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
     
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
