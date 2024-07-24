@@ -30,7 +30,7 @@ steps:
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
     - pwsh: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
-        $Env:TEST_ENVIRONMENT_ROOT_URL="${{ parameters.url }}:80"
+        $Env:TEST_ENVIRONMENT_ROOT_URL="${{ parameters.url }}:443"
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
