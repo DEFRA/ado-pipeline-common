@@ -36,9 +36,9 @@ steps:
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
     - pwsh: |
         sudo mkdir -R 777 ${{ parameters.testOutputDir }}
-        $Env:PACT_BROKER_URL="https://$(PACT-BROKER-URL)"
-        $Env:PACT_BROKER_USERNAME="https://$(PACT-BROKER-USERNAME)"
-        $Env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"        
+        $env:PACT_BROKER_URL="https://$(PACT-BROKER-URL)"
+        $env:PACT_BROKER_USERNAME="https://$(PACT-BROKER-USERNAME)"
+        $env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"        
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       continueOnError: ${{ parameters.continueOnError }}
@@ -46,10 +46,10 @@ steps:
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
     - pwsh: |
         sudo mkdir -R 777 ${{ parameters.testOutputDir }}
-        $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
-        $Env:PACT_BROKER_URL="https://$(PACT-BROKER-URL)"
-        $Env:PACT_BROKER_USERNAME="https://$(PACT-BROKER-USERNAME)"
-        $Env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"
+        $env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
+        $env:PACT_BROKER_URL="https://$(PACT-BROKER-URL)"
+        $env:PACT_BROKER_USERNAME="https://$(PACT-BROKER-USERNAME)"
+        $env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       continueOnError: ${{ parameters.continueOnError }}

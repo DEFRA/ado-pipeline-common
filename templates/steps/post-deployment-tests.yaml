@@ -30,7 +30,7 @@ steps:
         typeOfTest: 'PostDeploy'
         url: ${{ parameters.url }}
         artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
-        continueOnError: ${{ parameters.continueOnError }}    
+        continueOnError: ${{ parameters.continueOnError }}
   - ${{ if and(contains(parameters.testEnvs.integrationTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'integration')) }}:
     - template: /templates/steps/tests/integration-test.yaml
       parameters:
