@@ -434,49 +434,49 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
-                      - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
-                        - template: /templates/steps/generate-flux-manifest.yaml
-                          parameters:
-                            SsvServiceConnection: ${{ deploymentEnv.ssvServiceConnection }}
-                            ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
-                            TeamName: ${{ parameters.teamName }}
-                            ServiceName: ${{ parameters.serviceName }}
-                            EnvName: ${{ deploymentEnv.name }}
-                            KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }} 
-                            TenantId: ${{ deploymentEnv.tenantId }}
-                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
-                        - template: /templates/steps/secrets-import-kv.yaml	                          
-                          parameters:
-                            serviceConnection: ${{ deploymentEnv.serviceConnection }}
-                            appKeyVault:  ${{ deploymentEnv.appKeyVault }}
-                            VariableGroups: "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
-                            VarFilter: "${{ join(';', parameters.appDeployConfig.variables) }}"
-                            ProgrammeName: "${{ parameters.appDeployConfig.programmeName }}"
-                            EnvName: ${{ deploymentEnv.name }}
-                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                      - ${{ if not(contains(parameters.stepsToSkip, 'AppConfigImport')) }}:
-                        - template: /templates/steps/appconfig-import.yaml
-                          parameters:
-                            dryRun: false
-                            environmentObj: ${{ deploymentEnv }} 
-                            appDeployConfig: ${{ parameters.appDeployConfig }}
-                            workingDirectory: '$(Pipeline.Workspace)/s'
-                            serviceName: ${{ parameters.serviceName }}
-                            configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
-                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                            AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
-                            Version: $(appVersion)
-                            FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
+                    #   - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
+                    #     - template: /templates/steps/generate-flux-manifest.yaml
+                    #       parameters:
+                    #         SsvServiceConnection: ${{ deploymentEnv.ssvServiceConnection }}
+                    #         ApiBaseUri: ${{ deploymentEnv.fluxManifestApiBaseUri }}
+                    #         TeamName: ${{ parameters.teamName }}
+                    #         ServiceName: ${{ parameters.serviceName }}
+                    #         EnvName: ${{ deploymentEnv.name }}
+                    #         KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }} 
+                    #         TenantId: ${{ deploymentEnv.tenantId }}
+                    #   - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
+                    #     - template: /templates/steps/secrets-import-kv.yaml	                          
+                    #       parameters:
+                    #         serviceConnection: ${{ deploymentEnv.serviceConnection }}
+                    #         appKeyVault:  ${{ deploymentEnv.appKeyVault }}
+                    #         VariableGroups: "${{ join(';', parameters.appDeployConfig.variableGroups) }}"
+                    #         VarFilter: "${{ join(';', parameters.appDeployConfig.variables) }}"
+                    #         ProgrammeName: "${{ parameters.appDeployConfig.programmeName }}"
+                    #         EnvName: ${{ deploymentEnv.name }}
+                    #         PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                    #   - ${{ if not(contains(parameters.stepsToSkip, 'AppConfigImport')) }}:
+                    #     - template: /templates/steps/appconfig-import.yaml
+                    #       parameters:
+                    #         dryRun: false
+                    #         environmentObj: ${{ deploymentEnv }} 
+                    #         appDeployConfig: ${{ parameters.appDeployConfig }}
+                    #         workingDirectory: '$(Pipeline.Workspace)/s'
+                    #         serviceName: ${{ parameters.serviceName }}
+                    #         configFileType: ${{ coalesce(parameters.appDeployConfig.filetype, 'json') }}
+                    #         PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                    #         AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
+                    #         Version: $(appVersion)
+                    #         FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
 
-                    - ${{ if eq(parameters.deployConfigOnly, false )}}:
-                      - template: /templates/steps/common-app-cd.yaml
-                        parameters:
-                            serviceName: ${{ parameters.serviceName }}
-                            environmentObj: ${{ deploymentEnv }}
-                            appBuildConfig: ${{ parameters.appBuildConfig }}
-                            appDeployConfig: ${{ parameters.appDeployConfig }}
-                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                            stepsToSkip: ${{ parameters.stepsToSkip }}
+                    # - ${{ if eq(parameters.deployConfigOnly, false )}}:
+                    #   - template: /templates/steps/common-app-cd.yaml
+                    #     parameters:
+                    #         serviceName: ${{ parameters.serviceName }}
+                    #         environmentObj: ${{ deploymentEnv }}
+                    #         appBuildConfig: ${{ parameters.appBuildConfig }}
+                    #         appDeployConfig: ${{ parameters.appDeployConfig }}
+                    #         PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                    #         stepsToSkip: ${{ parameters.stepsToSkip }}
 
                       - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
                         - task: PowerShell@2
@@ -505,12 +505,12 @@ stages:
                             pwsh: true
                             workingDirectory: '$(Pipeline.Workspace)/s'        
 
-                      - ${{ if eq(coalesce(deploymentEnv.teamResourcesPermissions.grantTeamAccessGroupPermissionToTeamResourceGroup, 'false'), true) }}:
-                        - template: /templates/steps/team-roleassignment.yaml
-                          parameters:
-                              teamName: ${{ parameters.teamName }}
-                              serviceName: ${{ parameters.serviceName }}
-                              deploymentEnv: ${{ deploymentEnv }}                           
+                      # - ${{ if eq(coalesce(deploymentEnv.teamResourcesPermissions.grantTeamAccessGroupPermissionToTeamResourceGroup, 'false'), true) }}:
+                      #   - template: /templates/steps/team-roleassignment.yaml
+                      #     parameters:
+                      #         teamName: ${{ parameters.teamName }}
+                      #         serviceName: ${{ parameters.serviceName }}
+                      #         deploymentEnv: ${{ deploymentEnv }}                           
                                                        
           - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - job: WaitForFluxRelease
