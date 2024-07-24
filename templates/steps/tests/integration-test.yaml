@@ -35,6 +35,7 @@ steps:
         KeyVaultName: ${{ parameters.appBuildConfig.keyVaultName }}
         SecretsFilter: 'PACT-BROKER-URL,PACT-BROKER-USERNAME,PACT-BROKER-PASSWORD'
         RunAsPreJob: false
+      enabled: false
     - pwsh: |
         sudo mkdir -R 777 ${{ parameters.testOutputDir }}
         $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
