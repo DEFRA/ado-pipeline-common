@@ -48,7 +48,7 @@ steps:
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
-        isPrBcontinueOnErroruild: ${{ parameters.continueOnError }}
+        continueOnError: ${{ parameters.continueOnError }}
   - ${{ if and(contains(parameters.testEnvs.performanceTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'performance')) }}:
     - template: /templates/steps/tests/performance-test.yaml
       parameters:
