@@ -39,8 +39,8 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
-      continueOnError: ${{ parameters.continueOnError }}
-      errorActionPreference: 'Continue'
+      #continueOnError: ${{ parameters.continueOnError }}
+      ignoreLASTEXITCODE: true
       condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
