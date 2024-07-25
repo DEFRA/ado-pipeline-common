@@ -38,7 +38,6 @@ steps:
       workingDirectory: '$(Pipeline.Workspace)/s'  
   - ${{ if or(parameters.IsPrBuild, contains(parameters.appTestConfig.preDeployTest.testsToRun,'integration')) }}:
     - template: /templates/steps/tests/integration-test.yaml
-      condition: always()
       parameters:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
@@ -47,7 +46,6 @@ steps:
         appBuildConfig: ${{ parameters.appBuildConfig }}
   - ${{ if or(parameters.IsPrBuild, contains(parameters.appTestConfig.preDeployTest.testsToRun,'service-acceptance')) }}:
     - template: /templates/steps/tests/service-acceptance-test.yaml
-      condition: always()
       parameters:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
@@ -55,21 +53,18 @@ steps:
         continueOnError: ${{ parameters.continueOnError }}
   - ${{ if or(parameters.IsPrBuild,contains(parameters.appTestConfig.preDeployTest.testsToRun,'owasp')) }}:
     - template: /templates/steps/tests/owasp-test.yaml
-      condition: always()
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         continueOnError: ${{ parameters.continueOnError }}
   - ${{ if or(parameters.IsPrBuild,contains(parameters.appTestConfig.preDeployTest.testsToRun,'accessibility')) }}:
     - template: /templates/steps/tests/accessibility-test.yaml
-      condition: always()
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         continueOnError: ${{ parameters.continueOnError }}
   - ${{ if or(parameters.IsPrBuild,contains(parameters.appTestConfig.preDeployTest.testsToRun,'performance')) }}:
     - template: /templates/steps/tests/performance-test.yaml
-      condition: always()
       parameters:
         testDir : '$(Pipeline.Workspace)/s/test/performance'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
@@ -77,7 +72,6 @@ steps:
         continueOnError: ${{ parameters.continueOnError }}
   - ${{ if or(parameters.IsPrBuild,contains(parameters.appTestConfig.preDeployTest.testsToRun,'acceptance')) }}:
     - template: /templates/steps/tests/acceptance-test.yaml
-      condition: always()
       parameters:
         testDir : '$(Pipeline.Workspace)/s'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
