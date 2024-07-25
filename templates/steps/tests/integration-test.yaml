@@ -34,22 +34,22 @@ steps:
       SecretsFilter: 'PACT-BROKER-URL,PACT-BROKER-USERNAME,PACT-BROKER-PASSWORD'
       RunAsPreJob: false
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
-    - pwsh: |
-        sudo mkdir -R 777 ${{ parameters.testOutputDir }}
-        $env:PACT_BROKER_URL="https://$(PACT-BROKER-URL)"
-        $env:PACT_BROKER_USERNAME="https://$(PACT-BROKER-USERNAME)"
-        $env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"        
+    - script: |
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+        export PACT_BROKER_URL=https://$(PACT-BROKER-URL)
+        export PACT_BROKER_USERNAME=https://$(PACT-BROKER-USERNAME)
+        export PACT_BROKER_PASSWORD=https://$(PACT-BROKER-PASSWORD)
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_test_yaml, 'true')
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
-    - pwsh: |
-        sudo mkdir -R 777 ${{ parameters.testOutputDir }}
-        $env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
-        $env:PACT_BROKER_URL="https://$(PACT-BROKER-URL)"
-        $env:PACT_BROKER_USERNAME="https://$(PACT-BROKER-USERNAME)"
-        $env:PACT_BROKER_PASSWORD="https://$(PACT-BROKER-PASSWORD)"
+    - script: |
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
+        export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        export PACT_BROKER_URL=https://$(PACT-BROKER-URL)
+        export PACT_BROKER_USERNAME=https://$(PACT-BROKER-USERNAME)
+        export PACT_BROKER_PASSWORD=https://$(PACT-BROKER-PASSWORD)
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       continueOnError: ${{ parameters.continueOnError }}

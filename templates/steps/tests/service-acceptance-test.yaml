@@ -24,7 +24,7 @@ steps:
       }
     displayName: Service Acceptance Test - File Validation
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
-    - pwsh: |
+    - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
         sudo chmod -R 777 ${{ parameters.testDir }}/app
         docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" build
@@ -34,10 +34,10 @@ steps:
       continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_acceptance_yaml, 'true')
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
-    - pwsh: |
+    - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
         sudo chmod -R 777 ${{ parameters.testDir }}/app
-        $env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
+        export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
         docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" build
         docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" run --rm "${{ parameters.service }}-test-runner"
       displayName: Service Acceptance Test - Run

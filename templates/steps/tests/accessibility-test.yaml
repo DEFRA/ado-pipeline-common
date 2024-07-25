@@ -23,7 +23,7 @@ steps:
     displayName: Accessibility Test AXE - File Validation
     
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
-    - pwsh: |
+    - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
@@ -32,9 +32,9 @@ steps:
       condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
-    - pwsh: |
+    - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
-        $env:TEST_ENVIRONMENT_ROOT_URL="${{ parameters.url }}:80"
+        export TEST_ENVIRONMENT_ROOT_URL=${{ parameters.url }}:80
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run

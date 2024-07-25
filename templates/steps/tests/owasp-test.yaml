@@ -23,19 +23,22 @@ steps:
       }
     displayName: OWASP Test - File Validation
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
-    - pwsh: |
+    - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
         sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
+        export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
       displayName: OWASP Test - Run
       continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
-    - pwsh: |
+    - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
         sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
-        $env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
+        export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
       displayName: OWASP Test - Run
