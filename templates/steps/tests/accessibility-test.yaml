@@ -28,6 +28,7 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
       continueOnError: ${{ parameters.continueOnError }}
+      failOnStderr: ${{ not(parameters.continueOnError) }}
       condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
@@ -39,6 +40,7 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
       continueOnError: ${{ parameters.continueOnError }}
+      failOnStderr: ${{ not(parameters.continueOnError) }}
       condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
@@ -46,7 +48,7 @@ steps:
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/axe
       artifact: axe-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
-    continueOnError: true      
+    continueOnError: true
     condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - script: |
