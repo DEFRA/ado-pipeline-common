@@ -67,10 +67,10 @@ steps:
       testResultsFormat: 'JUnit'
       testRunTitle: 'Integration Test Result-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}'
       testResultsFiles: '${{ parameters.testOutputDir }}/junit.xml'
-      failTaskOnFailedTests: ${{ parameters.continueOnError }}
+      failTaskOnFailedTests: ${{ not(parameters.continueOnError) }}
     displayName: 'Intg Test Publish Test Results'
     continueOnError: ${{ parameters.continueOnError }}
-    condition: eq(variables.docker_compose_dot_test_yaml, 'true')    
+    condition: eq(variables.docker_compose_dot_test_yaml, 'true')
   - script: |
       docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" down
     displayName: DockerDown

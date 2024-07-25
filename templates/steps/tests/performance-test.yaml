@@ -61,7 +61,7 @@ steps:
       testResultsFormat: 'JUnit'
       testRunTitle: 'Performance Test Result-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}'
       testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
-      failTaskOnFailedTests: true
+      failTaskOnFailedTests: ${{ not(parameters.continueOnError) }}
     displayName: 'Perf Test Publish Test Results'
     continueOnError: ${{ parameters.continueOnError }}
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
