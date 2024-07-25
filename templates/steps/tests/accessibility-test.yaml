@@ -25,7 +25,9 @@ steps:
     
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
     - script: |
-        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe        
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
+        export TEST_ENVIRONMENT_ROOT_URL=ffc-demo-web.snd4.adp.defra.gov.uk:80
+        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
       continueOnError: ${{ parameters.continueOnError }}
