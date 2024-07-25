@@ -71,7 +71,7 @@ steps:
       docker-compose down
     displayName: DockerDown
     continueOnError: true
-    condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true') 
+    condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Performance Test - Publish Html Report
