@@ -66,6 +66,13 @@ steps:
     continueOnError: ${{ parameters.continueOnError }}
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
+  - script: |
+      cd ${{ parameters.testDir }}
+      docker-compose down
+    displayName: DockerDown
+    continueOnError: true
+    condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true') 
+
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Performance Test - Publish Html Report
   #   inputs:

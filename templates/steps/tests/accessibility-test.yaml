@@ -24,8 +24,7 @@ steps:
     
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
     - script: |
-        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
-        docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
+        sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe        
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
       continueOnError: ${{ parameters.continueOnError }}
@@ -34,8 +33,7 @@ steps:
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
     - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
-        export TEST_ENVIRONMENT_ROOT_URL=${{ parameters.url }}:80
-        docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
+        export TEST_ENVIRONMENT_ROOT_URL=${{ parameters.url }}:80        
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
       continueOnError: ${{ parameters.continueOnError }}
@@ -48,3 +46,9 @@ steps:
       artifact: axe-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
     continueOnError: true      
     condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
+
+  - script: |
+      docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
+    displayName: DockerDown
+    continueOnError: true
+    condition: eq(variables.docker_compose_dot_axe_yaml, 'true')      

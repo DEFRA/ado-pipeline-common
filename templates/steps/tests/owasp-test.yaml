@@ -26,9 +26,6 @@ steps:
     - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
         sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
-        export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
-        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
-        docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
       displayName: OWASP Test - Run
       continueOnError: ${{ parameters.continueOnError }}
@@ -39,7 +36,6 @@ steps:
         sudo mkdir -p -m 777 ${{ parameters.testDir }}/zap
         export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
         echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
-        docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
         docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml run --rm zap-baseline-scan
       displayName: OWASP Test - Run
       continueOnError: ${{ parameters.continueOnError }}
@@ -52,6 +48,11 @@ steps:
     continueOnError: true
     condition: eq(variables.docker_compose_dot_zap_yaml, 'true')
 
+  - script: |
+      docker-compose -f docker-compose.yaml -f docker-compose.zap.yaml -p zap-baseline-scan down
+    displayName: DockerDown
+    continueOnError: true
+    condition: eq(variables.docker_compose_dot_zap_yaml, 'true') 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: OWASP Test - Publish Html Report
   #   inputs:

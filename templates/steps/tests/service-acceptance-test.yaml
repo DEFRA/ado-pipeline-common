@@ -52,6 +52,12 @@ steps:
     continueOnError: true
     condition: eq(variables.docker_compose_dot_acceptance_yaml, 'true')
 
+  - script: |
+      docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" down
+    displayName: DockerDown
+    continueOnError: true
+    condition: eq(variables.docker_compose_dot_acceptance_yaml, 'true') 
+
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Service Acceptance Test - Publish Html Report
   #   inputs:
