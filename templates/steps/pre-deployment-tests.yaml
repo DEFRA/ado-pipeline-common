@@ -11,7 +11,9 @@ parameters:
   - name: continueOnError
     type: boolean
     default: false
-
+  - name: appBuildConfig
+    type: object
+    default: null
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
@@ -41,6 +43,7 @@ steps:
         testDir : '$(Pipeline.Workspace)/s'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
         continueOnError: ${{ parameters.continueOnError }}
+        appBuildConfig: ${{ parameters.appBuildConfig }}
   - ${{ if or(parameters.IsPrBuild, contains(parameters.appTestConfig.preDeployTest.testsToRun,'service-acceptance')) }}:
     - template: /templates/steps/tests/service-acceptance-test.yaml
       parameters:

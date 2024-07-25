@@ -271,6 +271,7 @@ stages:
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
                 continueOnError: ${{ not(variables.IsPrBuild) }}
+                appBuildConfig: ${{ parameters.appBuildConfig }}
 
       - job: BuildHelmChart
         displayName: 'Build Helm Chart'
