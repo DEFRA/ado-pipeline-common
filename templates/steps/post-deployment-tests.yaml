@@ -28,7 +28,8 @@ steps:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
         typeOfTest: 'PostDeploy'
-        testOutputDir: '$(Pipeline.Workspace)/s/test-output' 
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        url: ${{ parameters.url }}
         appBuildConfig: ${{ parameters.appBuildConfig }}
         artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
         continueOnError: ${{ parameters.continueOnError }}
@@ -39,6 +40,7 @@ steps:
         testDir : '$(Pipeline.Workspace)/s'
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        url: ${{ parameters.url }}
         artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
         continueOnError: ${{ parameters.continueOnError }}
   - ${{ if and(contains(parameters.testEnvs.owaspTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'owasp')) }}:
@@ -47,6 +49,7 @@ steps:
         testDir : '$(Pipeline.Workspace)/s'
         typeOfTest: 'PostDeploy'
         testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        url: ${{ parameters.url }}
         artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
         continueOnError: ${{ parameters.continueOnError }}
   - ${{ if and(contains(parameters.testEnvs.performanceTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'performance')) }}:
