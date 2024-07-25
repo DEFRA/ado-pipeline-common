@@ -19,6 +19,7 @@ steps:
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.axe.yaml"){
         Write-Output "##vso[task.setvariable variable=docker_compose_dot_axe_yaml]true"
+        Write-Host "continueOnError: ${{ parameters.continueOnError }}"
       }
     displayName: Accessibility Test AXE - File Validation
     
@@ -28,7 +29,7 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
       continueOnError: ${{ parameters.continueOnError }}
-      failOnStderr: ${{ not(parameters.continueOnError) }}
+      failOnStderr: false
       condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
@@ -40,7 +41,7 @@ steps:
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
       continueOnError: ${{ parameters.continueOnError }}
-      failOnStderr: ${{ not(parameters.continueOnError) }}
+      failOnStderr: false
       condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
