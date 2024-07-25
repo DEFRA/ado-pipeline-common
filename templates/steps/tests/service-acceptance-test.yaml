@@ -38,6 +38,7 @@ steps:
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
         sudo chmod -R 777 ${{ parameters.testDir }}/app
         export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
         docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" build
         docker-compose -f docker-compose.yaml -f docker-compose.acceptance.yaml -p "${{ parameters.service }}-acceptance-test" run --rm "${{ parameters.service }}-test-runner"
       displayName: Service Acceptance Test - Run

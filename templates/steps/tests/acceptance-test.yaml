@@ -47,6 +47,7 @@ steps:
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
         export TEST_TAGS=${{ parameters.tags }}
         export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
         cd test/acceptance
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit

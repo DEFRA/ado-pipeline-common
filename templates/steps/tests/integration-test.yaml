@@ -47,6 +47,7 @@ steps:
     - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
         export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
         export PACT_BROKER_URL=https://$(PACT-BROKER-URL)
         export PACT_BROKER_USERNAME=https://$(PACT-BROKER-USERNAME)
         export PACT_BROKER_PASSWORD=https://$(PACT-BROKER-PASSWORD)
