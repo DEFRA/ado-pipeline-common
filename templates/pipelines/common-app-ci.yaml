@@ -270,7 +270,6 @@ stages:
                 serviceName: ${{ parameters.serviceName }}
                 IsPrBuild: ${{ variables.IsPrBuild }}
                 appTestConfig: ${{ parameters.appTestConfig }}
-                continueOnError: ${{ not(variables.IsPrBuild) }}
                 appBuildConfig: ${{ parameters.appBuildConfig }}
 
       - job: BuildHelmChart
@@ -578,4 +577,3 @@ stages:
                           serviceName: ${{ parameters.serviceName }}
                           appBuildConfig: ${{ parameters.appBuildConfig }}
                           appTestConfig: ${{ parameters.appTestConfig }}
-                          continueOnError: ${{ not(variables.IsPrBuild) }}
