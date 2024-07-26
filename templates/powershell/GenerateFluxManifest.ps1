@@ -255,7 +255,7 @@ try {
         Add-Environment -ApiBaseUri $ApiBaseUri -TeamName $TeamName -ServiceName $ServiceName -Name $EnvName
     }
     elseif ($response.PSObject.Properties.Name -contains 'environment' -and $response.environment) {
-        $generate = $null -eq $response.environment.manifest ? $true : $response.environment.manifest.generate -or ($response.environment.manifest.generatedVersion -lt $response.fluxTemplatesVersion)
+        $generate = $null -eq $response.environment.manifest ? $true : $response.environment.manifest.generate -or ([Version]$response.environment.manifest.generatedVersion -lt [Version]$response.fluxTemplatesVersion)
     }
     
     if ($null -eq $response -or $generate) {
