@@ -9,6 +9,12 @@ parameters:
   - name: url
     type: string
     default: ''
+  - name: artifactNameSuffix
+    type: string
+    default: $(build.buildid)
+  - name: continueOnError
+    type: boolean
+    default: false    
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.axe.yaml"){
@@ -16,26 +22,35 @@ steps:
       }
     displayName: Accessibility Test AXE - File Validation
     
-  - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:    
-    - pwsh: |
+  - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
+    - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
-        docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
-  - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:    
-    - pwsh: |
+  - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
+    - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/axe
-        $Env:TEST_ENVIRONMENT_ROOT_URL="https://${{ parameters.url }}"
-        docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
+        #Port number should be 80 for the container to access the application
+        export TEST_ENVIRONMENT_ROOT_URL=${{ parameters.url }}:80
+        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
         docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml run --rm axe
       displayName: Accessibility Test AXE - Run
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
     displayName: Accessibility Test AXE - Publish Test
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/axe
-      artifact: $(build.buildid)-axe-results
-    condition: eq(variables.docker_compose_dot_axe_yaml, 'true')      
+      artifact: axe-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
+    continueOnError: true
+    condition: eq(variables.docker_compose_dot_axe_yaml, 'true')
+
+  - script: |
+      docker-compose -f docker-compose.yaml -f docker-compose.axe.yaml -p axe down
+    displayName: DockerDown
+    continueOnError: true
+    condition: eq(variables.docker_compose_dot_axe_yaml, 'true')

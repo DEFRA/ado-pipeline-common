@@ -11,6 +11,12 @@ parameters:
     default: ''
   - name: scriptPath
     type: string
+  - name: artifactNameSuffix
+    type: string
+    default: $(build.buildid)
+  - name: continueOnError
+    type: boolean
+    default: false    
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.jmeter.yaml"){
@@ -21,16 +27,17 @@ steps:
       echo "https;${{ parameters.url }};443" > jmeterConfig.csv
       cat jmeterConfig.csv
     workingDirectory: ${{ parameters.testDir }}
-    displayName: Perf Test - Update jmeterConfig      
+    displayName: Perf Test - Update jmeterConfig          
     condition: and( ${{ eq(parameters.typeOfTest,'PostDeploy') }}, eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true'))
 
-  - pwsh: |
+  - script: |
       sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/performance/htmlreport
       sudo chmod -R 777 ${{ parameters.testOutputDir }}/performance
       cat jmeterConfig.csv
       cd ${{ parameters.testDir }} 
       docker-compose -f ../../docker-compose.yaml -f docker-compose.jmeter.yaml run jmeter-test
     displayName: Perf Test - Run
+    continueOnError: ${{ parameters.continueOnError }}
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   - script: |
@@ -45,16 +52,25 @@ steps:
     displayName: Perf Test - Publish Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/performance
-      artifact: $(build.buildid)-jmeter-results-${{ parameters.typeOfTest }}
+      artifact: perf-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
+    continueOnError: ${{ parameters.continueOnError }}
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   - task: PublishTestResults@2
     inputs:
       testResultsFormat: 'JUnit'
-      testRunTitle: 'Performance Test Result- -${{ parameters.typeOfTest }}'
+      testRunTitle: 'Performance Test Result-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}'
       testResultsFiles: '${{ parameters.testOutputDir }}/performance/testresults.xml'
-      failTaskOnFailedTests: true
+      failTaskOnFailedTests: ${{ not(parameters.continueOnError) }}
     displayName: 'Perf Test Publish Test Results'
+    continueOnError: ${{ parameters.continueOnError }}
+    condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
+
+  - script: |
+      cd ${{ parameters.testDir }}
+      docker-compose down
+    displayName: DockerDown
+    continueOnError: true
     condition: eq(variables.test_performance_docker_compose_dot_jmeter_yaml, 'true')
 
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1

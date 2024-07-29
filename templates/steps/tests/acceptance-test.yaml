@@ -12,11 +12,17 @@ parameters:
   - name: tags
     type: string
     default: ''
+  - name: artifactNameSuffix
+    type: string
+    default: $(build.buildid)
+  - name: continueOnError
+    type: boolean
+    default: false    
 steps:  
 
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/test/acceptance/docker-compose.yaml"){
-        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]true"
+        Write-Output "##vso[task.setvariable variable=test_acceptance_docker_compose_dot_yaml]true"        
       }
     displayName: Acceptance Test - File Validation
 
@@ -33,6 +39,7 @@ steps:
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
       displayName: Acceptance Test - Run
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
 
   - ${{ if eq(parameters.typeOfTest,'PostDeploy') }}:
@@ -40,19 +47,27 @@ steps:
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}/html-reports
         export TEST_TAGS=${{ parameters.tags }}
         export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
+        echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
         cd test/acceptance
         docker-compose build
         docker-compose -f docker-compose.yaml -f docker-compose.override.yaml up --abort-on-container-exit
       displayName: Acceptance Test - ${{ parameters.tags }}
+      continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
 
   - task: PublishPipelineArtifact@1
     displayName: Acceptance Test - Publish Test Report
     inputs:
       targetPath: ${{ parameters.testOutputDir }}/html-reports
-      artifact: $(build.buildid)-acceptance-results-${{ parameters.typeOfTest }}
+      artifact: acceptance-results-${{ parameters.typeOfTest }}-${{ parameters.artifactNameSuffix }}
+    continueOnError: true
     condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')
-    
+
+  - script: |
+      docker-compose -f docker-compose.yaml -f docker-compose.override.yaml down
+    displayName: DockerDown
+    continueOnError: true
+    condition: eq(variables.test_acceptance_docker_compose_dot_yaml, 'true')       
   # - task: LakshayKaushik.PublishHTMLReports.publishhtmlreport.publishhtmlreport@1
   #   displayName: Acceptance Test - Publish Html Report
   #   inputs:
