@@ -59,7 +59,7 @@ steps:
     - task: AzurePowerShell@5
       displayName: 'Pre Check - Import App Config'
       inputs:
-        azureSubscription: '${{ parameters.environmentObj.ssvServiceConnection }}'
+        azureSubscription: '${{ parameters.environmentObj.serviceConnection }}'
         scriptType: FilePath
         scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/PreImportAppConfigCheck.ps1'
         scriptArguments: > 
