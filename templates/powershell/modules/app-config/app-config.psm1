@@ -650,6 +650,7 @@ function Import-AppConfigValues {
 
 		if($FullBuild){
 			try {
+				Write-Host "Cleaning up old sentinel key labels"
 				Get-AppConfigKeyLabels -ConfigStoreName $ConfigStore -Key 'Sentinel' -LabelStartsWith "$Label-" -LabelDoesNotContain "$Label-$Version" | ForEach-Object {
 					Remove-AppConfigValue -InputObject $_ -ConfigStore $ConfigStore
 				}
