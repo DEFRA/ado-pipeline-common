@@ -619,33 +619,28 @@ function Import-AppConfigValues {
 		}
 
 		[string]$sentinelKey = 'Sentinel'
-		if ($FullBuild) {
-			if (-not $existingAppConfig.ContainsKey($sentinelKey)) {
-				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
-				$SentinelItem.Key = $sentinelKey
-				$SentinelItem.value = $BuildId
-				$SentinelItem.Label = $Label
-				$SentinelItem.ContentType = $null
-				$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
-			}
+		[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
 
+		if ($FullBuild) {
 			[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
 			$SentinelItem.Key = $sentinelKey
 			$SentinelItem.value = $BuildId
-			$SentinelItem.ContentType = $null
+			if (-not $existingAppConfig.ContainsKey($sentinelKey)) {
+				$SentinelItem.Label = $Label
+				$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+			}
 			$SentinelItem.Label = "$Label-$Version"
 			$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 		}
 		elseif ($outputs) {
 			#If there are any changes in config values, update sentinel key.
-			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
 			if ($existingAppConfig.ContainsKey($sentinelKey)) {
-				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
+				[AppConfigEntry]$SentinelItem = $existingAppConfig[$sentinelKey]
 				$SentinelItem.value = $BuildId
 				$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 			}
 		}
-		
+
 		Write-Debug "${functionName}:process:End"
 	}
 
