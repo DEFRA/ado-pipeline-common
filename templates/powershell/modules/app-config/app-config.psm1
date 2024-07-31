@@ -619,13 +619,15 @@ function Import-AppConfigValues {
 		}
 
 		[string]$sentinelKey = 'Sentinel'
+		[string]$sentinelUniqueKey = "{0}:{1}" -f $sentinelKey, $Label
 		[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
 
 		if ($FullBuild) {
 			[AppConfigEntry]$sentinelItem = [AppConfigEntry]::new()
 			$sentinelItem.Key = $sentinelKey
 			$sentinelItem.value = $BuildId
-			if (-not $existingAppConfig.ContainsKey($sentinelKey)) {
+			if (-not $existingAppConfig.ContainsKey($sentinelUniqueKey)) {
+				Write-Debug "${functionName}:process:Creating sentinel key"
 				$sentinelItem.Label = $Label
 				$outputs += @($sentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 			}
@@ -635,8 +637,9 @@ function Import-AppConfigValues {
 		}
 		elseif ($outputs) {
 			#If there are any changes in config values, update sentinel key.
-			if ($existingAppConfig.ContainsKey($sentinelKey)) {
-				[AppConfigEntry]$sentinelItem = $existingAppConfig[$sentinelKey]
+			if ($existingAppConfig.ContainsKey($sentinelUniqueKey)) {
+				Write-Debug "${functionName}:process:Updating sentinel key"
+				[AppConfigEntry]$sentinelItem = $existingAppConfig[$sentinelUniqueKey]
 				$sentinelItem.value = $BuildId
 				$outputs += @($sentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 			}
@@ -648,7 +651,7 @@ function Import-AppConfigValues {
 	end {
 		Write-Debug "${functionName}:end:Start"
 
-		if($FullBuild){
+		if ($FullBuild) {
 			try {
 				Write-Host "Cleaning up old sentinel key labels"
 				Get-AppConfigKeyLabels -ConfigStoreName $ConfigStore -Key 'Sentinel' -LabelStartsWith "$Label-" -LabelDoesNotContain "$Label-$Version" | ForEach-Object {
