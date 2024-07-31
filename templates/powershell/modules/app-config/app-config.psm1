@@ -618,29 +618,34 @@ function Import-AppConfigValues {
 			$outputs += @($delta.Remove | Remove-AppConfigValue -ConfigStore $ConfigStore)
 		}
 
-		#If there are any changes in config values, update sentinel key.
-		if ($outputs) {
-			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
-			[string]$sentinelKey = 'Sentinel'
-			if ($existingAppConfig.ContainsKey($sentinelKey) -and (-not $FullBuild)) {
-				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
-				$SentinelItem.value = $BuildId
-			}
-			else {
+		[string]$sentinelKey = 'Sentinel'
+		if ($FullBuild) {
+			if (-not $existingAppConfig.ContainsKey($sentinelKey)) {
 				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
 				$SentinelItem.Key = $sentinelKey
 				$SentinelItem.value = $BuildId
-				if ($FullBuild) {
-					$SentinelItem.Label = "$Label-$Version"
-				}
-				else {
-					$SentinelItem.Label = $Label
-				}
+				$SentinelItem.Label = $Label
 				$SentinelItem.ContentType = $null
+				$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 			}
+
+			[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
+			$SentinelItem.Key = $sentinelKey
+			$SentinelItem.value = $BuildId
+			$SentinelItem.ContentType = $null
+			$SentinelItem.Label = "$Label-$Version"
 			$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 		}
-
+		elseif ($outputs) {
+			#If there are any changes in config values, update sentinel key.
+			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
+			if ($existingAppConfig.ContainsKey($sentinelKey)) {
+				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
+				$SentinelItem.value = $BuildId
+				$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+			}
+		}
+		
 		Write-Debug "${functionName}:process:End"
 	}
 
@@ -978,14 +983,14 @@ function Test-Yaml {
 		}
 
 		$rules = @{
-			'string' = { param($item) 
+			'string'         = { param($item) 
 				$keyValid = $item.key -is [string]
 				$valueValid = $item.value -is [string]
 				$valid = $keyValid -and $valueValid
 				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a string" } else { $null }
 				return $valid, $reason
 			}
-			'keyvault' = $keyvaultSecretRule
+			'keyvault'       = $keyvaultSecretRule
 			'keyvaultsecret' = $keyvaultSecretRule
 		}
 		
