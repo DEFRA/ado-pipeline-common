@@ -622,22 +622,23 @@ function Import-AppConfigValues {
 		[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
 
 		if ($FullBuild) {
-			[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
-			$SentinelItem.Key = $sentinelKey
-			$SentinelItem.value = $BuildId
+			[AppConfigEntry]$sentinelItem = [AppConfigEntry]::new()
+			$sentinelItem.Key = $sentinelKey
+			$sentinelItem.value = $BuildId
 			if (-not $existingAppConfig.ContainsKey($sentinelKey)) {
-				$SentinelItem.Label = $Label
-				$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+				$sentinelItem.Label = $Label
+				$outputs += @($sentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 			}
-			$SentinelItem.Label = "$Label-$Version"
-			$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+			$sentinelItem.Label = "$Label-$Version"
+			$outputs += @($sentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+			
 		}
 		elseif ($outputs) {
 			#If there are any changes in config values, update sentinel key.
 			if ($existingAppConfig.ContainsKey($sentinelKey)) {
-				[AppConfigEntry]$SentinelItem = $existingAppConfig[$sentinelKey]
-				$SentinelItem.value = $BuildId
-				$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+				[AppConfigEntry]$sentinelItem = $existingAppConfig[$sentinelKey]
+				$sentinelItem.value = $BuildId
+				$outputs += @($sentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
 			}
 		}
 
@@ -647,8 +648,7 @@ function Import-AppConfigValues {
 	end {
 		Write-Debug "${functionName}:end:Start"
 
-		if ($outputs.Count -gt 0) {
-
+		if($FullBuild){
 			try {
 				Get-AppConfigKeyLabels -ConfigStoreName $ConfigStore -Key 'Sentinel' -LabelStartsWith "$Label-" -LabelDoesNotContain "$Label-$Version" | ForEach-Object {
 					Remove-AppConfigValue -InputObject $_ -ConfigStore $ConfigStore
@@ -657,7 +657,9 @@ function Import-AppConfigValues {
 			catch {
 				Write-Warning "Failed to cleanup old sentinel key labels."
 			}
+		}
 
+		if ($outputs.Count -gt 0) {
 			[AppConfigEntry[]]$results = $outputs | ConvertFrom-Json | ConvertTo-AppConfigEntry
 			Write-Output $results
 		}
