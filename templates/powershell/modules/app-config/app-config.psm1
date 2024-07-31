@@ -68,6 +68,64 @@ function ConvertTo-AppConfigEntry {
 	}      
 }
 
+<#
+.SYNOPSIS 
+		Gets the key labels from the specified appConfiguration store.
+.DESCRIPTION
+		Gets the key labels from the specified appConfiguration store.
+.PARAMETER ConfigStoreName
+		Name of the appConfiguration store.
+.PARAMETER Key
+		Key to get the labels for.
+.PARAMETER LabelStartsWith
+		Filter to only return labels that start with this value.
+.PARAMETER LabelDoesNotContain
+		Filter to only return labels that do not contain this value.
+#>
+function Get-AppConfigKeyLabels {
+	param (
+		[Parameter(Mandatory)]
+		[string]$ConfigStoreName, 
+		[Parameter(Mandatory)]
+		[string]$Key,
+		[Parameter(Mandatory)]
+		[string]$LabelStartsWith,
+		[Parameter(Mandatory)]
+		[string]$LabelDoesNotContain
+	)
+
+	[string]$functionName = $MyInvocation.MyCommand
+	Write-Debug "${functionName}:Start"
+	Write-Debug "${functionName}:ConfigStoreName=$ConfigStoreName"
+	Write-Debug "${functionName}:Key=$Key"
+	Write-Debug "${functionName}:LabelStartsWith=$LabelStartsWith"
+	Write-Debug "${functionName}:LabelDoesNotContain=$LabelDoesNotContain"
+
+	[System.Text.StringBuilder]$commandBuilder = [System.Text.StringBuilder]::new("az appconfig kv list --all --auth-mode login  ")
+	[void]$commandBuilder.Append(" --name `"$ConfigStoreName`" ")
+	[void]$commandBuilder.Append(" --key `"$Key`" ")
+	[void]$commandBuilder.Append(" --key `"$Key`" ")
+	[void]$commandBuilder.Append(" --fields key label ")
+	[void]$commandBuilder.Append(" --query `"[?starts_with(label, '$LabelStartsWith') && !contains(label,'$LabelDoesNotContain')]`" ")
+	
+	[string]$command = $commandBuilder.ToString()
+	Write-Debug "${functionName}:Command: $command"
+
+	[string]$output = Invoke-Expression -Command $command 
+	[int]$processExitCode = $LASTEXITCODE
+
+	if ($processExitCode -ne 0) {
+		throw "'$command' exited with non-zero exit code '$processExitCode'"
+	}
+
+	Write-Debug "${functionName}:Output: $output"
+
+	Write-Output $output | ConvertFrom-Json
+
+	Write-Debug "${functionName}:End"
+}
+
+
 <# 
   .SYNOPSIS 
     Converts the InputObject into an [AppConfigEntry] and places it into a [hashtable].
@@ -590,6 +648,16 @@ function Import-AppConfigValues {
 		Write-Debug "${functionName}:end:Start"
 
 		if ($outputs.Count -gt 0) {
+
+			try {
+				Get-AppConfigKeyLabels -ConfigStoreName $ConfigStore -Key 'Sentinel' -LabelStartsWith "$Label-" -LabelDoesNotContain "$Label-$Version" | ForEach-Object {
+					Remove-AppConfigValue -InputObject $_ -ConfigStore $ConfigStore
+				}
+			}
+			catch {
+				Write-Warning "Failed to cleanup old sentinel key labels."
+			}
+
 			[AppConfigEntry[]]$results = $outputs | ConvertFrom-Json | ConvertTo-AppConfigEntry
 			Write-Output $results
 		}
@@ -887,7 +955,7 @@ function Test-Yaml {
 	param(
 		[Parameter(Mandatory)]
 		[string] $Yaml
-		)
+	)
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
@@ -918,7 +986,7 @@ function Test-Yaml {
 				return $valid, $reason
 			}
 			'keyvault' = $keyvaultSecretRule
-    		'keyvaultsecret' = $keyvaultSecretRule
+			'keyvaultsecret' = $keyvaultSecretRule
 		}
 		
 		$data = ConvertFrom-Yaml $Yaml
