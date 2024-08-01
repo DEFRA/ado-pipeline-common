@@ -418,8 +418,8 @@ function Get-AppConfigValuesFromYamlFile {
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
 		Write-Debug "${functionName}:Start"
-		Install-Module powershell-yaml -Force -Debug:$false
-		Import-Module powershell-yaml -Force -Debug:$false
+		Install-Module powershell-yaml -Force -Debug:$false -Verbose:$false
+		Import-Module powershell-yaml -Force -Debug:$false -Verbose:$false
 	}
 
 	process {
@@ -910,8 +910,8 @@ function Test-Yaml {
 		Write-Debug "${functionName}:Start"
 		Write-Debug "${functionName}:Yaml=$Yaml"
 
-		if (!(Get-Module -ListAvailable -Name powershell-yaml)) {
-			Install-Module -Name powershell-yaml -Force -Debug:$false
+		if (!(Get-Module -ListAvailable -Name powershell-yaml -Verbose:$false -Debug:$false)) {
+			Install-Module -Name powershell-yaml -Force -Verbose:$false -Debug:$false
 		}
 	}
 
