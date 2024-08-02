@@ -63,7 +63,7 @@ steps:
     verbose: false
     customCommand: 'run --if-present test:unit'
 
-- task: PublishCodeCoverageResults@1
+- task: PublishCodeCoverageResults@2
   inputs:
     codeCoverageTool: 'Cobertura'
     summaryFileLocation: ${{ parameters.sonarConfig.nodejs.summaryFileLocation }}
