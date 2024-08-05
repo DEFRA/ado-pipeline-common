@@ -32,18 +32,16 @@ function ConvertTo-AppConfigEntry {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-		Write-Debug "${functionName}:begin:End"
+		Write-Debug "${functionName}:Start"
 	}
 
 	process {
-		Write-Debug "${functionName}:process:Start"
 
 		if ($null -ne $InputObject) {
-			Write-Debug "${functionName}:process:InputObject.contentType=$($InputObject.contentType)"
-			Write-Debug "${functionName}:process:InputObject.key=$($InputObject.key)"
-			Write-Debug "${functionName}:process:InputObject.label=$($InputObject.label)"
-			Write-Debug "${functionName}:process:InputObject.value=$($InputObject.value)"
+			Write-Debug "${functionName}:InputObject.contentType=$($InputObject.contentType)"
+			Write-Debug "${functionName}:InputObject.key=$($InputObject.key)"
+			Write-Debug "${functionName}:InputObject.label=$($InputObject.label)"
+			Write-Debug "${functionName}:InputObject.value=$($InputObject.value)"
 
 			[AppConfigEntry]$entry = [AppConfigEntry]::new()
 			$entry.Key = $InputObject.key
@@ -58,15 +56,70 @@ function ConvertTo-AppConfigEntry {
 
 			Write-Output $entry
 		}
-
-		Write-Debug "${functionName}:process:End"
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}      
 }
+
+<#
+.SYNOPSIS 
+		Gets the key labels from the specified appConfiguration store.
+.DESCRIPTION
+		Gets the key labels from the specified appConfiguration store.
+.PARAMETER ConfigStoreName
+		Name of the appConfiguration store.
+.PARAMETER Key
+		Key to get the labels for.
+.PARAMETER LabelStartsWith
+		Filter to only return labels that start with this value.
+.PARAMETER LabelDoesNotContain
+		Filter to only return labels that do not contain this value.
+#>
+function Get-AppConfigKeyLabels {
+	param (
+		[Parameter(Mandatory)]
+		[string]$ConfigStoreName, 
+		[Parameter(Mandatory)]
+		[string]$Key,
+		[Parameter(Mandatory)]
+		[string]$LabelStartsWith,
+		[Parameter(Mandatory)]
+		[string]$LabelDoesNotContain
+	)
+
+	[string]$functionName = $MyInvocation.MyCommand
+	Write-Debug "${functionName}:Start"
+	Write-Debug "${functionName}:ConfigStoreName=$ConfigStoreName"
+	Write-Debug "${functionName}:Key=$Key"
+	Write-Debug "${functionName}:LabelStartsWith=$LabelStartsWith"
+	Write-Debug "${functionName}:LabelDoesNotContain=$LabelDoesNotContain"
+
+	[System.Text.StringBuilder]$commandBuilder = [System.Text.StringBuilder]::new("az appconfig kv list --all --auth-mode login  ")
+	[void]$commandBuilder.Append(" --name `"$ConfigStoreName`" ")
+	[void]$commandBuilder.Append(" --key `"$Key`" ")
+	[void]$commandBuilder.Append(" --key `"$Key`" ")
+	[void]$commandBuilder.Append(" --fields key label ")
+	[void]$commandBuilder.Append(" --query `"[?starts_with(label, '$LabelStartsWith') && !contains(label,'$LabelDoesNotContain')]`" ")
+	
+	[string]$command = $commandBuilder.ToString()
+	Write-Debug "${functionName}:Command: $command"
+
+	[string]$output = Invoke-Expression -Command $command 
+	[int]$processExitCode = $LASTEXITCODE
+
+	if ($processExitCode -ne 0) {
+		throw "'$command' exited with non-zero exit code '$processExitCode'"
+	}
+
+	Write-Debug "${functionName}:Output: $output"
+
+	Write-Output $output | ConvertFrom-Json
+
+	Write-Debug "${functionName}:End"
+}
+
 
 <# 
   .SYNOPSIS 
@@ -100,30 +153,23 @@ function ConvertTo-AppConfigHashTable {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-
+		Write-Debug "${functionName}:Start"
 		[hashtable]$dictionary = @{}
-
-		Write-Debug "${functionName}:begin:End"
 	}
 
 	process {
-		Write-Debug "${functionName}:process:Start"
-        
+
 		[AppConfigEntry]$entry = ConvertTo-AppConfigEntry -InputObject $InputObject
 
 		[string]$uniqueKey = "{0}:{1}" -f $entry.Key, $entry.Label
-		Write-Debug "${functionName}:process:uniqueKey=$uniqueKey"
+		
+		Write-Debug "${functionName}:Adding $uniqueKey to Hashtable"
 		$dictionary.Add($uniqueKey, $entry)
-
-		Write-Debug "${functionName}:process:End"
 	}
 
-
 	end {
-		Write-Debug "${functionName}:end:Start"
 		Write-Output $dictionary
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}    
 }
 
@@ -160,42 +206,35 @@ function Export-AppConfigValues {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-		Write-Debug "${functionName}:process:Path=$Path"
-		Write-Debug "${functionName}:process:Path=$Force"
+		Write-Debug "${functionName}:Start"
+		Write-Debug "${functionName}:Path=$Path"
+		Write-Debug "${functionName}:Force=$Force"
 
 		[System.IO.FileInfo]$file = $Path
-		Write-Debug "${functionName}:process:file.FullName=$($file.FullName)"
+		Write-Debug "${functionName}:File.FullName=$($file.FullName)"
 
 		if ($file.Exists -and -not $Force) {
 			throw "File $($File.Name) already exists.  Use -Force to overwrite."
 		}
 
 		if (-not $file.Directory.Exists) {
-			Write-Debug "${functionName}:process:Creating output directory $($file.Directory.FullName)"
+			Write-Debug "${functionName}:Creating output directory $($file.Directory.FullName)"
 			$file.Directory.Create()
 		}
-        
-		Write-Debug "${functionName}:begin:End"
 	}
 
 	process {
-		Write-Debug "${functionName}:process:Start"
-
 		[string]$json = Get-AppConfigValues -ConfigStore $ConfigStore -AsJson
-		Write-Debug "${functionName}:process:json=$json"
+		Write-Debug "${functionName}:AppConfigvaluesJson=$json"
 
-		Write-Debug "${functionName}:process:Writing to $($file.FullName):"
+		Write-Debug "${functionName}:Writing AppConfigvaluesJson to $($file.FullName):"
 		Set-Content -Path $file.FullName -Value $json -Force
 		$file.Refresh()
 		Write-Output $file
-
-		Write-Debug "${functionName}:process:End"
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}
 }
 
@@ -233,17 +272,13 @@ function Get-AppConfigValues {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-		Write-Debug "${functionName}:begin:ConfigStore=$ConfigStore"
-		Write-Debug "${functionName}:begin:Label=$Label"
-		Write-Debug "${functionName}:begin:End"
+		Write-Debug "${functionName}:Start"
+		Write-Debug "${functionName}:ConfigStore=$ConfigStore"
+		Write-Debug "${functionName}:Label=$Label"
 	}
     
 	process {
-		Write-Debug "${functionName}:process:Start"
-
-		Write-Verbose "Getting list of config entries from $ConfigStore"
-
+		
 		[System.Text.StringBuilder]$commandBuilder = [System.Text.StringBuilder]::new("az appconfig kv list --all --auth-mode login  ")
 		[void]$commandBuilder.Append(" --name `"$ConfigStore`" ")
 		[void]$commandBuilder.Append(" --query `"[*].{ key:key, label:label, value:value, contentType:contentType } `"")
@@ -257,7 +292,7 @@ function Get-AppConfigValues {
 
 		[string]$command = $commandBuilder.ToString()
 
-		Write-Debug "${functionName}:process:command=$command"
+		Write-Debug "${functionName}:Command=$command"
        
 		[string]$output = Invoke-Expression -Command $command 
 		[int]$processExitCode = $LASTEXITCODE
@@ -278,13 +313,10 @@ function Get-AppConfigValues {
 		else {
 			Write-Output $result
 		}
-
-		Write-Debug "${functionName}:process:End"
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}
 }
 
@@ -321,16 +353,14 @@ function Get-AppConfigValuesFromFile {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-		Write-Debug "${functionName}:begin:End"
+		Write-Debug "${functionName}:Start"
 	}
 
 	process {
-		Write-Debug "${functionName}:process:Start"
-		Write-Debug "${functionName}:process:Path=$Path"
+		Write-Debug "${functionName}:FilePath=$Path"
 
 		[System.IO.FileInfo]$file = $Path
-		Write-Debug "${functionName}:process:file.FullName=$($file.FullName)"
+		Write-Debug "${functionName}:File.FullName=$($file.FullName)"
 
 		if (-not $file.Exists) {
 			throw [System.IO.FileNotFoundException]::new($file.FullName)
@@ -338,18 +368,15 @@ function Get-AppConfigValuesFromFile {
 
 		[string]$content = Get-Content -Path $Path
 
-		Write-Debug "${functionName}:process:content=$content"
+		Write-Debug "${functionName}:FileContent=$content"
 
 		$output = $content | ConvertFrom-Json | ConvertTo-AppConfigEntry | Sort-Object -Property Key, Label
 
 		Write-Output $output
-
-		Write-Debug "${functionName}:process:End"
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}
 }
 
@@ -390,19 +417,16 @@ function Get-AppConfigValuesFromYamlFile {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-		Write-Debug "${functionName}:begin:End"
-
-		Install-Module powershell-yaml -Force
-		Import-Module powershell-yaml -Force
+		Write-Debug "${functionName}:Start"
+		Install-Module powershell-yaml -Force -Debug:$false -Verbose:$false
+		Import-Module powershell-yaml -Force -Debug:$false -Verbose:$false
 	}
 
 	process {
-		Write-Debug "${functionName}:process:Start"
-		Write-Debug "${functionName}:process:Path=$Path"
+		Write-Debug "${functionName}:FilePath=$Path"
 
 		[System.IO.FileInfo]$file = $Path
-		Write-Debug "${functionName}:process:file.FullName=$($file.FullName)"
+		Write-Debug "${functionName}:File.FullName=$($file.FullName)"
 
 		if (-not $file.Exists) {
 			throw [System.IO.FileNotFoundException]::new($file.FullName)
@@ -410,7 +434,7 @@ function Get-AppConfigValuesFromYamlFile {
 
 		[string]$content = Get-Content -Raw -Path $Path
 
-		Write-Debug "${functionName}:process:content=$content"
+		Write-Debug "${functionName}:FileContent=$content"
 
 		[string]$kvContentType = 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
 
@@ -434,13 +458,10 @@ function Get-AppConfigValuesFromYamlFile {
 		$output = $ConfigFileContent | ConvertTo-AppConfigEntry | Sort-Object -Property Key, Label
 
 		Write-Output $output
-
-		Write-Debug "${functionName}:process:End"
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}
 }
 
@@ -504,14 +525,14 @@ function Import-AppConfigValues {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-		Write-Debug "${functionName}:begin:ConfigStore=$ConfigStore"
-		Write-Debug "${functionName}:begin:Label=$Label"
-		Write-Debug "${functionName}:begin:Path=$Path"
-		Write-Debug "${functionName}:begin:KeyVaultName=$KeyVaultName"
-		Write-Debug "${functionName}:begin:BuildId=$BuildId"
-		Write-Debug "${functionName}:begin:Version=$Version"
-		Write-Debug "${functionName}:begin:FullBuild=$FullBuild"
+		Write-Debug "${functionName}:Start"
+		Write-Debug "${functionName}:ConfigStore=$ConfigStore"
+		Write-Debug "${functionName}:Label=$Label"
+		Write-Debug "${functionName}:Path=$Path"
+		Write-Debug "${functionName}:KeyVaultName=$KeyVaultName"
+		Write-Debug "${functionName}:BuildId=$BuildId"
+		Write-Debug "${functionName}:Version=$Version"
+		Write-Debug "${functionName}:FullBuild=$FullBuild"
 
 		[array]$outputs = @()
 		[System.IO.FileInfo]$importFile = $Path
@@ -519,12 +540,9 @@ function Import-AppConfigValues {
 		if (-not $importFile.Exists) {
 			throw [System.IO.FileNotFoundException]::new($importFile.FullName)
 		}
-
-		Write-Debug "${functionName}:begin:End"
 	}
 
 	process {
-		Write-Debug "${functionName}:process:Start"
 		[AppConfigEntry[]]$existingItems = Get-AppConfigValues -ConfigStore $ConfigStore -Label $Label
 
 		switch ($importFile.Extension) {
@@ -560,41 +578,53 @@ function Import-AppConfigValues {
 			$outputs += @($delta.Remove | Remove-AppConfigValue -ConfigStore $ConfigStore)
 		}
 
-		#If there are any changes in config values, update sentinel key.
-		if ($outputs) {
-			[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
-			[string]$sentinelKey = 'Sentinel'
-			if ($existingAppConfig.ContainsKey($sentinelKey) -and (-not $FullBuild)) {
-				[AppConfigEntry]$SentinelItem = $destinationAppConfig[$sentinelKey]
-				$SentinelItem.value = $BuildId
-			}
-			else {
-				[AppConfigEntry]$SentinelItem = [AppConfigEntry]::new()
-				$SentinelItem.Key = $sentinelKey
-				$SentinelItem.value = $BuildId
-				if ($FullBuild) {
-					$SentinelItem.Label = "$Label-$Version"
-				}
-				else {
-					$SentinelItem.Label = $Label
-				}
-				$SentinelItem.ContentType = $null
-			}
-			$outputs += @($SentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
-		}
+		[string]$sentinelKey = 'Sentinel'
+		[string]$sentinelUniqueKey = "{0}:{1}" -f $sentinelKey, $Label
+		[hashtable]$existingAppConfig = $existingItems | ConvertTo-AppConfigHashTable
 
-		Write-Debug "${functionName}:process:End"
+		if ($FullBuild) {
+			[AppConfigEntry]$sentinelItem = [AppConfigEntry]::new()
+			$sentinelItem.Key = $sentinelKey
+			$sentinelItem.value = $BuildId
+			if (-not $existingAppConfig.ContainsKey($sentinelUniqueKey)) {
+				Write-Debug "${functionName}:process:Creating sentinel key"
+				$sentinelItem.Label = $Label
+				$outputs += @($sentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+			}
+			$sentinelItem.Label = "$Label-$Version"
+			$outputs += @($sentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+			
+		}
+		elseif ($outputs) {
+			#If there are any changes in config values, update sentinel key.
+			if ($existingAppConfig.ContainsKey($sentinelUniqueKey)) {
+				Write-Debug "${functionName}:process:Updating sentinel key"
+				[AppConfigEntry]$sentinelItem = $existingAppConfig[$sentinelUniqueKey]
+				$sentinelItem.value = $BuildId
+				$outputs += @($sentinelItem  | Set-AppConfigValue -ConfigStore $ConfigStore)
+			}
+		}
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
+		if ($FullBuild) {
+			try {
+				Write-Host "Cleaning up old sentinel key labels"
+				Get-AppConfigKeyLabels -ConfigStoreName $ConfigStore -Key 'Sentinel' -LabelStartsWith "$Label-" -LabelDoesNotContain "$Label-$Version" | ForEach-Object {
+					Remove-AppConfigValue -InputObject $_ -ConfigStore $ConfigStore
+				}
+			}
+			catch {
+				Write-Warning "Failed to cleanup old sentinel key labels."
+			}
+		}
 
 		if ($outputs.Count -gt 0) {
 			[AppConfigEntry[]]$results = $outputs | ConvertFrom-Json | ConvertTo-AppConfigEntry
 			Write-Output $results
 		}
 
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}
 }
 
@@ -622,7 +652,7 @@ function New-AppConfigDifference {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
+		Write-Debug "${functionName}:Start"
 		[hashtable]$sourceAppConfig = $Source | ConvertTo-AppConfigHashTable
 		[hashtable]$destinationAppConfig = @{}
 		[hashtable]$addEntries = @{}
@@ -635,16 +665,14 @@ function New-AppConfigDifference {
 		else {
 			Write-Verbose "Destination is empty"
 		}
-         
-		Write-Debug "${functionName}:begin:End"
 	}
 
 	process {
-		Write-Debug "${functionName}:process:Start"
+
 		[string]$sentinelKey = 'Sentinel:'
 
 		$sourceAppConfig.Keys | ForEach-Object {
-			Write-Debug "${functionName}:process:sourceKey=$_"
+			Write-Debug "${functionName}:SourceKey=$_"
 			[AppConfigEntry]$sourceItem = $SourceAppConfig[$_]
 			if (-not $_.StartsWith($sentinelKey)) {
 				if ($destinationAppConfig.ContainsKey($_)) {
@@ -662,15 +690,15 @@ function New-AppConfigDifference {
 							($sourceContentType -ceq $destinationContentType)
 						)
 					}
-					Write-Debug "${functionName}:process:${same}:sourceValue/destinationValue=${sourceValue}/${destinationValue}"
+					Write-Debug "${functionName}:${same}:sourceValue/destinationValue=${sourceValue}/${destinationValue}"
 	
 					if (-not $same) {
-						Write-Debug "${functionName}:process:$_ differs - needs updated"
+						Write-Debug "${functionName}:$_ differs - needs updated"
 						$updateEntries.Add($_, $sourceItem)
 					}
 				}
 				else {
-					Write-Debug "${functionName}:process:$_ not found in destination"
+					Write-Debug "${functionName}:$_ not found in destination"
 					$addEntries.Add($_, $sourceItem)
 				}
 			}
@@ -678,20 +706,16 @@ function New-AppConfigDifference {
 
 		$destinationAppConfig.Keys | ForEach-Object {
 			[bool]$exists = $sourceAppConfig.ContainsKey($_)
-			Write-Debug "${functionName}:process:${exists}:destinationKey=$_"
+			Write-Debug "${functionName}:${exists}:destinationKey=$_"
 
 			if (-not $exists -and -not $_.StartsWith($sentinelKey)) {
 				Write-Verbose "$_ surplus - needs removed"
 				$removeEntries.Add($_, $destinationAppConfig[$_])
 			}
 		}
-
-		Write-Debug "${functionName}:process:End"
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
-
 		[AppConfigDifferences]$differences = [AppConfigDifferences]::new()
 		$differences.Add = $addEntries.Values
 		$differences.Update = $updateEntries.Values
@@ -699,7 +723,7 @@ function New-AppConfigDifference {
 
 		Write-Output $differences
         
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}
 }
 
@@ -733,15 +757,13 @@ function Remove-AppConfigValue {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-		Write-Debug "${functionName}:begin:ConfigStore=$ConfigStore"
-		Write-Debug "${functionName}:begin:End"
+		Write-Debug "${functionName}:Start"
+		Write-Debug "${functionName}:ConfigStore=$ConfigStore"
 	}
     
 	process {
-		Write-Debug "${functionName}:process:Start"
-		Write-Debug "${functionName}:process:InputObject.Key=$($InputObject.Key)"
-		Write-Debug "${functionName}:process:InputObject.Label=$($InputObject.Label)"
+		Write-Debug "${functionName}:InputObject.Key=$($InputObject.Key)"
+		Write-Debug "${functionName}:InputObject.Label=$($InputObject.Label)"
 
 		[string]$label = $InputObject.Label
 		[string]$key = $InputObject.Key
@@ -756,7 +778,7 @@ function Remove-AppConfigValue {
 
 		[string]$command = $commandBuilder.ToString()
 
-		Write-Debug "${functionName}:process:command=$command"
+		Write-Debug "${functionName}:Command=$command"
 		Write-Verbose "Removing ${key}:${label} from $ConfigStore"
 
 		if ($PSCmdlet.ShouldProcess($command, $ConfigStore, $functionName)) {
@@ -767,12 +789,10 @@ function Remove-AppConfigValue {
 				throw "'$command' exited with non-zero exit code '$processExitCode'"
 			}
 		}
-		Write-Debug "${functionName}:process:End"
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}
 }
 
@@ -810,24 +830,22 @@ function Set-AppConfigValue {
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
-		Write-Debug "${functionName}:begin:Start"
-		Write-Debug "${functionName}:begin:ConfigStore=$ConfigStore"
-		Write-Debug "${functionName}:begin:End"
+		Write-Debug "${functionName}:Start"
+		Write-Debug "${functionName}:ConfigStore=$ConfigStore"
 	}
     
 	process {
-		Write-Debug "${functionName}:process:Start"
-		Write-Debug "${functionName}:process:InputObject.Key=$($InputObject.Key)"
-		Write-Debug "${functionName}:process:InputObject.Label=$($InputObject.Label)"
-		Write-Debug "${functionName}:process:InputObject.Value=$($InputObject.Value)"
-		Write-Debug "${functionName}:process:InputObject.ContentType=$($InputObject.ContentType)"
+		Write-Debug "${functionName}:InputObject.Key=$($InputObject.Key)"
+		Write-Debug "${functionName}:InputObject.Label=$($InputObject.Label)"
+		Write-Debug "${functionName}:InputObject.Value=$($InputObject.Value)"
+		Write-Debug "${functionName}:InputObject.ContentType=$($InputObject.ContentType)"
 
 		[string]$key = $InputObject.Key
 		[string]$label = $InputObject.Label
 		[string]$contentType = $InputObject.ContentType
 		[bool]$isKeyVault = $InputObject.IsKeyVault()
 
-		Write-Debug "${functionName}:process:isKeyVault=$isKeyVault"
+		Write-Debug "${functionName}:IsKeyVault=$isKeyVault"
 
 		[System.Text.StringBuilder]$commandBuilder = [System.Text.StringBuilder]::new("az appconfig kv ")
 		if ($isKeyVault) {
@@ -857,7 +875,7 @@ function Set-AppConfigValue {
 
 		[string]$command = $commandBuilder.ToString()
 
-		Write-Debug "${functionName}:process:command=$command"
+		Write-Debug "${functionName}:Command=$command"
 
 		if ($isKeyVault) {
 			Write-Verbose "Setting keyvault ${key}:${label} in $ConfigStore"
@@ -874,12 +892,10 @@ function Set-AppConfigValue {
 				throw "'$command' exited with non-zero exit code '$processExitCode'"
 			}
 		}
-		Write-Debug "${functionName}:process:End"
 	}
 
 	end {
-		Write-Debug "${functionName}:end:Start"
-		Write-Debug "${functionName}:end:End"
+		Write-Debug "${functionName}:End"
 	}
 }
 
@@ -887,15 +903,15 @@ function Test-Yaml {
 	param(
 		[Parameter(Mandatory)]
 		[string] $Yaml
-		)
+	)
 
 	begin {
 		[string]$functionName = $MyInvocation.MyCommand
 		Write-Debug "${functionName}:Start"
 		Write-Debug "${functionName}:Yaml=$Yaml"
 
-		if (!(Get-Module -ListAvailable -Name powershell-yaml)) {
-			Install-Module -Name powershell-yaml -Force
+		if (!(Get-Module -ListAvailable -Name powershell-yaml -Verbose:$false -Debug:$false)) {
+			Install-Module -Name powershell-yaml -Force -Verbose:$false -Debug:$false
 		}
 	}
 
@@ -910,15 +926,15 @@ function Test-Yaml {
 		}
 
 		$rules = @{
-			'string' = { param($item) 
+			'string'         = { param($item) 
 				$keyValid = $item.key -is [string]
 				$valueValid = $item.value -is [string]
 				$valid = $keyValid -and $valueValid
 				$reason = if (-not $keyValid) { "key is not a string" } elseif (-not $valueValid) { "value is not a string" } else { $null }
 				return $valid, $reason
 			}
-			'keyvault' = $keyvaultSecretRule
-    		'keyvaultsecret' = $keyvaultSecretRule
+			'keyvault'       = $keyvaultSecretRule
+			'keyvaultsecret' = $keyvaultSecretRule
 		}
 		
 		$data = ConvertFrom-Yaml $Yaml
