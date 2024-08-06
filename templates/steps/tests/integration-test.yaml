@@ -36,9 +36,9 @@ steps:
   - ${{ if eq(parameters.typeOfTest,'PreDeploy') }}:
     - script: |
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
-        export PACT_BROKER_URL=$(PACT-BROKER-URL)
-        export PACT_BROKER_USERNAME=$(PACT-BROKER-USERNAME)
-        export PACT_BROKER_PASSWORD=$(PACT-BROKER-PASSWORD)
+        export PACT_BROKER_URL="$(PACT-BROKER-URL)"
+        export PACT_BROKER_USERNAME="$(PACT-BROKER-USERNAME)"
+        export PACT_BROKER_PASSWORD="$(PACT-BROKER-PASSWORD)"
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       continueOnError: ${{ parameters.continueOnError }}
@@ -48,9 +48,9 @@ steps:
         sudo mkdir -p -m 777 ${{ parameters.testOutputDir }}
         export TEST_ENVIRONMENT_ROOT_URL=https://${{ parameters.url }}
         echo "TEST_ENVIRONMENT_ROOT_URL: ${TEST_ENVIRONMENT_ROOT_URL}"
-        export PACT_BROKER_URL=$(PACT-BROKER-URL)
-        export PACT_BROKER_USERNAME=$(PACT-BROKER-USERNAME)
-        export PACT_BROKER_PASSWORD=$(PACT-BROKER-PASSWORD)
+        export PACT_BROKER_URL="$(PACT-BROKER-URL)"
+        export PACT_BROKER_USERNAME="$(PACT-BROKER-USERNAME)"
+        export PACT_BROKER_PASSWORD="$(PACT-BROKER-PASSWORD)"
         docker-compose -f docker-compose.yaml -f docker-compose.test.yaml -p "${{ parameters.service }}-test" up
       displayName: Intg Test - Run
       continueOnError: ${{ parameters.continueOnError }}
