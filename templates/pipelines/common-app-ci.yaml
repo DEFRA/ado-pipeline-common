@@ -479,6 +479,20 @@ stages:
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
 
+                    - task: AzureCLI@2
+                      displayName: 'AI Search Indexes'
+                      inputs:
+                        azureSubscription: ${{ parameters.appBuildConfig.serviceConnection }}
+                        scriptType: pscore
+                        scriptLocation: scriptPath
+                        scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Deploy-SearchIndexes.ps1'
+                        arguments: >
+                          -SearchServiceName '${{ deploymentEnv.searchServiceName }}'
+                          -ConfigDataFolderPath '$(Pipeline.Workspace)/s/aisearch'
+                        failOnStandardError: false
+                        addSpnToEnvironment: true
+                        workingDirectory: '$(Pipeline.Workspace)/s'
+
                       - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
                         - task: PowerShell@2
                           displayName: 'Use ACR image timestamp to verify Flux Helm release'
