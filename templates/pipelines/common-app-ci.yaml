@@ -479,6 +479,7 @@ stages:
                         arguments: >
                           -SearchServiceName '${{ deploymentEnv.searchServiceName }}'
                           -ConfigDataFolderPath '$(Pipeline.Workspace)/s/aisearch'
+                          -PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                         failOnStandardError: false
                         addSpnToEnvironment: true
                         workingDirectory: '$(Pipeline.Workspace)/s'

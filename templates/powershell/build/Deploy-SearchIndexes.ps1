@@ -8,10 +8,10 @@ Deploy Search Indexes to Azure Search Service
 Mandatory. Name of the Search Service
 .PARAMETER ConfigDataFolderPath
 Optional. Search service configuration data folder path
-.PARAMETER WorkingDirectory
-Optional. Working Directory of the script
+.PARAMETER PSHelperDirectory
+Optional. Path to the PS Helper module directory
 .EXAMPLE
-.\Deploy-SearchIndexes.ps1  -SearchServiceName <SearchServiceName> -ConfigDataFolderPath <ConfigDataFolderPath> -WorkingDirectory -<WorkingDirectory> 
+.\Deploy-SearchIndexes.ps1  -SearchServiceName <SearchServiceName> -ConfigDataFolderPath <ConfigDataFolderPath> -PSHelperDirectory -<PSHelperDirectory> 
 #> 
 
 
@@ -21,7 +21,8 @@ param(
     [string]$SearchServiceName,
     [Parameter(Mandatory)]
     [string]$ConfigDataFolderPath,
-    [string]$WorkingDirectory = $PWD
+    [Parameter(Mandatory)]
+    [string]$PSHelperDirectory
 )
 
 Set-StrictMode -Version 3.0
@@ -44,7 +45,7 @@ if ($enableDebug) {
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:searchServiceName=$SearchServiceName"
 Write-Debug "${functionName}:ConfigDataFolderPath=$ConfigDataFolderPath"
-Write-Debug "${functionName}:WorkingDirectory=$WorkingDirectory"
+Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
 Function Set-AzureSearchObject {
     [CmdletBinding()]
@@ -71,7 +72,7 @@ Function Set-AzureSearchObject {
 
 try {
     if ($null -ne $ConfigDataFolderPath) {
-        [System.IO.DirectoryInfo]$moduleDir = Join-Path -Path $WorkingDirectory -ChildPath "templates/powershell/modules/ps-helpers"
+        [System.IO.DirectoryInfo]$moduleDir = $PSHelperDirectory
         Write-Debug "${functionName}:moduleDir.FullName=$($moduleDir.FullName)"
         Import-Module $moduleDir.FullName -Force
         
