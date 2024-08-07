@@ -469,16 +469,6 @@ stages:
                             Version: $(appVersion)
                             FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
 
-                    - ${{ if eq(parameters.deployConfigOnly, false )}}:
-                      - template: /templates/steps/common-app-cd.yaml
-                        parameters:
-                            serviceName: ${{ parameters.serviceName }}
-                            environmentObj: ${{ deploymentEnv }}
-                            appBuildConfig: ${{ parameters.appBuildConfig }}
-                            appDeployConfig: ${{ parameters.appDeployConfig }}
-                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                            stepsToSkip: ${{ parameters.stepsToSkip }}
-
                     - task: AzureCLI@2
                       displayName: 'AI Search Indexes'
                       inputs:
@@ -493,6 +483,16 @@ stages:
                         addSpnToEnvironment: true
                         workingDirectory: '$(Pipeline.Workspace)/s'
 
+                    - ${{ if eq(parameters.deployConfigOnly, false )}}:
+                      - template: /templates/steps/common-app-cd.yaml
+                        parameters:
+                            serviceName: ${{ parameters.serviceName }}
+                            environmentObj: ${{ deploymentEnv }}
+                            appBuildConfig: ${{ parameters.appBuildConfig }}
+                            appDeployConfig: ${{ parameters.appDeployConfig }}
+                            PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                            stepsToSkip: ${{ parameters.stepsToSkip }}
+                    
                       - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
                         - task: PowerShell@2
                           displayName: 'Use ACR image timestamp to verify Flux Helm release'
