@@ -3,7 +3,10 @@
 Deploy Search Indexes to Azure Search Service
 .DESCRIPTION
 Deploy Search Indexes to Azure Search Service
-
+.PARAMETER ServiceName
+Mandatory. Name of the Service
+.PARAMETER TeamName
+Mandatory. Name of the Team
 .PARAMETER SearchServiceName
 Mandatory. Name of the Search Service
 .PARAMETER ConfigDataFolderPath
@@ -11,12 +14,16 @@ Optional. Search service configuration data folder path
 .PARAMETER PSHelperDirectory
 Optional. Path to the PS Helper module directory
 .EXAMPLE
-.\Deploy-SearchIndexes.ps1  -SearchServiceName <SearchServiceName> -ConfigDataFolderPath <ConfigDataFolderPath> -PSHelperDirectory -<PSHelperDirectory> 
+.\Deploy-SearchIndexes.ps1  -ServiceName <ServiceName> -TeamName <TeamName> -SearchServiceName <SearchServiceName> -ConfigDataFolderPath <ConfigDataFolderPath> -PSHelperDirectory -<PSHelperDirectory> 
 #> 
 
 
 [CmdletBinding()]
 param(
+    [Parameter(Mandatory)]
+    [string]$ServiceName,
+    [Parameter(Mandatory)]
+    [string]$TeamName,
     [Parameter(Mandatory)]
     [string]$SearchServiceName,
     [Parameter(Mandatory)]
@@ -43,6 +50,8 @@ if ($enableDebug) {
 }
 
 Write-Host "${functionName} started at $($startTime.ToString('u'))"
+Write-Debug "${functionName}:ServiceName=$ServiceName"
+Write-Debug "${functionName}:TeamName=$TeamName"
 Write-Debug "${functionName}:searchServiceName=$SearchServiceName"
 Write-Debug "${functionName}:ConfigDataFolderPath=$ConfigDataFolderPath"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
@@ -84,7 +93,11 @@ try {
             if (Test-Path -Path "$($ConfigDataFolderPath)/$dir") {
                 $Files = Get-ChildItem -Path "$($ConfigDataFolderPath)/$dir"
                 ForEach ($File in $Files) {
-                    Set-AzureSearchObject -Type $dir -Name $($File.Basename) -Source $($File.FullName) -SearchServiceName $SearchServiceName -Token $accessToken
+                    if($($File.Basename) -match $TeamName) {
+                        Set-AzureSearchObject -Type $dir -Name $($File.Basename) -Source $($File.FullName) -SearchServiceName $SearchServiceName -Token $accessToken
+                    }else{
+                        Write-Host "Skipping $($File.Basename) as it does not match the team name $TeamName"
+                    }                    
                 }
             }
             else {
