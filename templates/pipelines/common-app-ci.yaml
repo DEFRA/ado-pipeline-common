@@ -435,6 +435,20 @@ stages:
                         path: s/ 
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
+                      - task: AzureCLI@2
+                        displayName: 'AI Search Indexes'
+                        inputs:
+                          azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                          scriptType: pscore
+                          scriptLocation: scriptPath
+                          scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Deploy-SearchIndexes.ps1'
+                          arguments: >
+                            -SearchServiceName '${{ deploymentEnv.searchServiceName }}'
+                            -ConfigDataFolderPath '$(Pipeline.Workspace)/s/aisearch'
+                            -PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                          failOnStandardError: false
+                          addSpnToEnvironment: true
+                          workingDirectory: '$(Pipeline.Workspace)/s'
                       - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
                         - template: /templates/steps/generate-flux-manifest.yaml
                           parameters:
@@ -469,20 +483,7 @@ stages:
                             Version: $(appVersion)
                             FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
 
-                    - task: AzureCLI@2
-                      displayName: 'AI Search Indexes'
-                      inputs:
-                        serviceConnection: ${{ deploymentEnv.serviceConnection }}
-                        scriptType: pscore
-                        scriptLocation: scriptPath
-                        scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Deploy-SearchIndexes.ps1'
-                        arguments: >
-                          -SearchServiceName '${{ deploymentEnv.searchServiceName }}'
-                          -ConfigDataFolderPath '$(Pipeline.Workspace)/s/aisearch'
-                          -PSHelperDirectory: ${{ variables.PSHelperDirectory }}
-                        failOnStandardError: false
-                        addSpnToEnvironment: true
-                        workingDirectory: '$(Pipeline.Workspace)/s'
+                    
 
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
