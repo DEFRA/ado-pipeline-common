@@ -108,7 +108,7 @@ stages:
             displayName: Test App            
             name: TestApp           
 
-          - task: PublishCodeCoverageResults@1
+          - task: PublishCodeCoverageResults@2
             inputs:
               codeCoverageTool: 'Cobertura'
               summaryFileLocation: '$(Pipeline.Workspace)/s${{ parameters.appBuildConfig.appPath }}/${{ parameters.sonarConfig.nodejs.summaryFileLocation }}'
