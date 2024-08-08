@@ -56,6 +56,27 @@ Write-Debug "${functionName}:searchServiceName=$SearchServiceName"
 Write-Debug "${functionName}:ConfigDataFolderPath=$ConfigDataFolderPath"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
+Function Set-RBAC {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)][string]$ServiceName,
+        [Parameter(Mandatory = $true)][string]$TeamName,
+        [Parameter(Mandatory = $true)][string]$SearchServiceName,
+        [Parameter(Mandatory = $true)][string]$IndexName,
+        [Parameter(Mandatory = $true)][string]$Role,
+    )   
+    # get MI id
+    $miId = az identity list --group $ServiceName --query objectId -o tsv
+    if($Role -eq "Contributor"){
+        $role = "Search Index Data Contributor"
+    }else if($Role -eq "Reader"){   
+        $role = "Search Index Data Reader"
+    }
+    # index resource url
+    $indexResourceId = "/subscriptions/55f3b8c6-6800-41c7-a40d-2adb5e4e1bd1/resourceGroups/SNDADPINFRG1401/providers/Microsoft.Search/searchServices/sndadpinfssv1401/indexes/$IndexName"
+    az role assignment create --assignee $miId --role $role --scope $indexResourceId
+}
+
 Function Set-AzureSearchObject {
     [CmdletBinding()]
     param(
@@ -94,7 +115,7 @@ try {
                 $Files = Get-ChildItem -Path "$($ConfigDataFolderPath)/$dir"
                 ForEach ($File in $Files) {
                     if($($File.Basename) -match $TeamName) {
-                        Set-AzureSearchObject -Type $dir -Name $($File.Basename) -Source $($File.FullName) -SearchServiceName $SearchServiceName -Token $accessToken
+                        Set-AzureSearchObject -Type $dir -Name $($File.Basename) -Source $($File.FullName) -SearchServiceName $SearchServiceName -Token $accessToken                        
                     }else{
                         Write-Host "Skipping $($File.Basename) as it does not match the team name $TeamName"
                     }                    
@@ -103,6 +124,15 @@ try {
             else {
                 Write-Host "No $dir found in $ConfigDataFolderPath"
             }
+        }
+
+        if (Test-Path -Path "$($ConfigDataFolderPath)/access.json") {
+            $accessList = Get-Content -Raw -Path "$($ConfigDataFolderPath)/access.json" | ConvertFrom-Json
+            $accessList | ForEach-Object {
+                Set-RBAC -ServiceName $ServiceName -TeamName $TeamName -SearchServiceName $SearchServiceName -IndexName $_.name -Role $_.role
+            }
+        }else{
+            Write-Host "No access.json found in $ConfigDataFolderPath"
         }
     }
 
