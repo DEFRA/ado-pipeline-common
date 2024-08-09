@@ -68,7 +68,7 @@ Function Set-RBAC {
         [Parameter(Mandatory = $true)][string]$TeamName,
         [Parameter(Mandatory = $true)][string]$SearchServiceName,
         [Parameter(Mandatory = $true)][string]$ServiceResourceGroup,
-        [Parameter(Mandatory = $true)][string]$AccessList
+        [Parameter(Mandatory = $true)][array]$AccessList
     )   
     $teamRG = $ServiceResourceGroup + "-" + $TeamName
     $miPrincipalId = az identity list -g $teamRG --query "[?contains(name,'$ServiceName')].{principalId: principalId}" | ConvertFrom-Json
