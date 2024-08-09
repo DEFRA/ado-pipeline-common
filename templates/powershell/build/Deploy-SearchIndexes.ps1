@@ -139,7 +139,7 @@ try {
                 }
             }
             else {
-                throw "No $dir found in $ConfigDataFolderPath"
+                Write-Host "No $dir found in $ConfigDataFolderPath"
             }
         }
 
