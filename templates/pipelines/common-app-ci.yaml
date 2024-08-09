@@ -559,7 +559,7 @@ stages:
                     
           - ${{ if and(contains(parameters.appTestConfig.postDeployTest.envToTest,deploymentEnv.name), ne(parameters.appDeployConfig.aisearch, ''), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - deployment: aisearch${{ deploymentEnv.name }}
-              displayName: 'Ai Search Deploy'
+              displayName: 'AI Search Deploy'
               dependsOn: WaitForFluxRelease
               environment: ${{ deploymentEnv.name }}
               strategy:
@@ -582,6 +582,7 @@ stages:
                             -ServiceName '${{ parameters.serviceName }}'
                             -TeamName '${{ parameters.teamName }}'
                             -SearchServiceName '${{ deploymentEnv.searchServiceName }}'
+                            -ServiceResourceGroup '${{ deploymentEnv.serviceResourceGroup }}'
                             -ConfigDataFolderPath '$(Pipeline.Workspace)/s/aisearch'
                             -PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                           failOnStandardError: false

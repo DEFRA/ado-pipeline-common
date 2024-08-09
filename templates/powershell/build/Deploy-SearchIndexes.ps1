@@ -9,12 +9,14 @@ Mandatory. Name of the Service
 Mandatory. Name of the Team
 .PARAMETER SearchServiceName
 Mandatory. Name of the Search Service
+.PARAMETER ServiceResourceGroup
+Mandatory. Name of the Resource Group
 .PARAMETER ConfigDataFolderPath
 Optional. Search service configuration data folder path
 .PARAMETER PSHelperDirectory
 Optional. Path to the PS Helper module directory
 .EXAMPLE
-.\Deploy-SearchIndexes.ps1  -ServiceName <ServiceName> -TeamName <TeamName> -SearchServiceName <SearchServiceName> -ConfigDataFolderPath <ConfigDataFolderPath> -PSHelperDirectory -<PSHelperDirectory> 
+.\Deploy-SearchIndexes.ps1  -ServiceName <ServiceName> -TeamName <TeamName> -SearchServiceName <SearchServiceName> -ServiceResourceGroup <ServiceResourceGroup> -ConfigDataFolderPath <ConfigDataFolderPath> -PSHelperDirectory -<PSHelperDirectory> 
 #> 
 
 
@@ -26,6 +28,8 @@ param(
     [string]$TeamName,
     [Parameter(Mandatory)]
     [string]$SearchServiceName,
+    [Parameter(Mandatory)]
+    [string]$ServiceResourceGroup,    
     [Parameter(Mandatory)]
     [string]$ConfigDataFolderPath,
     [Parameter(Mandatory)]
@@ -53,6 +57,7 @@ Write-Host "${functionName} started at $($startTime.ToString('u'))"
 Write-Debug "${functionName}:ServiceName=$ServiceName"
 Write-Debug "${functionName}:TeamName=$TeamName"
 Write-Debug "${functionName}:searchServiceName=$SearchServiceName"
+Write-Debug "${functionName}:ServiceResourceGroup=$ServiceResourceGroup"
 Write-Debug "${functionName}:ConfigDataFolderPath=$ConfigDataFolderPath"
 Write-Debug "${functionName}:PSHelperDirectory=$PSHelperDirectory"
 
@@ -62,19 +67,37 @@ Function Set-RBAC {
         [Parameter(Mandatory = $true)][string]$ServiceName,
         [Parameter(Mandatory = $true)][string]$TeamName,
         [Parameter(Mandatory = $true)][string]$SearchServiceName,
-        [Parameter(Mandatory = $true)][string]$IndexName,
-        [Parameter(Mandatory = $true)][string]$Role,
+        [Parameter(Mandatory = $true)][string]$ServiceResourceGroup,
+        [Parameter(Mandatory = $true)][string]$AccessList,        
     )   
     # get MI id
-    $miId = az identity list --group $ServiceName --query objectId -o tsv
-    if($Role -eq "Contributor"){
-        $role = "Search Index Data Contributor"
-    }else if($Role -eq "Reader"){   
-        $role = "Search Index Data Reader"
+    $teamRG = $ServiceResourceGroup + "-" + $TeamName
+    $miPrincipalId = az identity list -g $teamRG --query "[?contains(name,'$ServiceName')].{principalId: principalId}" | ConvertFrom-Json
+    if($miPrincipalId -eq $null){
+        Write-Error "Managed Identity not found for $ServiceName in $teamRG"
+        return
     }
+    
+
     # index resource url
-    $indexResourceId = "/subscriptions/55f3b8c6-6800-41c7-a40d-2adb5e4e1bd1/resourceGroups/SNDADPINFRG1401/providers/Microsoft.Search/searchServices/sndadpinfssv1401/indexes/$IndexName"
-    az role assignment create --assignee $miId --role $role --scope $indexResourceId
+    $searchservice= az search service show -n $SearchServiceName -g $ServiceResourceGroup | ConvertFrom-Json
+    if($searchservice -eq $null){
+        Write-Error "Search Service not found in $ServiceResourceGroup"
+        return
+    }
+    $AccessList | ForEach-Object {
+                    $indexResourceId = $searchservice.id + "/indexes/" + $_.name
+                    $Role = $_.role
+                    if($Role -eq "Contributor"){
+                        $role = "Search Index Data Contributor"
+                    }elseif($Role -eq "Reader"){
+                        $role = "Search Index Data Reader"
+                    }else{
+                        Write-Error "Invalid Role $Role"
+                        return
+                    }  
+                    az role assignment create --assignee-object-id $miPrincipalId.principalId --assignee-principal-type ServicePrincipal --role $Role --scope $indexResourceId
+                }    
 }
 
 Function Set-AzureSearchObject {
@@ -128,11 +151,13 @@ try {
 
         if (Test-Path -Path "$($ConfigDataFolderPath)/access.json") {
             $accessList = Get-Content -Raw -Path "$($ConfigDataFolderPath)/access.json" | ConvertFrom-Json
-            $accessList | ForEach-Object {
-                Set-RBAC -ServiceName $ServiceName -TeamName $TeamName -SearchServiceName $SearchServiceName -IndexName $_.name -Role $_.role
+            if($accessList -eq $null){  
+                Set-RBAC -ServiceName $ServiceName -TeamName $TeamName -SearchServiceName $SearchServiceName -ServiceResourceGroup $ServiceResourceGroup -AccessList $accessList
+            }else{
+                Write-Error "No access list found in access.json"
             }
         }else{
-            Write-Host "No access.json found in $ConfigDataFolderPath"
+            Write-Error "No access.json found in $ConfigDataFolderPath"
         }
     }
 
