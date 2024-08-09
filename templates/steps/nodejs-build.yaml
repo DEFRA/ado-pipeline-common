@@ -23,7 +23,7 @@ steps:
     echo "##vso[task.setvariable variable=COOKIE_PASSWORD;]$RANDOM"
   displayName: 'Generate Random COOKIE_PASSWORD for test'
 
-- task: Npm@1.238.1
+- task: Npm@1
   displayName: 'npm ci'
   inputs:
     command: custom
@@ -33,7 +33,7 @@ steps:
       customRegistry: useFeed
       customFeed: ${{ parameters.packageFeedName }}
            
-- task: Npm@1.238.1
+- task: Npm@1
   displayName: 'npm audit'
   inputs:
     command: custom
@@ -41,7 +41,7 @@ steps:
     customCommand: 'audit -audit-level=${{ parameters.failOnThreshold }} ' 
   continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
-- task: Npm@1.238.1
+- task: Npm@1
   displayName: 'npm lint'
   inputs:
     command: custom
@@ -49,14 +49,14 @@ steps:
     customCommand: 'run --if-present test:lint'
   continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
-- task: Npm@1.238.1
+- task: Npm@1
   displayName: 'npm build'
   inputs:
     command: custom
     verbose: false
     customCommand: 'run --if-present build'
 
-- task: Npm@1.238.1
+- task: Npm@1
   displayName: 'npm unit test'
   inputs:
     command: custom
