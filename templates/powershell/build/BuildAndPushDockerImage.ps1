@@ -205,7 +205,7 @@ function Invoke-DockerBuildAndPush {
     }
 }
 
-function Update-DbMigrationDockerfileVariables {
+function Update-DockerfileVariables {
     param(
         [Parameter(Mandatory)]
         [string]$DockerFileName,
@@ -313,7 +313,7 @@ try {
     if (Test-Path $dbMigrationDockerFileName -PathType Leaf) {
 
         Write-Host "Processing DB Migration Docker file: $dbMigrationDockerFileName"
-        Update-DbMigrationDockerfileVariables -DockerFileName $dbMigrationDockerFileName -Variables @{adpSharedAcrName = $BaseImagesAcrName}
+        Update-DockerfileVariables -DockerFileName $dbMigrationDockerFileName -Variables @{adpSharedAcrName = $BaseImagesAcrName}
 
         [string]$dbMigrationTagName = $AcrRepoName + "-dbmigration:" + $ImageVersion
         [string]$AcrDbMigrationTagName = $AcrName + ".azurecr.io/image/" + $dbMigrationTagName
@@ -350,6 +350,51 @@ try {
     } 
     else {
         Write-Host "No DB Migration Docker file exist."
+    }
+
+
+    #AI Search Deploy Image
+    [string]$aiSearchDockerFileName = "ai-search.Dockerfile"
+    if (Test-Path $aiSearchDockerFileName -PathType Leaf) {
+
+        Write-Host "Processing AI Search Docker file: $aiSearchDockerFileName"
+        Update-DockerfileVariables -DockerFileName $aiSearchDockerFileName -Variables @{adpSharedAcrName = $BaseImagesAcrName }
+
+        [string]$aiSearchTagName = $AcrRepoName + "-aisearch:" + $ImageVersion
+        [string]$AcrAISearchTagName = $AcrName + ".azurecr.io/image/" + $aiSearchTagName
+        Write-Debug "${functionName}:AI Search Docker Image=$aiSearchTagName"
+        Write-Debug "${functionName}:AcrAISearchTagName=$AcrAISearchTagName"
+    
+        [string]$searchDockerCacheFilePath = $ImageCachePath + "/search-cache.tar"
+        if (!(Test-Path $ImageCachePath -PathType Container)) {
+            New-Item -ItemType Directory -Force -Path $ImageCachePath
+        }
+        
+        if ( $Command.ToLower() -eq 'build' ) {
+            Invoke-DockerBuild -DockerCacheFilePath $searchDockerCacheFilePath `
+                -TagName $aiSearchTagName -AcrName $AcrName `
+                -DockerFileName $aiSearchDockerFileName  -WorkingDirectory $WorkingDirectory `
+                -BaseImagesAcrName $BaseImagesAcrName
+        }
+        elseif ( $Command.ToLower() -eq 'push' ) {
+            Invoke-DockerPush -DockerCacheFilePath $searchDockerCacheFilePath `
+                -TagName $aiSearchTagName -AcrName $AcrName -AcrTagName $AcrAISearchTagName `
+                -DockerFileName $aiSearchDockerFileName -WorkingDirectory $WorkingDirectory `
+                -BaseImagesAcrName $BaseImagesAcrName
+        }
+        else {
+            Invoke-DockerBuildAndPush -DockerCacheFilePath $searchDockerCacheFilePath `
+                -TagName $aiSearchTagName -AcrName $AcrName -AcrTagName $AcrAISearchTagName `
+                -DockerFileName $aiSearchDockerFileName -WorkingDirectory $WorkingDirectory `
+                -BaseImagesAcrName $BaseImagesAcrName
+        }    
+        if ($LastExitCode -ne 0) {
+            Write-Host "##vso[task.complete result=Failed;]DONE"
+            $exitCode = -2
+        }  
+    } 
+    else {
+        Write-Host "No AI Search Docker file exist."
     }
 
     $exitCode = 0          

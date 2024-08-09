@@ -467,7 +467,7 @@ stages:
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
                             Version: $(appVersion)
-                            FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
+                            FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}                    
 
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
@@ -478,7 +478,7 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
-
+                    
                       - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
                         - task: PowerShell@2
                           displayName: 'Use ACR image timestamp to verify Flux Helm release'
@@ -554,11 +554,43 @@ stages:
                       "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
                       }
                     waitForCompletion: 'true'
+                    
+          - ${{ if and(contains(parameters.appTestConfig.postDeployTest.envToTest,deploymentEnv.name), ne(parameters.appDeployConfig.aisearch, ''), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
+            - deployment: aisearch${{ deploymentEnv.name }}
+              displayName: 'Deploy AI Search'
+              dependsOn: WaitForFluxRelease
+              environment: ${{ deploymentEnv.name }}
+              strategy:
+                runOnce:
+                  deploy:          
+                    steps:                      
+                      - checkout: Self
+                        path: s/ 
+                      - checkout: PipelineCommon
+                        path: s/ADO-Pipeline-Common
+
+                      - task: AzureCLI@2
+                        displayName: 'AI Search Indexes'
+                        inputs:
+                          azureSubscription: ${{ deploymentEnv.serviceConnection }}
+                          scriptType: pscore
+                          scriptLocation: scriptPath
+                          scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Deploy-SearchIndexes.ps1'
+                          arguments: >
+                            -ServiceName '${{ parameters.serviceName }}'
+                            -TeamName '${{ parameters.teamName }}'
+                            -SearchServiceName '${{ deploymentEnv.searchServiceName }}'
+                            -ServiceResourceGroup '${{ deploymentEnv.serviceResourceGroup }}'
+                            -ConfigDataFolderPath '$(Pipeline.Workspace)/s/aisearch'
+                            -PSHelperDirectory: ${{ variables.PSHelperDirectory }}
+                          failOnStandardError: false
+                          addSpnToEnvironment: true
+                          workingDirectory: '$(Pipeline.Workspace)/s'
 
           - ${{ if and(contains(parameters.appTestConfig.postDeployTest.envToTest,deploymentEnv.name), not(contains(parameters.stepsToSkip, 'PostDeploymentTests')), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - deployment: PostDeploymentTests${{ deploymentEnv.name }}
               displayName: 'Post Deployment Tests'
-              dependsOn: WaitForFluxRelease
+              dependsOn: aisearch${{ deploymentEnv.name }}
               environment: ${{ deploymentEnv.name }}
               strategy:
                 runOnce:
