@@ -37,7 +37,6 @@ steps:
           sonar.cs.vstest.reportsPaths=$(Agent.TempDirectory)/*.trx
           sonar.cs.vscoveragexml.reportsPaths=$(Agent.TempDirectory)/**/*.coverage
           sonar.exclusions=**/obj/**,**/*.Tests.csproj,**/Migrations/*
-          sonar.qualitygate.wait=true
       ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
         extraProperties: |
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
@@ -69,6 +68,7 @@ steps:
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+          sonar.qualitygate.wait=true
 
     ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'java') }}:
       scannerMode: 'Other'
