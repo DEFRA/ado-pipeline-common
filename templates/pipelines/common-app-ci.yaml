@@ -559,7 +559,7 @@ stages:
                     
           - ${{ if and(contains(parameters.appTestConfig.postDeployTest.envToTest,deploymentEnv.name), ne(parameters.appDeployConfig.aisearch, ''), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - deployment: aisearch${{ deploymentEnv.name }}
-              displayName: 'AI Search Deploy'
+              displayName: 'Deploy AI Search'
               dependsOn: WaitForFluxRelease
               environment: ${{ deploymentEnv.name }}
               strategy:

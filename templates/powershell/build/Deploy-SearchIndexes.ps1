@@ -29,7 +29,7 @@ param(
     [Parameter(Mandatory)]
     [string]$SearchServiceName,
     [Parameter(Mandatory)]
-    [string]$ServiceResourceGroup,    
+    [string]$ServiceResourceGroup,
     [Parameter(Mandatory)]
     [string]$ConfigDataFolderPath,
     [Parameter(Mandatory)]
@@ -68,9 +68,8 @@ Function Set-RBAC {
         [Parameter(Mandatory = $true)][string]$TeamName,
         [Parameter(Mandatory = $true)][string]$SearchServiceName,
         [Parameter(Mandatory = $true)][string]$ServiceResourceGroup,
-        [Parameter(Mandatory = $true)][string]$AccessList,        
+        [Parameter(Mandatory = $true)][string]$AccessList
     )   
-    # get MI id
     $teamRG = $ServiceResourceGroup + "-" + $TeamName
     $miPrincipalId = az identity list -g $teamRG --query "[?contains(name,'$ServiceName')].{principalId: principalId}" | ConvertFrom-Json
     if($miPrincipalId -eq $null){
@@ -78,8 +77,6 @@ Function Set-RBAC {
         return
     }
     
-
-    # index resource url
     $searchservice= az search service show -n $SearchServiceName -g $ServiceResourceGroup | ConvertFrom-Json
     if($searchservice -eq $null){
         Write-Error "Search Service not found in $ServiceResourceGroup"
