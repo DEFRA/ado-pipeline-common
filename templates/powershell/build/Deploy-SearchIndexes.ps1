@@ -73,14 +73,12 @@ Function Set-RBAC {
     $teamRG = $ServiceResourceGroup + "-" + $TeamName
     $miPrincipalId = az identity list -g $teamRG --query "[?contains(name,'$ServiceName')].{principalId: principalId}" | ConvertFrom-Json
     if($miPrincipalId -eq $null){
-        Write-Error "Managed Identity not found for $ServiceName in $teamRG"
-        return
+        throw "Managed Identity not found for $ServiceName in $teamRG"
     }
     
     $searchservice= az search service show -n $SearchServiceName -g $ServiceResourceGroup | ConvertFrom-Json
     if($searchservice -eq $null){
-        Write-Error "Search Service not found in $ServiceResourceGroup"
-        return
+        throw "Search Service not found in $ServiceResourceGroup"
     }
     $AccessList | ForEach-Object {
                     $indexResourceId = $searchservice.id + "/indexes/" + $_.name
@@ -90,8 +88,7 @@ Function Set-RBAC {
                     }elseif($Role -eq "Reader"){
                         $role = "Search Index Data Reader"
                     }else{
-                        Write-Error "Invalid Role $Role"
-                        return
+                        throw "Invalid Role $Role"
                     }  
                     az role assignment create --assignee-object-id $miPrincipalId.principalId --assignee-principal-type ServicePrincipal --role $Role --scope $indexResourceId
                 }    
@@ -142,7 +139,7 @@ try {
                 }
             }
             else {
-                Write-Host "No $dir found in $ConfigDataFolderPath"
+                throw "No $dir found in $ConfigDataFolderPath"
             }
         }
 
@@ -151,10 +148,10 @@ try {
             if($accessList -ne $null){  
                 Set-RBAC -ServiceName $ServiceName -TeamName $TeamName -SearchServiceName $SearchServiceName -ServiceResourceGroup $ServiceResourceGroup -AccessList $accessList
             }else{
-                Write-Error "No access list found in access.json"
+                throw "No access list found in access.json"
             }
         }else{
-            Write-Error "No access.json found in $ConfigDataFolderPath"
+            throw "No access.json found in $ConfigDataFolderPath"
         }
     }
 
