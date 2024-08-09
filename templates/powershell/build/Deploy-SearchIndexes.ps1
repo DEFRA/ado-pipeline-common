@@ -148,7 +148,7 @@ try {
 
         if (Test-Path -Path "$($ConfigDataFolderPath)/access.json") {
             $accessList = Get-Content -Raw -Path "$($ConfigDataFolderPath)/access.json" | ConvertFrom-Json
-            if($accessList -eq $null){  
+            if($accessList -ne $null){  
                 Set-RBAC -ServiceName $ServiceName -TeamName $TeamName -SearchServiceName $SearchServiceName -ServiceResourceGroup $ServiceResourceGroup -AccessList $accessList
             }else{
                 Write-Error "No access list found in access.json"
