@@ -85,3 +85,4 @@ steps:
           sonar.pullrequest.key=$(System.PullRequest.PullRequestNumber)
           sonar.pullrequest.branch=$(System.PullRequest.SourceBranch)
           sonar.pullrequest.base=$(System.PullRequest.TargetBranch)
+          sonar.qualitygate.wait=true
