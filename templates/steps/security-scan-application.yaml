@@ -29,8 +29,8 @@ steps:
         testType: code
         codeSeverityThreshold: 'high'
       ${{ else  }}:        
-        failOnThreshold: '${{ parameters.failOnThreshold }}'
+        severityThreshold: '${{ parameters.failOnThreshold }}'
         ${{ if ne(projectManifestPath, '') }}:
-          targetFile: '${{ projectManifestPath }}'        
+          targetFile: '${{ projectManifestPath }}'
     enabled: true
     continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
