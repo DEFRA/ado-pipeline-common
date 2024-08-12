@@ -29,9 +29,7 @@ steps:
         testType: code
         codeSeverityThreshold: 'high'
       ${{ else  }}:
-        testType: 'app'
-        failOnThreshold: critical
-        severityThreshold: 'low'
+        failOnThreshold: 'critical'
         ${{ if ne(projectManifestPath, '') }}:
           targetFile: '${{ projectManifestPath }}'        
     enabled: true
