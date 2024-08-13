@@ -13,6 +13,9 @@ parameters:
     default: ''         
   - name: appBuildConfig
     type: object
+  - name: snykPolicyFilePath
+    type: string
+    default: './.snyk'    
 
 steps:
 - ${{ each projectManifestPath in split(parameters.manifestPath, ';') }}:
@@ -25,6 +28,7 @@ steps:
       monitorOnBuild: false
       projectName: '${{ parameters.acrRepoName }}'
       organization: '${{ parameters.snykOrganizationName }}'
+      additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }}'
       ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'java') }}:
         testType: code
         codeSeverityThreshold: 'high'
