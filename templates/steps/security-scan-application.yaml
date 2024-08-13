@@ -26,15 +26,16 @@ steps:
       testDirectory: '$(Build.SourcesDirectory)'      
       failOnIssues: true
       monitorOnBuild: false
+      failOnThreshold: '${{ parameters.failOnThreshold }}'
       projectName: '${{ parameters.acrRepoName }}'
       organization: '${{ parameters.snykOrganizationName }}'
-      additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }} --fail-fast'
+      additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }}'
       ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'java') }}:
         testType: code
         codeSeverityThreshold: 'high'
       ${{ else  }}:
         severityThreshold: ${{ parameters.failOnThreshold }}
         ${{ if ne(projectManifestPath, '') }}:
-          targetFile: '${{ projectManifestPath }}'        
+          targetFile: '${{ projectManifestPath }}'
     enabled: true
     continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
