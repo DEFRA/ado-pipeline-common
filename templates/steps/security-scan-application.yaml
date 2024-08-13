@@ -28,7 +28,7 @@ steps:
       monitorOnBuild: false
       projectName: '${{ parameters.acrRepoName }}'
       organization: '${{ parameters.snykOrganizationName }}'
-      additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }}'
+      additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }} --fail-fast'
       ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'java') }}:
         testType: code
         codeSeverityThreshold: 'high'
