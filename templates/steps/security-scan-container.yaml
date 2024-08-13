@@ -28,8 +28,9 @@ steps:
     monitorOnBuild: false
     failOnIssues: ${{ eq(variables['Build.Reason'], 'PullRequest') }}
     projectName: '${{ parameters.acrRepoName }}'
-    organization: '${{ parameters.snykOrganizationName }}'    
+    organization: '${{ parameters.snykOrganizationName }}'
     failOnThreshold: '${{ parameters.failOnThreshold }}'
+    severityThreshold: ${{ parameters.failOnThreshold }}
     additionalArguments: '--policy-path=${{ parameters.snykPolicyFilePath }} --exclude-base-image-vulns'
   enabled: true
   continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
