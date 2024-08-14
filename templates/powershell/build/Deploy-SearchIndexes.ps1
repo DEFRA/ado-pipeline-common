@@ -72,26 +72,28 @@ Function Set-RBAC {
     )   
     $teamRG = $ServiceResourceGroup + "-" + $TeamName
     $miPrincipalId = az identity list -g $teamRG --query "[?contains(name,'$ServiceName')].{principalId: principalId}" | ConvertFrom-Json
-    if($miPrincipalId -eq $null){
+    if ($null -eq $miPrincipalId ) {
         throw "Managed Identity not found for $ServiceName in $teamRG"
     }
     
-    $searchservice= az search service show -n $SearchServiceName -g $ServiceResourceGroup | ConvertFrom-Json
-    if($searchservice -eq $null){
+    $searchservice = az search service show -n $SearchServiceName -g $ServiceResourceGroup | ConvertFrom-Json
+    if ($null -eq $searchservice ) {
         throw "Search Service not found in $ServiceResourceGroup"
     }
     $AccessList | ForEach-Object {
-                    $indexResourceId = $searchservice.id + "/indexes/" + $_.name
-                    $Role = $_.role
-                    if($Role -eq "Contributor"){
-                        $role = "Search Index Data Contributor"
-                    }elseif($Role -eq "Reader"){
-                        $role = "Search Index Data Reader"
-                    }else{
-                        throw "Invalid Role $Role"
-                    }  
-                    az role assignment create --assignee-object-id $miPrincipalId.principalId --assignee-principal-type ServicePrincipal --role $Role --scope $indexResourceId
-                }    
+        $indexResourceId = $searchservice.id + "/indexes/" + $_.name
+        $Role = $_.role
+        if ($Role -eq "Contributor") {
+            $role = "Search Index Data Contributor"
+        }
+        elseif ($Role -eq "Reader") {
+            $role = "Search Index Data Reader"
+        }
+        else {
+            throw "Invalid Role $Role"
+        }  
+        az role assignment create --assignee-object-id $miPrincipalId.principalId --assignee-principal-type ServicePrincipal --role $Role --scope $indexResourceId
+    }    
 }
 
 Function Set-AzureSearchObject {
@@ -131,9 +133,10 @@ try {
             if (Test-Path -Path "$($ConfigDataFolderPath)/$dir") {
                 $Files = Get-ChildItem -Path "$($ConfigDataFolderPath)/$dir"
                 ForEach ($File in $Files) {
-                    if($($File.Basename) -match $TeamName) {
+                    if ($($File.Basename) -match $TeamName) {
                         Set-AzureSearchObject -Type $dir -Name $($File.Basename) -Source $($File.FullName) -SearchServiceName $SearchServiceName -Token $accessToken                        
-                    }else{
+                    }
+                    else {
                         Write-Host "Skipping $($File.Basename) as it does not match the team name $TeamName"
                     }                    
                 }
@@ -145,12 +148,14 @@ try {
 
         if (Test-Path -Path "$($ConfigDataFolderPath)/access.json") {
             $accessList = Get-Content -Raw -Path "$($ConfigDataFolderPath)/access.json" | ConvertFrom-Json
-            if($accessList -ne $null){  
+            if ($null -ne $accessList) {  
                 Set-RBAC -ServiceName $ServiceName -TeamName $TeamName -SearchServiceName $SearchServiceName -ServiceResourceGroup $ServiceResourceGroup -AccessList $accessList
-            }else{
+            }
+            else {
                 throw "No access list found in access.json"
             }
-        }else{
+        }
+        else {
             throw "No access.json found in $ConfigDataFolderPath"
         }
     }
