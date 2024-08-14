@@ -185,7 +185,7 @@ stages:
           - ${{ if ne(parameters.sonarConfig.sonarConnection, '') }}:
             - template: /templates/steps/sonar-analysis.yaml
 
-          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+          - ${{ if eq(parameters.snykConfig.snykScanEnabled, true) }}:
             - template: /templates/steps/security-scan-application.yaml
               parameters:
                 snykConnection: ${{ parameters.snykConfig.snykConnection }}
@@ -238,7 +238,7 @@ stages:
               failOnStandardError: false
               workingDirectory: '$(Pipeline.Workspace)/s'
 
-          - ${{ if ne(parameters.snykConfig.snykConnection, '') }}:
+          - ${{ if eq(parameters.snykConfig.snykScanEnabled, true) }}:
             - template: /templates/steps/security-scan-container.yaml
               parameters:
                 snykConnection: ${{ parameters.snykConfig.snykConnection }}

@@ -38,7 +38,7 @@ steps:
   inputs:
     command: custom
     verbose: false
-    customCommand: 'audit -audit-level=${{ parameters.failOnThreshold }} ' 
+    customCommand: 'audit -audit-level=${{ parameters.failOnThreshold }} --omit=dev' 
   continueOnError: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
 
 - task: Npm@1
