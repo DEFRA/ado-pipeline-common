@@ -22,6 +22,17 @@ steps:
       $datestring=Get-Date -Format yyyyMMdd-hhmm
       Write-Output "##vso[task.setvariable variable=rundatestring]$datestring"
     displayName: Get Run Date String
+  - ${{ if and(contains(parameters.testEnvs.contractTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'contract')) }}:
+    - template: /templates/steps/tests/contract-test.yaml
+      parameters:
+        service : '${{ parameters.serviceName }}'
+        testDir : '$(Pipeline.Workspace)/s'
+        typeOfTest: 'PostDeploy'
+        testOutputDir: '$(Pipeline.Workspace)/s/test-output'
+        url: ${{ parameters.url }}
+        appBuildConfig: ${{ parameters.appBuildConfig }}
+        artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
+        continueOnError: ${{ parameters.continueOnError }}    
   - ${{ if and(contains(parameters.testEnvs.integrationTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'integration')) }}:
     - template: /templates/steps/tests/integration-test.yaml
       parameters:
