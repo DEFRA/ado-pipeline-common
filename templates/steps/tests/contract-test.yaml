@@ -39,7 +39,7 @@ steps:
         export PACT_BROKER_URL="$(PACT-BROKER-URL)"
         export PACT_BROKER_USERNAME="$(PACT-BROKER-USERNAME)"
         export PACT_BROKER_PASSWORD="$(PACT-BROKER-PASSWORD)"
-        docker-compose -f docker-compose.yaml -f docker-compose.contract.test.yaml -p "${{ parameters.service }}-test" up
+        docker-compose -f docker-compose.yaml -f docker-compose.contract.test.yaml -p "${{ parameters.service }}-test" up --abort-on-container-exit
       displayName: Contract Test - Run
       continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_contract_test_yaml, 'true')
@@ -51,7 +51,7 @@ steps:
         export PACT_BROKER_URL="$(PACT-BROKER-URL)"
         export PACT_BROKER_USERNAME="$(PACT-BROKER-USERNAME)"
         export PACT_BROKER_PASSWORD="$(PACT-BROKER-PASSWORD)"
-        docker-compose -f docker-compose.yaml -f docker-compose.contract.test.yaml -p "${{ parameters.service }}-test" up
+        docker-compose -f docker-compose.yaml -f docker-compose.contract.test.yaml -p "${{ parameters.service }}-test" up --abort-on-container-exit
       displayName: Contract Test - Run
       continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_contract_test_yaml, 'true')
