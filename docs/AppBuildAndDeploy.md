@@ -159,7 +159,8 @@ extends:
     sharedAcrConfig:                                        #Mandatory: Object which contains configration for helm lint and build
       name: 'ssvadpinfcr3401'
       serviceConnection: 'AZD-ADP-SSV3'
-    snykConfig:                                             #Optional: 
+    snykConfig:                                             #Mandatory: 
+      snykScanEnabled: true                                 #By default scan enabled
       snykConnection: 'Connection name'                     #Mandatory: Name of the connection in ADO
       snykOrganizationName: 'defra'                         #Mandatory: Name of snyk organization
       failOnThreshold: 'critical'                           #Mandatory: Threshold to fail the task if vulrarabilies identified
