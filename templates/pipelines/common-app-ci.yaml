@@ -5,7 +5,7 @@ parameters:
   type: string
 - name: deployFromFeature
   type: boolean
-  default: false  
+  default: false
 - name: deployConfigOnly
   type: boolean
   default: false
@@ -19,9 +19,9 @@ parameters:
   type: object
 - name: packageFeedName
   type: string
-  default: '' 
+  default: ''
 - name: appBuildConfig
-  type: object 
+  type: object
 - name: appTestConfig
   type: object
 - name: snykConfig
@@ -65,7 +65,7 @@ stages:
         vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
     jobs:
       - job: Initialise
-        displayName: 'Initialise'     
+        displayName: 'Initialise'
         steps:
           - checkout: self
             path: s/source
@@ -89,12 +89,12 @@ stages:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/Extract-CodeVersion.ps1'
               arguments: >
-                  -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }} 
-                  -ProjectPath "${{ parameters.appBuildConfig.projectPath }}" 
+                  -AppFrameworkType ${{ parameters.appBuildConfig.appFrameworkType }}
+                  -ProjectPath "${{ parameters.appBuildConfig.projectPath }}"
                   -PSHelperDirectory ${{ variables.PSHelperDirectory }}
               pwsh: true
               workingDirectory: '$(Pipeline.Workspace)/s/source'
-            displayName: Get App Version           
+            displayName: Get App Version
             name: GetAppVersion
 
           - task: PowerShell@2
@@ -110,7 +110,7 @@ stages:
             condition:  |
               and(
                   eq(variables['appVersion'], variables['initialVersion']),
-                  eq(variables.IsDefaultBranchBuild, true)   
+                  eq(variables.IsDefaultBranchBuild, true)
                   )
             displayName: Setup GitHub Repository Access
             name: SetupAzurePipelinesApp
@@ -125,7 +125,7 @@ stages:
               pwsh: true
 
       - job: Build
-        displayName: 'Build'  
+        displayName: 'Build'
         condition: |
           and(
             succeeded('Initialise'),
@@ -172,7 +172,7 @@ stages:
               parameters:
                 frameworkVersion: ${{ parameters.appBuildConfig.frameworkVersion }}
                 failOnThreshold: ${{ parameters.npmConfig.failOnThreshold }}
-                packageFeedName: ${{ parameters.packageFeedName }}  
+                packageFeedName: ${{ parameters.packageFeedName }}
                 sonarConfig: ${{ parameters.sonarConfig }}
 
           - ${{ if eq(parameters.appBuildConfig.appFrameworkType, 'java') }}:
@@ -201,7 +201,7 @@ stages:
           and(
             succeeded('Initialise'),
             ${{ eq(parameters.deployConfigOnly, false) }},
-            ${{ not(contains(parameters.stepsToSkip, 'BuildDockerImage')) }}   
+            ${{ not(contains(parameters.stepsToSkip, 'BuildDockerImage')) }}
           )
         dependsOn: [Initialise]
         variables:
@@ -223,14 +223,14 @@ stages:
           - task: AzureCLI@2
             displayName: 'Docker Build Image'
             inputs:
-              azureSubscription: ${{ parameters.appBuildConfig.serviceConnection }} 
+              azureSubscription: ${{ parameters.appBuildConfig.serviceConnection }}
               scriptType: pscore
               scriptLocation: scriptPath
               scriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/BuildAndPushDockerImage.ps1'
               arguments: >
-                 -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}' 
-                 -ImageVersion  $(appVersion) 
-                 -ImageCachePath '$(Pipeline.Workspace)/docker' 
+                 -AcrRepoName '${{ parameters.appBuildConfig.imageRepoName }}'
+                 -ImageVersion  $(appVersion)
+                 -ImageCachePath '$(Pipeline.Workspace)/docker'
                  -Command 'build'
                  -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                  -DockerFilePath ${{ coalesce(parameters.appBuildConfig.dockerFilePath, 'Dockerfile') }}
@@ -249,17 +249,17 @@ stages:
                 dockerfilePath: ${{ parameters.appBuildConfig.dockerfilePath }}
 
       - job: PreDeploymentTests
-        displayName: 'Pre Deployment Tests'  
+        displayName: 'Pre Deployment Tests'
         condition: |
           and(
             succeeded('BuildDockerImage'),
             ${{ eq(parameters.deployConfigOnly, false) }},
-            ${{ not(contains(parameters.stepsToSkip, 'PreDeploymentTests')) }} 
+            ${{ not(contains(parameters.stepsToSkip, 'PreDeploymentTests')) }}
           )
         dependsOn: [Initialise, BuildDockerImage]
         steps:
           - checkout: self
-            path: s/  
+            path: s/
           - checkout: PipelineCommon
             path: s/ADO-Pipeline-Common
 
@@ -277,7 +277,7 @@ stages:
         condition:  |
           and(
             succeeded(),
-            ${{ eq(parameters.deployConfigOnly, false) }}    
+            ${{ eq(parameters.deployConfigOnly, false) }}
           )
         dependsOn:  [Initialise]
         variables:
@@ -302,20 +302,20 @@ stages:
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/HelmLintAndPublish.ps1'
-              arguments: > 
-                -ChartVersion  $(appVersion) 
-                -ChartCachePath '$(Pipeline.Workspace)/helm' 
-                -Command 'lintandbuild' 
-                -PSHelperDirectory ${{ variables.PSHelperDirectory }} 
+              arguments: >
+                -ChartVersion  $(appVersion)
+                -ChartCachePath '$(Pipeline.Workspace)/helm'
+                -Command 'lintandbuild'
+                -PSHelperDirectory ${{ variables.PSHelperDirectory }}
                 -chartHomeDir '$(Pipeline.Workspace)/s/helm'
                 -ServiceName ${{ parameters.serviceName }}
                 -ApiBaseUri: ${{ parameters.appBuildConfig.fluxManifestApiBaseUri }}
               failOnStderr: false
               pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s'  
+              workingDirectory: '$(Pipeline.Workspace)/s'
 
       - job: PublishArtifacts
-        displayName: 'Publish Artifacts'   
+        displayName: 'Publish Artifacts'
         dependsOn: [Initialise,Build,BuildDockerImage,BuildHelmChart]
         condition: |
           and(
@@ -324,7 +324,7 @@ stages:
               eq( variables.IsDefaultBranchBuild , true),
               eq( variables.IsPrBuild , true),
               eq( ${{ parameters.deployFromFeature }} , true)
-            ) 
+            )
           )
         variables:
           appVersion: $[ dependencies.Initialise.outputs['GetAppVersion.appVersion'] ]
@@ -335,14 +335,14 @@ stages:
             path: s/ADO-Pipeline-Common
 
           - task: PowerShell@2
-            displayName: 'Set App Version'   
+            displayName: 'Set App Version'
             inputs:
               targetType: filePath
               filePath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/build/GetSet-CodeVersion.ps1'
               arguments: -Command "Set" -AppVersion $(appVersion) -ArtifactFilePath  $(System.ArtifactsDirectory)/version
               failOnStderr: false
               pwsh: true
-              workingDirectory: '$(Pipeline.Workspace)/s' 
+              workingDirectory: '$(Pipeline.Workspace)/s'
 
           - task: PublishPipelineArtifact@1
             displayName: 'Publish version'
@@ -356,26 +356,26 @@ stages:
               inputs:
                 key: $(dockerCacheKey)
                 path: $(Pipeline.Workspace)/docker
-                cacheHitVar: CACHE_RESTORED            
+                cacheHitVar: CACHE_RESTORED
             - task: PublishPipelineArtifact@1
               displayName: 'Publish docker'
               inputs:
                 targetPath: '$(Pipeline.Workspace)/docker'
                 artifact: docker
-                
+
           - task: Cache@2
             displayName: Restore Cached helm chart
             inputs:
               key: $(helmCacheKey)
               path: $(Pipeline.Workspace)/helm
-              cacheHitVar: CACHE_RESTORED  
+              cacheHitVar: CACHE_RESTORED
 
           - task: PublishPipelineArtifact@1
             displayName: 'Publish helm'
             inputs:
               targetPath: '$(Pipeline.Workspace)/helm'
               artifact: helm
-          
+
           - ${{ if eq(variables.IsDefaultBranchBuild, true) }}:
             - template: /templates/steps/tag-and-release.yaml
               parameters:
@@ -383,34 +383,34 @@ stages:
                 appVersion: $(appVersion)
                 PSHelperDirectory: ${{ variables.PSHelperDirectory }}
 
-  - ${{ each deploymentEnv in parameters.environments }}:  
+  - ${{ each deploymentEnv in parameters.environments }}:
     - ${{ if or( eq(variables.IsDefaultBranchBuild, true), and( or(eq(variables.IsPrBuild, true), eq(parameters.deployFromFeature, true)), eq( deploymentEnv.type,'dev')), eq(parameters.deployConfigOnly, true) ) }}:
       - stage: ${{ deploymentEnv.name }}
         dependsOn:
           - Application_CI
           - ${{ deploymentEnv.dependsOn }}
         displayName: '${{ upper(deploymentEnv.name) }}'
-        variables:       
+        variables:
         - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
           - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
             - ${{ if contains(varGroup, deploymentEnv.name) }}:
               - group: '${{ varGroup }}'
             - ${{ elseif contains(varGroup, '<environment>') }}:
-              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}    
+              - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}
         - name: serviceName
           value: ${{ parameters.serviceName }}
         - name: PSHelperDirectory
           value: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/modules/ps-helpers'
         - name: appVersion
           value: $[ stageDependencies.Application_CI.Initialise.outputs['GetAppVersion.appVersion'] ]
-  
+
         ${{ if ne(deploymentEnv.privateAgentName, '') }}:
           pool:
             name: ${{ deploymentEnv.privateAgentName }}
         ${{ else }}:
           pool:
             vmImage: ${{ coalesce(parameters.agentImage, 'ubuntu-latest') }}
-        jobs:        
+        jobs:
           - deployment: PublishTo${{ deploymentEnv.name }}
             condition:  |
               or(
@@ -422,17 +422,17 @@ stages:
                     eq(${{ parameters.deployFromFeature }},true)
                   ),
                   eq('${{ deploymentEnv.type }}','dev')
-                ) 
-              ) 
+                )
+              )
             displayName: 'Publish To ${{ deploymentEnv.name }}'
             environment: ${{ deploymentEnv.name }}
             strategy:
               runOnce:
-                deploy:          
+                deploy:
                   steps:
                     - ${{ if ne(parameters.appDeployConfig, '') }}:
                       - checkout: Self
-                        path: s/ 
+                        path: s/
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
                       - ${{ if and(eq(parameters.appDeployConfig.generateFluxManifest, true), ne(parameters.teamName, '')) }}:
@@ -443,10 +443,10 @@ stages:
                             TeamName: ${{ parameters.teamName }}
                             ServiceName: ${{ parameters.serviceName }}
                             EnvName: ${{ deploymentEnv.name }}
-                            KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }} 
+                            KeyVaultName: ${{ deploymentEnv.ssvInfraKeyVault }}
                             TenantId: ${{ deploymentEnv.tenantId }}
-                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:                         
-                        - template: /templates/steps/secrets-import-kv.yaml	                          
+                      - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
+                        - template: /templates/steps/secrets-import-kv.yaml
                           parameters:
                             serviceConnection: ${{ deploymentEnv.serviceConnection }}
                             appKeyVault:  ${{ deploymentEnv.appKeyVault }}
@@ -459,7 +459,7 @@ stages:
                         - template: /templates/steps/appconfig-import.yaml
                           parameters:
                             dryRun: false
-                            environmentObj: ${{ deploymentEnv }} 
+                            environmentObj: ${{ deploymentEnv }}
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             workingDirectory: '$(Pipeline.Workspace)/s'
                             serviceName: ${{ parameters.serviceName }}
@@ -467,7 +467,7 @@ stages:
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             AppConfigModuleDirectory: ${{ variables.AppConfigModuleDirectory }}
                             Version: $(appVersion)
-                            FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}                    
+                            FullBuild: ${{ eq(parameters.deployConfigOnly, false) }}
 
                     - ${{ if eq(parameters.deployConfigOnly, false )}}:
                       - template: /templates/steps/common-app-cd.yaml
@@ -478,7 +478,7 @@ stages:
                             appDeployConfig: ${{ parameters.appDeployConfig }}
                             PSHelperDirectory: ${{ variables.PSHelperDirectory }}
                             stepsToSkip: ${{ parameters.stepsToSkip }}
-                    
+
                       - ${{ if eq(deploymentEnv.adoCallBackApiEnabled, True) }}:
                         - task: PowerShell@2
                           displayName: 'Use ACR image timestamp to verify Flux Helm release'
@@ -489,30 +489,30 @@ stages:
                               Write-Host "##vso[task.setvariable variable=acrImageAddedTime;isOutput=true;]$(Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ')"
                             failOnStderr: false
                             pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s' 
+                            workingDirectory: '$(Pipeline.Workspace)/s'
 
                         - task: AzurePowerShell@5
                           displayName: 'Generate Api Token'
                           name: GenerateApiToken
                           inputs:
-                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }} 
+                            azureSubscription: ${{ deploymentEnv.ssvServiceConnection }}
                             ScriptType: FilePath
                             ScriptPath: '$(Pipeline.Workspace)/s/ADO-Pipeline-Common/templates/powershell/Get-AdoCallBackApiToken.ps1'
                             ScriptArguments: >
-                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }} 
+                                -KeyVaultName ${{ deploymentEnv.ssvInfraKeyVault }}
                                 -TenantId ${{ deploymentEnv.tenantId }}
                             FailOnStandardError: true
                             azurePowerShellVersion: 'LatestVersion'
                             pwsh: true
-                            workingDirectory: '$(Pipeline.Workspace)/s'        
+                            workingDirectory: '$(Pipeline.Workspace)/s'
 
                       - ${{ if eq(coalesce(deploymentEnv.teamResourcesPermissions.grantTeamAccessGroupPermissionToTeamResourceGroup, 'false'), true) }}:
                         - template: /templates/steps/team-roleassignment.yaml
                           parameters:
                               teamName: ${{ parameters.teamName }}
                               serviceName: ${{ parameters.serviceName }}
-                              deploymentEnv: ${{ deploymentEnv }}                           
-                                                       
+                              deploymentEnv: ${{ deploymentEnv }}
+
           - ${{ if and(eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - job: WaitForFluxRelease
               displayName: 'Wait For Flux Release'
@@ -523,8 +523,8 @@ stages:
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.setAcrImageAddedTime.acrImageAddedTime']]
                 - name: token
                   value: $[ dependencies.PublishTo${{ deploymentEnv.name }}.outputs['PublishTo${{ deploymentEnv.name }}.GenerateApiToken.adoCallBackApiAuthHeader']]
-              timeoutInMinutes: 20
-              steps:                  
+              timeoutInMinutes: 6
+              steps:
                 - task: InvokeRESTAPI@1
                   displayName: 'Check If Release Has Succeeded (reconciled)'
                   inputs:
@@ -554,7 +554,7 @@ stages:
                       "helmImageAddedToACRTime": "$(helmImageAddedToACRTime)"
                       }
                     waitForCompletion: 'true'
-                    
+
           - ${{ if and(contains(parameters.appTestConfig.postDeployTest.envToTest,deploymentEnv.name), ne(parameters.appDeployConfig.aisearch, ''), eq(deploymentEnv.adoCallBackApiEnabled, True), eq(parameters.deployConfigOnly, false )) }}:
             - deployment: aisearch${{ deploymentEnv.name }}
               displayName: 'Deploy AI Search'
@@ -562,10 +562,10 @@ stages:
               environment: ${{ deploymentEnv.name }}
               strategy:
                 runOnce:
-                  deploy:          
-                    steps:                      
+                  deploy:
+                    steps:
                       - checkout: Self
-                        path: s/ 
+                        path: s/
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
 
@@ -597,10 +597,10 @@ stages:
               environment: ${{ deploymentEnv.name }}
               strategy:
                 runOnce:
-                  deploy:          
-                    steps:                      
+                  deploy:
+                    steps:
                       - checkout: Self
-                        path: s/ 
+                        path: s/
                       - checkout: PipelineCommon
                         path: s/ADO-Pipeline-Common
 
