@@ -24,7 +24,7 @@ parameters:
     type: string
 
 variables:
-  varGroup: ${{ parameters.varGroup }}
+- group: ${{ parameters.varGroup }}
 
 steps:  
   - pwsh: |
