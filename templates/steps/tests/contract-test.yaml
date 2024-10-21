@@ -52,7 +52,7 @@ steps:
         export PACT_BROKER_URL="$(PACT-BROKER-URL)"
         export PACT_BROKER_USERNAME="$(PACT-BROKER-USERNAME)"
         export PACT_BROKER_PASSWORD="$(PACT-BROKER-PASSWORD)"
-        echo "The test var is: $(ffc-demo-web-TEST-VAR)"
+        export MY_ENV_VAR="$(ffc-demo-web-TEST-VAR)"
         docker-compose -f docker-compose.yaml -f docker-compose.contract.test.yaml -p "${{ parameters.service }}-test" up --abort-on-container-exit
       displayName: Contract Test - Run
       continueOnError: ${{ parameters.continueOnError }}
