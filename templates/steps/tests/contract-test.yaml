@@ -23,9 +23,6 @@ parameters:
   - name: varGroup
     type: string
 
-variables:
-- group: ${{ parameters.varGroup }}
-
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.contract.test.yaml"){

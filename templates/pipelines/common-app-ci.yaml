@@ -595,6 +595,8 @@ stages:
               ${{ else }}:
                 dependsOn: WaitForFluxRelease
               environment: ${{ deploymentEnv.name }}
+              variables:
+              - group: fcp-data-access-layer-api-snd4
               strategy:
                 runOnce:
                   deploy:
