@@ -14,8 +14,6 @@ parameters:
   - name: continueOnError
     type: boolean
     default: false
-  - name: varGroup
-    type: string
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
@@ -35,7 +33,6 @@ steps:
         appBuildConfig: ${{ parameters.appBuildConfig }}
         artifactNameSuffix: ${{ parameters.envName }}-$(rundatestring)
         continueOnError: ${{ parameters.continueOnError }}    
-        varGroup: ${{ parameters.varGroup }}
   - ${{ if and(contains(parameters.testEnvs.integrationTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'integration')) }}:
     - template: /templates/steps/tests/integration-test.yaml
       parameters:

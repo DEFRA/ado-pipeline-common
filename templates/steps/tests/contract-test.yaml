@@ -20,8 +20,6 @@ parameters:
   - name: continueOnError
     type: boolean
     default: false    
-  - name: varGroup
-    type: string
 
 steps:  
   - pwsh: |
