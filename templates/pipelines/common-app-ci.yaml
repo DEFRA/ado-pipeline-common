@@ -612,3 +612,4 @@ stages:
                           serviceName: ${{ parameters.serviceName }}
                           appBuildConfig: ${{ parameters.appBuildConfig }}
                           appTestConfig: ${{ parameters.appTestConfig }}
+                          varGroup: ${{ replace(parameters.appDeployConfig.variableGroups, '<environment>', deploymentEnv.name) }}

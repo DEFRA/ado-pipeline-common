@@ -14,6 +14,8 @@ parameters:
   - name: continueOnError
     type: boolean
     default: false
+  - name: varGroups
+    type: object
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
@@ -24,6 +26,8 @@ steps:
     displayName: Get Run Date String
   - ${{ if and(contains(parameters.testEnvs.contractTests, parameters.envName),contains(parameters.appTestConfig.postDeployTest.testsToRun,'contract')) }}:
     - template: /templates/steps/tests/contract-test.yaml
+      variables:
+        - group: ${{ parameters.varGroups }}
       parameters:
         service : '${{ parameters.serviceName }}'
         testDir : '$(Pipeline.Workspace)/s'
