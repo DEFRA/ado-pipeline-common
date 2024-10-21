@@ -15,7 +15,7 @@ parameters:
     type: boolean
     default: false
   - name: varGroups
-    type: object
+    type: string
 steps:
   - template: /templates/steps/additional-tools.yaml
     parameters:
