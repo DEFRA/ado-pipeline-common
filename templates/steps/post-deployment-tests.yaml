@@ -14,7 +14,7 @@ parameters:
   - name: continueOnError
     type: boolean
     default: false
-  - name: varGroups
+  - name: varGroup
     type: string
 steps:
   - template: /templates/steps/additional-tools.yaml
