@@ -6,7 +6,7 @@ parameters:
   - name: testOutputDir
     type: string
   - name: typeOfTest
-    type: string    
+    type: string
     default: 'PreDeploy'
   - name: url
     type: string
@@ -19,9 +19,9 @@ parameters:
     default: $(build.buildid)
   - name: continueOnError
     type: boolean
-    default: false    
+    default: false
 
-steps:  
+steps:
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.contract.test.yaml"){
         Write-Output "##vso[task.setvariable variable=docker_compose_contract_test_yaml]true"
@@ -52,6 +52,7 @@ steps:
         export PACT_BROKER_URL="$(PACT-BROKER-URL)"
         export PACT_BROKER_USERNAME="$(PACT-BROKER-USERNAME)"
         export PACT_BROKER_PASSWORD="$(PACT-BROKER-PASSWORD)"
+        echo "The test var is: $(ffc-demo-web-TEST-VAR)"
         docker-compose -f docker-compose.yaml -f docker-compose.contract.test.yaml -p "${{ parameters.service }}-test" up --abort-on-container-exit
       displayName: Contract Test - Run
       continueOnError: ${{ parameters.continueOnError }}
