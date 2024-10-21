@@ -20,6 +20,9 @@ parameters:
   - name: continueOnError
     type: boolean
     default: false    
+  - name: varGroup
+    type: string
+
 steps:  
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.contract.test.yaml"){
@@ -55,6 +58,8 @@ steps:
       displayName: Contract Test - Run
       continueOnError: ${{ parameters.continueOnError }}
       condition: eq(variables.docker_compose_contract_test_yaml, 'true')
+      variables:
+        - group: ${{ parameters.varGroup }}
   - task: PublishPipelineArtifact@1
     displayName: Contract Test - Publish Report
     inputs:
