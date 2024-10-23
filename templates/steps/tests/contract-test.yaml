@@ -6,7 +6,7 @@ parameters:
   - name: testOutputDir
     type: string
   - name: typeOfTest
-    type: string    
+    type: string
     default: 'PreDeploy'
   - name: url
     type: string
@@ -19,8 +19,9 @@ parameters:
     default: $(build.buildid)
   - name: continueOnError
     type: boolean
-    default: false    
-steps:  
+    default: false
+
+steps:
   - pwsh: |
       if(Test-Path -Path "${{ parameters.testDir }}/docker-compose.contract.test.yaml"){
         Write-Output "##vso[task.setvariable variable=docker_compose_contract_test_yaml]true"

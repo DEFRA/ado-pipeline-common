@@ -595,6 +595,13 @@ stages:
               ${{ else }}:
                 dependsOn: WaitForFluxRelease
               environment: ${{ deploymentEnv.name }}
+              variables:
+              - ${{ if ne(parameters.appDeployConfig.variableGroups, '') }}:
+                - ${{ each varGroup in parameters.appDeployConfig.variableGroups }}:
+                  - ${{ if contains(varGroup, deploymentEnv.name) }}:
+                    - group: '${{ varGroup }}'
+                  - ${{ elseif contains(varGroup, '<environment>') }}:
+                    - group: ${{ replace(varGroup, '<environment>', deploymentEnv.name) }}
               strategy:
                 runOnce:
                   deploy:
