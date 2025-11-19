@@ -43,7 +43,7 @@ if (-not(Test-Path -Path $armTtkModule -PathType Leaf)) {
     try {
         Write-Host "Downloading ARM ttk"
         $dowloadFilePath = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk.zip"
-        $extractToolKitPath = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk"
+        $extractToolKitPath = Join-Path -Path $PSScriptRoot
 
         Invoke-WebRequest -Uri 'https://github.com/Azure/arm-ttk/releases/latest/download/arm-ttk.zip' -OutFile $dowloadFilePath
         Expand-Archive -Path $dowloadFilePath -DestinationPath $extractToolKitPath -Force
