@@ -36,21 +36,21 @@ $warningtests = @('DependsOn-Best-Practices',
     'DeploymentTemplate-Must-Not-Contain-Hardcoded-Uri',
     'Outputs-Must-Not-Contain-Secrets')
 
-$armTtkModule = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk" "arm-ttk" "arm-ttk" "arm-ttk.psd1"
+$armTtkModule = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk" "arm-ttk" "arm-ttk.psd1"
 Write-Host "Path: $armTtkModule"
 
 if (-not(Test-Path -Path $armTtkModule -PathType Leaf)) {
     try {
         Write-Host "Downloading ARM ttk"
         $dowloadFilePath = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk.zip"
-        $extractToolKitPath = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk"
 
         Invoke-WebRequest -Uri 'https://github.com/Azure/arm-ttk/releases/latest/download/arm-ttk.zip' -OutFile $dowloadFilePath
-        Expand-Archive -Path $dowloadFilePath -DestinationPath $extractToolKitPath -Force
-        Write-Host "ARM ttk extracted to $extractToolKitPath"
+        Expand-Archive -Path $dowloadFilePath -DestinationPath $PSScriptRoot -Force
+        Write-Host "ARM ttk extracted to $PSScriptRoot"
         
+        $extractToolKitPath = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk"
         Write-Host "Listing files in $extractToolKitPath"
-        Get-ChildItem -Path $extractToolKitPath -Recurse | ForEach-Object {
+        Get-ChildItem -Path "$extractToolKitPath" -Recurse | ForEach-Object {
             Write-Host $_.FullName
         }
     }
