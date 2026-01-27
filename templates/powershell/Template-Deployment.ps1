@@ -145,6 +145,26 @@ try {
     }
     
     $templateParameterFile = Get-TemplateParameterFilePath -TemplateFileName $fileName -ParameterFilePath $ParameterFilePath
+    
+    # Debug: Output parameter file contents for troubleshooting
+    Write-Host "=== Parameter File Contents (for debugging) ==="
+    if (Test-Path $templateParameterFile) {
+        Get-Content $templateParameterFile -Raw | Write-Host
+        Write-Host "=== End of Parameter File ==="
+        
+        # Try to validate JSON syntax
+        try {
+            $jsonContent = Get-Content $templateParameterFile -Raw
+            $null = $jsonContent | ConvertFrom-Json
+            Write-Host "✓ Parameter file JSON syntax is valid"
+        } catch {
+            Write-Host "✗ Parameter file JSON syntax is INVALID: $_"
+            Write-Host "Error details: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Host "Parameter file not found: $templateParameterFile"
+    }
+    
     $command += "--name $deploymentName --template-file $TemplateFile --parameters $templateParameterFile"
 
     if ($WhatIf) { Write-Host "Starting template What-IF." }
