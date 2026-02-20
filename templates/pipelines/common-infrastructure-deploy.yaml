@@ -105,7 +105,7 @@ stages:
                             ${{ if eq(parameters.acrServiceConnection, '') }}:
                               Type: PowerShell
                             scriptArguments: >
-                              -TemplateName "${{ deployment.name }}"
+                              -TemplateName "${{ coalesce(deployment.templateName, deployment.name) }}"
                               -TemplatePath "$(Pipeline.Workspace)/s/self/${{ deployment.path }}"
                         
                         - displayName: ARM ttk - ${{ deployment.name }}
@@ -114,12 +114,12 @@ stages:
                           Type: PowerShell
                           azurePowershellUseCore: true
                           scriptArguments:
-                            -TemplateFile $(Build.SourcesDirectory)\self\${{ deployment.path }}\${{ deployment.name }}.json
+                            -TemplateFile $(Build.SourcesDirectory)\self\${{ deployment.path }}\${{ coalesce(deployment.templateName, deployment.name) }}.json
                   
                   - template: /templates/steps/validate-deploy-arm-template.yaml
                     parameters:
                       scope: ${{ deployment.scope }}
-                      templateName: ${{ deployment.name }}
+                      templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                       templateType: ${{ deployment.type }}
                       parameterFilePath: ${{ deployment.parameterFilePath }}
                       templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
@@ -186,7 +186,7 @@ stages:
                           - template: /templates/steps/validate-deploy-arm-template.yaml
                             parameters:
                               scope: ${{ deployment.scope }}
-                              templateName: ${{ deployment.name }}
+                              templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                               templateType: ${{ deployment.type }}
                               parameterFilePath: ${{ deployment.parameterFilePath }}
                               templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
@@ -322,9 +322,9 @@ stages:
 
                                 - template: /templates/steps/validate-deploy-arm-template.yaml
                                   parameters:
-                                    deploy: true
+                                    deploy: ${{ coalesce(deployment.deploy, true) }}
                                     scope: ${{ deployment.scope }}
-                                    templateName: ${{ deployment.name }}
+                                    templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                                     templateType: ${{ deployment.type }}
                                     parameterFilePath: ${{ deployment.parameterFilePath }}
                                     templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}

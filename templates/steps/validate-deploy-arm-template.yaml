@@ -66,6 +66,8 @@ steps:
           scriptPath: templates/powershell/Template-Deployment.ps1
           Type: AzureCLI
           AzureCLIScriptType: pscore
+          ${{ if and(eq(parameters.deploy, true), eq(parameters.whatIf, false)) }}:
+            retryCountOnTaskFailure: 2
           ${{ if ne(parameters.parameterFilePath, '') }}:
             scriptArguments: >
                 -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
