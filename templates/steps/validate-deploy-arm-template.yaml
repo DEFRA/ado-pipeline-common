@@ -45,11 +45,16 @@ steps:
   - template: /templates/steps/replace-tokens.yaml
     parameters:
       rootDirectorylocation: '$(Build.SourcesDirectory)'
-      targetFileslocation: |
-        ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
-        ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
-        $(Build.SourcesDirectory)/self/${{ parameters.parameterFilePath }}/*.parameters.json => *.transformed.parameters.json
-        $(Build.SourcesDirectory)/self/${{ parameters.parameterFilePath }}/*.bicepparam => *.transformed.bicepparam
+      ${{ if ne(parameters.parameterFilePath, '') }}:
+        targetFileslocation: |
+          ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
+          ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
+          ${{ parameters.parameterFilePath }}/*.parameters.json => *.transformed.parameters.json
+          ${{ parameters.parameterFilePath }}/*.bicepparam => *.transformed.bicepparam
+      ${{ else }}:
+        targetFileslocation: |
+          ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
+          ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
       escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
 
   - template: /templates/steps/powershell.yaml
@@ -71,7 +76,7 @@ steps:
           ${{ if ne(parameters.parameterFilePath, '') }}:
             scriptArguments: >
                 -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
-                -ParameterFilePath "$(Build.SourcesDirectory)/self/${{ parameters.parameterFilePath }}"
+                -ParameterFilePath "${{ parameters.parameterFilePath }}"
                 -Location "${{ parameters.location }}"
                 -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
                 -Deploy $${{ parameters.deploy }}

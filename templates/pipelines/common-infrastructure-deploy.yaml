@@ -45,6 +45,10 @@ parameters:
   displayName: Instance
   type: string
   default: ''
+- name: repositoryRoot
+  displayName: Root path for deployment templates (defaults to primary repo; use $(Pipeline.Workspace)/s/self when repo is checked out as resource 'self')
+  type: string
+  default: '$(Build.SourcesDirectory)/self'
 
 stages:
   - stage: Validate
@@ -106,7 +110,7 @@ stages:
                               Type: PowerShell
                             scriptArguments: >
                               -TemplateName "${{ coalesce(deployment.templateName, deployment.name) }}"
-                              -TemplatePath "$(Pipeline.Workspace)/s/self/${{ deployment.path }}"
+                              -TemplatePath "${{ parameters.repositoryRoot }}/${{ deployment.path }}"
                         
                         - displayName: ARM ttk - ${{ deployment.name }}
                           scriptRepo: PipelineCommonFiles
@@ -114,15 +118,16 @@ stages:
                           Type: PowerShell
                           azurePowershellUseCore: true
                           scriptArguments:
-                            -TemplateFile $(Build.SourcesDirectory)\self\${{ deployment.path }}\${{ coalesce(deployment.templateName, deployment.name) }}.json
+                            -TemplateFile ${{ parameters.repositoryRoot }}/${{ deployment.path }}/${{ coalesce(deployment.templateName, deployment.name) }}.json
                   
                   - template: /templates/steps/validate-deploy-arm-template.yaml
                     parameters:
                       scope: ${{ deployment.scope }}
                       templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                       templateType: ${{ deployment.type }}
-                      parameterFilePath: ${{ deployment.parameterFilePath }}
-                      templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                      ${{ if ne(deployment.parameterFilePath, '') }}:
+                        parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                      templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
                       location: ${{ variables.location }}
                       resourceGroup: '${{ deployment.resourceGroupName }}'
                       connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -188,8 +193,9 @@ stages:
                               scope: ${{ deployment.scope }}
                               templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                               templateType: ${{ deployment.type }}
-                              parameterFilePath: ${{ deployment.parameterFilePath }}
-                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                              ${{ if ne(deployment.parameterFilePath, '') }}:
+                                parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                              templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -224,10 +230,11 @@ stages:
                             parameters:
                               whatIf: true
                               scope: ${{ deployment.scope }}
-                              templateName: ${{ deployment.name }}
+                              templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                               templateType: ${{ deployment.type }}
-                              parameterFilePath: ${{ deployment.parameterFilePath }}
-                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                              ${{ if ne(deployment.parameterFilePath, '') }}:
+                                parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                              templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -326,8 +333,9 @@ stages:
                                     scope: ${{ deployment.scope }}
                                     templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                                     templateType: ${{ deployment.type }}
-                                    parameterFilePath: ${{ deployment.parameterFilePath }}
-                                    templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                                    ${{ if ne(deployment.parameterFilePath, '') }}:
+                                      parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                                    templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
                                     location: ${{ variables.location }}
                                     resourceGroup: '${{ deployment.resourceGroupName }}'
                                     connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
