@@ -43,22 +43,43 @@ parameters:
     displayName: Optional root directory for replace-tokens (use when templatePath/parameterFilePath are under a different root, e.g. $(Pipeline.Workspace)/s/self)
     type: string
     default: ''
+  - name: templatePathRelative
+    displayName: Template path relative to tokenReplaceRootDirectory (use with tokenReplaceRootDirectory so replace-tokens resolves patterns under that root)
+    type: string
+    default: ''
+  - name: parameterFilePathRelative
+    displayName: Parameter file path relative to tokenReplaceRootDirectory
+    type: string
+    default: ''
 
 steps:
 
+  # When tokenReplaceRootDirectory and relative paths are set, use relative patterns so qetza task writes under that root (fixes Linux/multi-repo layout).
   - template: /templates/steps/replace-tokens.yaml
     parameters:
       rootDirectorylocation: ${{ coalesce(parameters.tokenReplaceRootDirectory, '$(Build.SourcesDirectory)') }}
-      ${{ if ne(parameters.parameterFilePath, '') }}:
-        targetFileslocation: |
-          ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
-          ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
-          ${{ parameters.parameterFilePath }}/*.parameters.json => *.transformed.parameters.json
-          ${{ parameters.parameterFilePath }}/*.bicepparam => *.transformed.bicepparam
+      ${{ if and(ne(parameters.tokenReplaceRootDirectory, ''), ne(parameters.templatePathRelative, '')) }}:
+        ${{ if ne(parameters.parameterFilePathRelative, '') }}:
+          targetFileslocation: |
+            ${{ parameters.templatePathRelative }}/*.parameters.json => *.transformed.parameters.json
+            ${{ parameters.templatePathRelative }}/*.bicepparam => *.transformed.bicepparam
+            ${{ parameters.parameterFilePathRelative }}/*.parameters.json => *.transformed.parameters.json
+            ${{ parameters.parameterFilePathRelative }}/*.bicepparam => *.transformed.bicepparam
+        ${{ else }}:
+          targetFileslocation: |
+            ${{ parameters.templatePathRelative }}/*.parameters.json => *.transformed.parameters.json
+            ${{ parameters.templatePathRelative }}/*.bicepparam => *.transformed.bicepparam
       ${{ else }}:
-        targetFileslocation: |
-          ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
-          ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
+        ${{ if ne(parameters.parameterFilePath, '') }}:
+          targetFileslocation: |
+            ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
+            ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
+            ${{ parameters.parameterFilePath }}/*.parameters.json => *.transformed.parameters.json
+            ${{ parameters.parameterFilePath }}/*.bicepparam => *.transformed.bicepparam
+        ${{ else }}:
+          targetFileslocation: |
+            ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
+            ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
       escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
 
   # When deploy and whatIf are both false, only replace-tokens runs (e.g. for "replace-only" steps that produce .transformed.parameters.json for a later script).

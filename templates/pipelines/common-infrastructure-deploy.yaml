@@ -127,7 +127,9 @@ stages:
                       templateType: ${{ deployment.type }}
                       ${{ if ne(deployment.parameterFilePath, '') }}:
                         parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                        parameterFilePathRelative: ${{ deployment.parameterFilePath }}
                       templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                      templatePathRelative: ${{ deployment.path }}
                       tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
                       location: ${{ variables.location }}
                       resourceGroup: '${{ deployment.resourceGroupName }}'
@@ -196,7 +198,9 @@ stages:
                               templateType: ${{ deployment.type }}
                               ${{ if ne(deployment.parameterFilePath, '') }}:
                                 parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                                parameterFilePathRelative: ${{ deployment.parameterFilePath }}
                               templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                              templatePathRelative: ${{ deployment.path }}
                               tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
@@ -335,12 +339,14 @@ stages:
                                     scope: ${{ deployment.scope }}
                                     templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                                     templateType: ${{ deployment.type }}
-                                    ${{ if ne(deployment.parameterFilePath, '') }}:
-                                      parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
-                                    templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
-                                    tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
-                                    location: ${{ variables.location }}
-                                    resourceGroup: '${{ deployment.resourceGroupName }}'
+                              ${{ if ne(deployment.parameterFilePath, '') }}:
+                                parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                                parameterFilePathRelative: ${{ deployment.parameterFilePath }}
+                              templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                              templatePathRelative: ${{ deployment.path }}
+                              tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
+                              location: ${{ variables.location }}
+                              resourceGroup: '${{ deployment.resourceGroupName }}'
                                     connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
                                     tokenReplaceEscapeConfig: ${{ parameters.tokenReplaceEscapeConfig }}
 
