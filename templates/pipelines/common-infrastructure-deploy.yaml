@@ -46,7 +46,7 @@ parameters:
   type: string
   default: ''
 - name: repositoryRoot
-  displayName: Root path for deployment templates (defaults to primary repo; use $(Pipeline.Workspace)/s/self when repo is checked out as resource 'self')
+  displayName: Repository root for template paths (optional; default $(Build.SourcesDirectory)/self; use $(Pipeline.Workspace)/s/self when repo is checked out as resource 'self')
   type: string
   default: '$(Build.SourcesDirectory)/self'
 
@@ -128,6 +128,7 @@ stages:
                       ${{ if ne(deployment.parameterFilePath, '') }}:
                         parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
                       templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                      tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
                       location: ${{ variables.location }}
                       resourceGroup: '${{ deployment.resourceGroupName }}'
                       connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -196,6 +197,7 @@ stages:
                               ${{ if ne(deployment.parameterFilePath, '') }}:
                                 parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
                               templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                              tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -336,6 +338,7 @@ stages:
                                     ${{ if ne(deployment.parameterFilePath, '') }}:
                                       parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
                                     templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                                    tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
                                     location: ${{ variables.location }}
                                     resourceGroup: '${{ deployment.resourceGroupName }}'
                                     connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}

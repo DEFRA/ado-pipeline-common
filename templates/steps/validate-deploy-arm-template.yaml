@@ -39,12 +39,16 @@ parameters:
   - name: tokenReplaceEscapeConfig
     type: string
     default: ''
+  - name: tokenReplaceRootDirectory
+    displayName: Optional root directory for replace-tokens (use when templatePath/parameterFilePath are under a different root, e.g. $(Pipeline.Workspace)/s/self)
+    type: string
+    default: ''
 
 steps:
 
   - template: /templates/steps/replace-tokens.yaml
     parameters:
-      rootDirectorylocation: '$(Build.SourcesDirectory)'
+      rootDirectorylocation: ${{ coalesce(parameters.tokenReplaceRootDirectory, '$(Build.SourcesDirectory)') }}
       ${{ if ne(parameters.parameterFilePath, '') }}:
         targetFileslocation: |
           ${{ parameters.templatePath }}/*.parameters.json => *.transformed.parameters.json
