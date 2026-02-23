@@ -323,7 +323,16 @@ stages:
 
                           - ${{ each deployment in groupDeployment.deployments }}:
                             - ${{ if or(eq(env.azureRegions.primary, region), and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(deployment.isDeployToSecondaryRegions, true), true))) }}:
-                              - ${{ if ne(deployment.type, 'script') }}:
+                              - ${{ if eq(deployment.type, 'replaceTokensOnly') }}:
+                                - template: /templates/steps/replace-tokens.yaml
+                                  parameters:
+                                    rootDirectorylocation: ${{ parameters.repositoryRoot }}
+                                    targetFileslocation: |
+                                      ${{ each path in deployment.replaceTokenPaths }}:
+                                      ${{ path }}/*.parameters.json => *.transformed.parameters.json
+                                      ${{ path }}/*.bicepparam => *.transformed.bicepparam
+                                    escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
+                              - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly')) }}:
                                 - ${{ if coalesce(deployment.preDeployScriptsList, False) }}:
                                   - template: /templates/steps/powershell.yaml
                                     parameters:
