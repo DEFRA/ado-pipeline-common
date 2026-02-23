@@ -61,34 +61,36 @@ steps:
           ${{ parameters.templatePath }}/*.bicepparam => *.transformed.bicepparam
       escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
 
-  - template: /templates/steps/powershell.yaml
-    parameters:
-      azureResourceManagerConnection: ${{ parameters.connection }}
-      scriptsList:
-        - scriptRepo: PipelineCommonFiles
-          ${{ if and(eq(parameters.deploy, true), eq(parameters.whatIf, false)) }}:
-            displayName: Deploy - ${{ parameters.templateName }}
-          ${{ if and(eq(parameters.deploy, false), eq(parameters.whatIf, false)) }}:
-            displayName: Validate - ${{ parameters.templateName }}
-          ${{ if eq(parameters.whatIf, true) }}:
-            displayName: WhatIf - ${{ parameters.templateName }}
-          scriptPath: templates/powershell/Template-Deployment.ps1
-          Type: AzureCLI
-          AzureCLIScriptType: pscore
-          ${{ if and(eq(parameters.deploy, true), eq(parameters.whatIf, false)) }}:
-            retryCountOnTaskFailure: 2
-          ${{ if ne(parameters.parameterFilePath, '') }}:
-            scriptArguments: >
-                -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
-                -ParameterFilePath "${{ parameters.parameterFilePath }}"
-                -Location "${{ parameters.location }}"
-                -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
-                -Deploy $${{ parameters.deploy }}
-                -WhatIf $${{ parameters.whatIf }}
-          ${{ else }}:
-            scriptArguments: >
-                -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
-                -Location "${{ parameters.location }}"
-                -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
-                -Deploy $${{ parameters.deploy }}
-                -WhatIf $${{ parameters.whatIf }}
+  # When deploy and whatIf are both false, only replace-tokens runs (e.g. for "replace-only" steps that produce .transformed.parameters.json for a later script).
+  - ${{ if or(eq(parameters.deploy, true), eq(parameters.whatIf, true)) }}:
+    - template: /templates/steps/powershell.yaml
+      parameters:
+        azureResourceManagerConnection: ${{ parameters.connection }}
+        scriptsList:
+          - scriptRepo: PipelineCommonFiles
+            ${{ if and(eq(parameters.deploy, true), eq(parameters.whatIf, false)) }}:
+              displayName: Deploy - ${{ parameters.templateName }}
+            ${{ if and(eq(parameters.deploy, false), eq(parameters.whatIf, false)) }}:
+              displayName: Validate - ${{ parameters.templateName }}
+            ${{ if eq(parameters.whatIf, true) }}:
+              displayName: WhatIf - ${{ parameters.templateName }}
+            scriptPath: templates/powershell/Template-Deployment.ps1
+            Type: AzureCLI
+            AzureCLIScriptType: pscore
+            ${{ if and(eq(parameters.deploy, true), eq(parameters.whatIf, false)) }}:
+              retryCountOnTaskFailure: 2
+            ${{ if ne(parameters.parameterFilePath, '') }}:
+              scriptArguments: >
+                  -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
+                  -ParameterFilePath "${{ parameters.parameterFilePath }}"
+                  -Location "${{ parameters.location }}"
+                  -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
+                  -Deploy $${{ parameters.deploy }}
+                  -WhatIf $${{ parameters.whatIf }}
+            ${{ else }}:
+              scriptArguments: >
+                  -TemplateFile "${{ parameters.templatePath }}/${{ parameters.templateName }}.${{ coalesce(parameters.templateType, 'json') }}"
+                  -Location "${{ parameters.location }}"
+                  -ResourceGroupName "${{ coalesce(parameters.resourceGroup, '') }}"
+                  -Deploy $${{ parameters.deploy }}
+                  -WhatIf $${{ parameters.whatIf }}
