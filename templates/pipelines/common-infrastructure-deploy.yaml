@@ -324,14 +324,22 @@ stages:
                           - ${{ each deployment in groupDeployment.deployments }}:
                             - ${{ if or(eq(env.azureRegions.primary, region), and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(deployment.isDeployToSecondaryRegions, true), true))) }}:
                               - ${{ if eq(deployment.type, 'replaceTokensOnly') }}:
-                                - ${{ each path in deployment.replaceTokenPaths }}:
+                                # One step with all path lines (same shape as validate-deploy-arm-template) so v5 behaves like other apps
+                                - ${{ if ne(coalesce(deployment.replaceTokenTargetFiles, ''), '') }}:
                                   - template: /templates/steps/replace-tokens.yaml
                                     parameters:
                                       rootDirectorylocation: ${{ parameters.repositoryRoot }}
-                                      targetFileslocation: |
-                                        ${{ path }}/*.parameters.json => *.transformed.parameters.json
-                                        ${{ path }}/*.bicepparam => *.transformed.bicepparam
+                                      targetFileslocation: ${{ deployment.replaceTokenTargetFiles }}
                                       escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
+                                - ${{ else }}:
+                                  - ${{ each path in deployment.replaceTokenPaths }}:
+                                    - template: /templates/steps/replace-tokens.yaml
+                                      parameters:
+                                        rootDirectorylocation: ${{ parameters.repositoryRoot }}
+                                        targetFileslocation: |
+                                          ${{ path }}/*.parameters.json => *.transformed.parameters.json
+                                          ${{ path }}/*.bicepparam => *.transformed.bicepparam
+                                        escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
                               - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly')) }}:
                                 - ${{ if coalesce(deployment.preDeployScriptsList, False) }}:
                                   - template: /templates/steps/powershell.yaml
