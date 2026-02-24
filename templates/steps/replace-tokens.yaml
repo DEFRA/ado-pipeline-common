@@ -15,8 +15,6 @@ parameters:
 steps:
   - task: qetza.replacetokens.replacetokens-task.replacetokens@5
     displayName: Replace Variables
-    ${{ if ne(parameters.rootDirectorylocation, '') }}:
-      workingDirectory: ${{ parameters.rootDirectorylocation }}
     inputs:
       ${{ if ne(parameters.rootDirectorylocation, '') }}:
         rootDirectory: ${{ parameters.rootDirectorylocation }}
