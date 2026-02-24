@@ -13,21 +13,20 @@ parameters:
     - json
     - xml
 steps:
-  # v6 required when rootDirectorylocation is custom (e.g. $(Pipeline.Workspace)/s/self): v5 does not resolve source paths from root on all agents
-  - task: qetza.replacetokens.replacetokens-task.replacetokens@6
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@5
     displayName: Replace Variables
     inputs:
       ${{ if ne(parameters.rootDirectorylocation, '') }}:
-        root: ${{ parameters.rootDirectorylocation }}
-      sources: ${{ parameters.targetFileslocation }}
+        rootDirectory: ${{ parameters.rootDirectorylocation }}
+      targetFiles: ${{ parameters.targetFileslocation }}
       encoding: auto
-      addBOM: true
-      missingVarAction: none
-      missingVarLog: warn
-      tokenPattern: custom
+      writeBOM: true
+      escapeType: ${{ parameters.escapeType }}
+      actionOnMissing: warn
+      keepToken: false
+      tokenPattern: 'custom'
       tokenPrefix: '#{{'
       tokenSuffix: '}}'
-      telemetryOptout: true
-      transforms: true
-      # escape: v6 uses off|auto|json|xml (v5 'none' -> 'off')
-      escape: ${{ replace(parameters.escapeType, 'none', 'off') }}
+      useLegacyPattern: false
+      enableTelemetry: false
+      enableTransforms: true
