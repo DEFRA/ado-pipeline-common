@@ -97,7 +97,7 @@ stages:
 
             - ${{ each groupDeployment in parameters.groupedDeployments }}:
               - ${{ each deployment in groupDeployment.deployments }}:
-                - ${{ if ne(deployment.type, 'script') }}:
+                - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly'), ne(coalesce(deployment.path, ''), '')) }}:
                   - template: /templates/steps/powershell.yaml
                     parameters:
                       azureResourceManagerConnection: ${{ deployment.acrServiceConnection }}
@@ -190,7 +190,7 @@ stages:
 
                     - ${{ each groupDeployment in parameters.groupedDeployments }}:
                       - ${{ each deployment in groupDeployment.deployments }}:
-                        - ${{ if ne(deployment.type, 'script') }}:
+                        - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly')) }}:
                           - template: /templates/steps/validate-deploy-arm-template.yaml
                             parameters:
                               scope: ${{ deployment.scope }}
@@ -231,7 +231,7 @@ stages:
 
                     - ${{ each groupDeployment in parameters.groupedDeployments }}:
                       - ${{ each deployment in groupDeployment.deployments }}:
-                        - ${{ if ne(deployment.type, 'script') }}:
+                        - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly')) }}:
                           - template: /templates/steps/validate-deploy-arm-template.yaml
                             parameters:
                               whatIf: true
