@@ -49,6 +49,10 @@ parameters:
   displayName: Repository root for template paths (optional; default $(Build.SourcesDirectory)/self; use $(Pipeline.Workspace)/s/self when repo is checked out as resource 'self')
   type: string
   default: '$(Build.SourcesDirectory)/self'
+- name: primaryRegionKey
+  displayName: Primary region key for regional variable file path (e.g. uksouth). Required when regionalVariableFiles use {region}; pass from config so path resolves at compile time.
+  type: string
+  default: ''
 
 stages:
   - stage: Validate
@@ -77,7 +81,7 @@ stages:
               - ${{ if ne(customVariable.template, '') }}:
                 - template: ${{ customVariable.template }}
             - ${{ each file in parameters.regionalVariableFiles }}:
-              - template: ${{ replace(replace(file, '{environment}',lower(env.name)), '{region}', lower(variables.primaryRegion)) }}
+              - template: ${{ replace(replace(file, '{environment}', lower(env.name)), '{region}', lower(coalesce(parameters.primaryRegionKey, variables.primaryRegion))) }}
           steps:
             - template: /templates/steps/initialize.yaml
               parameters:
