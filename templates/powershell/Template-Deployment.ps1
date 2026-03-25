@@ -116,15 +116,25 @@ try {
     Import-Module $moduleDir.FullName -Force
     
     [string]$command = ''
+    [bool]$skipRgScopedValidation = $false
     if ($ResourceGroupName -ne '') {
         Write-Host "Checking if the following resource group exists: $ResourceGroupName."
         $command = "az group exists --name $ResourceGroupName"
         $resourceGroupExists = Invoke-CommandLine -Command $command
         Write-Host "Resource group exists: $resourceGroupExists."
+        $resourceGroupExistsBool = [bool]::Parse($resourceGroupExists)
         # Validation and what-if must be non-mutating: only create RG for real deployments.
-        if ($Deploy -and -not ([bool]::Parse($resourceGroupExists))) {
+        if ($Deploy -and -not $resourceGroupExistsBool) {
             $command = "az group create --name $ResourceGroupName --location $Location"
             Invoke-CommandLine -Command $command | Out-Null
+        }
+        elseif ((-not $Deploy) -and $WhatIf -and -not $resourceGroupExistsBool) {
+            Write-Warning "Skipping what-if for RG-scoped template because resource group '$ResourceGroupName' does not exist."
+            $skipRgScopedValidation = $true
+        }
+        elseif ((-not $Deploy) -and (-not $WhatIf) -and -not $resourceGroupExistsBool) {
+            Write-Warning "Skipping validation for RG-scoped template because resource group '$ResourceGroupName' does not exist."
+            $skipRgScopedValidation = $true
         }
     }
 
@@ -173,7 +183,10 @@ try {
     else { Write-Host "Starting template validation." }    
     Write-Host "Deployment name is $deploymentName"
 
-    if ($WhatIf) { Invoke-CommandLine -Command $command }
+    if ($skipRgScopedValidation) {
+        Write-Host "Skipping ARM call for RG-scoped non-deploy operation with missing RG."
+    }
+    elseif ($WhatIf) { Invoke-CommandLine -Command $command }
     else { Invoke-CommandLine -Command $command | Out-Null }
     if ($Deploy) {
         if ($ResourceGroupName -ne '') { $command = $baseCommand -f "group show -g $ResourceGroupName" } else { $command = $baseCommand -f "sub show" }
