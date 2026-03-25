@@ -121,7 +121,8 @@ try {
         $command = "az group exists --name $ResourceGroupName"
         $resourceGroupExists = Invoke-CommandLine -Command $command
         Write-Host "Resource group exists: $resourceGroupExists."
-        if (-not ([bool]::Parse($resourceGroupExists))) {
+        # Validation and what-if must be non-mutating: only create RG for real deployments.
+        if ($Deploy -and -not ([bool]::Parse($resourceGroupExists))) {
             $command = "az group create --name $ResourceGroupName --location $Location"
             Invoke-CommandLine -Command $command | Out-Null
         }
