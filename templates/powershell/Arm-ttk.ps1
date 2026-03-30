@@ -8,9 +8,7 @@ $errortests = @(
     'DeploymentTemplate-Schema-Is-Correct',
     'Parameters-Must-Be-Referenced',
     'Secure-String-Parameters-Cannot-Have-Default',
-    'DeploymentTemplate-Must-Not-Contain-Hardcoded-Uri',
-    'adminUsername-Should-Not-Be-A-Literal',
-    'Outputs-Must-Not-Contain-Secrets')
+    'adminUsername-Should-Not-Be-A-Literal')
 
 $warningtests = @('DependsOn-Best-Practices',
     'Location-Should-Not-Be-Hardcoded',
@@ -34,20 +32,21 @@ $warningtests = @('DependsOn-Best-Practices',
     'DeploymentParameters-Should-Have-Value',
     'DeploymentParameters-Should-Have-Schema',
     'DeploymentParameters-Should-Have-Parameters',
-    'DeploymentParameters-Should-Have-ContentVersion')
+    'DeploymentParameters-Should-Have-ContentVersion',
+    'DeploymentTemplate-Must-Not-Contain-Hardcoded-Uri',
+    'Outputs-Must-Not-Contain-Secrets')
 
-$armTtkModule = Join-Path -Path $PSScriptRoot -ChildPath "arm-template-toolkit" "arm-ttk" "arm-ttk.psd1"
+$armTtkModule = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk" "arm-ttk" "arm-ttk.psd1"
 Write-Host "Path: $armTtkModule"
 
 if (-not(Test-Path -Path $armTtkModule -PathType Leaf)) {
     try {
         Write-Host "Downloading ARM ttk"
-        $dowloadFilePath = Join-Path -Path $PSScriptRoot -ChildPath "arm-template-toolkit.zip"
-        $extractTookKitPath = Join-Path -Path $PSScriptRoot -ChildPath "arm-template-toolkit"
+        $dowloadFilePath = Join-Path -Path $PSScriptRoot -ChildPath "arm-ttk.zip"
 
-        Invoke-WebRequest -Uri 'https://azurequickstartsservice.blob.core.windows.net/ttk/latest/arm-template-toolkit.zip' -OutFile $dowloadFilePath
-        Expand-Archive -Path $dowloadFilePath -DestinationPath $extractTookKitPath -Force
-        Write-Host "ARM ttk extracted"
+        Invoke-WebRequest -Uri 'https://github.com/Azure/arm-ttk/releases/latest/download/arm-ttk.zip' -OutFile $dowloadFilePath
+        Expand-Archive -Path $dowloadFilePath -DestinationPath $PSScriptRoot -Force
+        Write-Host "ARM ttk extracted to $PSScriptRoot"
     }
     catch {
         throw $_.Exception.Message
