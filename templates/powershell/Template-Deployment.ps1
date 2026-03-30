@@ -116,14 +116,25 @@ try {
     Import-Module $moduleDir.FullName -Force
     
     [string]$command = ''
+    [bool]$skipRgScopedValidation = $false
     if ($ResourceGroupName -ne '') {
         Write-Host "Checking if the following resource group exists: $ResourceGroupName."
         $command = "az group exists --name $ResourceGroupName"
         $resourceGroupExists = Invoke-CommandLine -Command $command
         Write-Host "Resource group exists: $resourceGroupExists."
-        if (-not ([bool]::Parse($resourceGroupExists))) {
+        $resourceGroupExistsBool = [bool]::Parse($resourceGroupExists)
+        # Validation and what-if must be non-mutating: only create RG for real deployments.
+        if ($Deploy -and -not $resourceGroupExistsBool) {
             $command = "az group create --name $ResourceGroupName --location $Location"
             Invoke-CommandLine -Command $command | Out-Null
+        }
+        elseif ((-not $Deploy) -and $WhatIf -and -not $resourceGroupExistsBool) {
+            Write-Warning "Skipping what-if for RG-scoped template because resource group '$ResourceGroupName' does not exist."
+            $skipRgScopedValidation = $true
+        }
+        elseif ((-not $Deploy) -and (-not $WhatIf) -and -not $resourceGroupExistsBool) {
+            Write-Warning "Skipping validation for RG-scoped template because resource group '$ResourceGroupName' does not exist."
+            $skipRgScopedValidation = $true
         }
     }
 
@@ -145,6 +156,26 @@ try {
     }
     
     $templateParameterFile = Get-TemplateParameterFilePath -TemplateFileName $fileName -ParameterFilePath $ParameterFilePath
+    
+    # Debug: Output parameter file contents for troubleshooting
+    Write-Host "=== Parameter File Contents (for debugging) ==="
+    if (Test-Path $templateParameterFile) {
+        Get-Content $templateParameterFile -Raw | Write-Host
+        Write-Host "=== End of Parameter File ==="
+        
+        # Try to validate JSON syntax
+        try {
+            $jsonContent = Get-Content $templateParameterFile -Raw
+            $null = $jsonContent | ConvertFrom-Json
+            Write-Host "✓ Parameter file JSON syntax is valid"
+        } catch {
+            Write-Host "✗ Parameter file JSON syntax is INVALID: $_"
+            Write-Host "Error details: $($_.Exception.Message)"
+        }
+    } else {
+        Write-Host "Parameter file not found: $templateParameterFile"
+    }
+    
     $command += "--name $deploymentName --template-file $TemplateFile --parameters $templateParameterFile"
 
     if ($WhatIf) { Write-Host "Starting template What-IF." }
@@ -152,7 +183,10 @@ try {
     else { Write-Host "Starting template validation." }    
     Write-Host "Deployment name is $deploymentName"
 
-    if ($WhatIf) { Invoke-CommandLine -Command $command }
+    if ($skipRgScopedValidation) {
+        Write-Host "Skipping ARM call for RG-scoped non-deploy operation with missing RG."
+    }
+    elseif ($WhatIf) { Invoke-CommandLine -Command $command }
     else { Invoke-CommandLine -Command $command | Out-Null }
     if ($Deploy) {
         if ($ResourceGroupName -ne '') { $command = $baseCommand -f "group show -g $ResourceGroupName" } else { $command = $baseCommand -f "sub show" }

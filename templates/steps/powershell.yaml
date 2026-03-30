@@ -47,6 +47,8 @@ steps:
           condition: ${{ script.condition }}
         ${{ if eq(script.runAlways, true) }}:
           condition: always()
+        ${{ if ne(coalesce(script.retryCountOnTaskFailure, 0), 0) }}:
+          retryCountOnTaskFailure: ${{ script.retryCountOnTaskFailure }}
         inputs:
           azureSubscription: ${{ coalesce( parameters.variables[script.serviceConnectionVariableName], parameters.azureResourceManagerConnection) }}
           ${{ if ne(script.inlineScript, '') }}:
@@ -93,6 +95,8 @@ steps:
         displayName: '${{ coalesce(script.displayName, script.scriptPath) }}'
         ${{ if eq(script.runAlways, true) }}:
           condition: always()
+        ${{ if ne(coalesce(script.retryCountOnTaskFailure, 0), 0) }}:
+          retryCountOnTaskFailure: ${{ script.retryCountOnTaskFailure }}
         inputs:
           azureSubscription: ${{ coalesce( parameters.variables[script.serviceConnectionVariableName], parameters.azureResourceManagerConnection) }}
           scriptType: ${{ coalesce(script.AzureCLIScriptType, 'ps') }}

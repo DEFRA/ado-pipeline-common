@@ -37,6 +37,18 @@ parameters:
   - none
   - json
   - xml
+- name: applicationID
+  displayName: Application ID
+  type: string
+  default: ''
+- name: instance
+  displayName: Instance
+  type: string
+  default: ''
+- name: repositoryRoot
+  displayName: Repository root for template paths (optional; default $(Build.SourcesDirectory)/self; use $(Pipeline.Workspace)/s/self when repo is checked out as resource 'self')
+  type: string
+  default: '$(Build.SourcesDirectory)/self'
 
 stages:
   - stage: Validate
@@ -57,7 +69,7 @@ stages:
             - name: primaryRegion
               value: ${{ env.azureRegions.primary }}
             - ${{ each file in parameters.variableFiles }}:
-              - template: ${{ replace(file, '{environment}', lower(env.name)) }}
+              - template: ${{ replace(replace(replace(file, '{environment}', lower(env.name)), '{applicationID}', coalesce(parameters.applicationID, '{applicationID}')), '{instance}', coalesce(parameters.instance, '{instance}')) }}
             - ${{ each customVariable in env.userCustomVariables }}:
               - ${{ if ne(customVariable.name, '') }}:
                 - name: ${{ customVariable.name }}
@@ -85,7 +97,7 @@ stages:
 
             - ${{ each groupDeployment in parameters.groupedDeployments }}:
               - ${{ each deployment in groupDeployment.deployments }}:
-                - ${{ if ne(deployment.type, 'script') }}:
+                - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly'), ne(coalesce(deployment.path, ''), '')) }}:
                   - template: /templates/steps/powershell.yaml
                     parameters:
                       azureResourceManagerConnection: ${{ deployment.acrServiceConnection }}
@@ -97,8 +109,8 @@ stages:
                             ${{ if eq(parameters.acrServiceConnection, '') }}:
                               Type: PowerShell
                             scriptArguments: >
-                              -TemplateName "${{ deployment.name }}"
-                              -TemplatePath "$(Pipeline.Workspace)/s/self/${{ deployment.path }}"
+                              -TemplateName "${{ coalesce(deployment.templateName, deployment.name) }}"
+                              -TemplatePath "${{ parameters.repositoryRoot }}/${{ deployment.path }}"
                         
                         - displayName: ARM ttk - ${{ deployment.name }}
                           scriptRepo: PipelineCommonFiles
@@ -106,15 +118,19 @@ stages:
                           Type: PowerShell
                           azurePowershellUseCore: true
                           scriptArguments:
-                            -TemplateFile $(Build.SourcesDirectory)\self\${{ deployment.path }}\${{ deployment.name }}.json
+                            -TemplateFile ${{ parameters.repositoryRoot }}/${{ deployment.path }}/${{ coalesce(deployment.templateName, deployment.name) }}.json
                   
                   - template: /templates/steps/validate-deploy-arm-template.yaml
                     parameters:
                       scope: ${{ deployment.scope }}
-                      templateName: ${{ deployment.name }}
+                      templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                       templateType: ${{ deployment.type }}
-                      parameterFilePath: ${{ deployment.parameterFilePath }}
-                      templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                      ${{ if ne(deployment.parameterFilePath, '') }}:
+                        parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                        parameterFilePathRelative: ${{ deployment.parameterFilePath }}
+                      templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                      templatePathRelative: ${{ deployment.path }}
+                      tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
                       location: ${{ variables.location }}
                       resourceGroup: '${{ deployment.resourceGroupName }}'
                       connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -138,7 +154,7 @@ stages:
           - name: azurePrimaryAndSecondaryRegions
             value: ${{ format('{0};{1}', env.azureRegions.primary, join(';', env.azureRegions.secondary)) }}
           - ${{ each file in parameters.variableFiles }}:
-            - template: ${{ replace(file, '{environment}', env.name) }}
+            - template: ${{ replace(replace(replace(file, '{environment}', env.name), '{applicationID}', coalesce(parameters.applicationID, '{applicationID}')), '{instance}', coalesce(parameters.instance, '{instance}')) }}
         ${{ if eq(env.developmentEnvironment, True) }}:
           condition: and(ne(dependencies.validate.result, 'Canceled'), not(canceled()), not(failed()), or(eq(${{ parameters.deployFromFeature }}, true), eq(${{ containsValue(env.deploymentBranches,'*') }},true) ,eq(${{ containsValue(env.deploymentBranches,variables['Build.SourceBranch']) }},true)))
         ${{ elseif startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
@@ -174,14 +190,18 @@ stages:
 
                     - ${{ each groupDeployment in parameters.groupedDeployments }}:
                       - ${{ each deployment in groupDeployment.deployments }}:
-                        - ${{ if ne(deployment.type, 'script') }}:
+                        - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly')) }}:
                           - template: /templates/steps/validate-deploy-arm-template.yaml
                             parameters:
                               scope: ${{ deployment.scope }}
-                              templateName: ${{ deployment.name }}
+                              templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                               templateType: ${{ deployment.type }}
-                              parameterFilePath: ${{ deployment.parameterFilePath }}
-                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                              ${{ if ne(deployment.parameterFilePath, '') }}:
+                                parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                                parameterFilePathRelative: ${{ deployment.parameterFilePath }}
+                              templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                              templatePathRelative: ${{ deployment.path }}
+                              tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -211,15 +231,16 @@ stages:
 
                     - ${{ each groupDeployment in parameters.groupedDeployments }}:
                       - ${{ each deployment in groupDeployment.deployments }}:
-                        - ${{ if ne(deployment.type, 'script') }}:
+                        - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly')) }}:
                           - template: /templates/steps/validate-deploy-arm-template.yaml
                             parameters:
                               whatIf: true
                               scope: ${{ deployment.scope }}
-                              templateName: ${{ deployment.name }}
+                              templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                               templateType: ${{ deployment.type }}
-                              parameterFilePath: ${{ deployment.parameterFilePath }}
-                              templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                              ${{ if ne(deployment.parameterFilePath, '') }}:
+                                parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                              templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
                               location: ${{ variables.location }}
                               resourceGroup: '${{ deployment.resourceGroupName }}'
                               connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
@@ -302,7 +323,34 @@ stages:
 
                           - ${{ each deployment in groupDeployment.deployments }}:
                             - ${{ if or(eq(env.azureRegions.primary, region), and(containsvalue(env.azureRegions.secondary, region), eq(coalesce(deployment.isDeployToSecondaryRegions, true), true))) }}:
-                              - ${{ if ne(deployment.type, 'script') }}:
+                              - ${{ if eq(deployment.type, 'replaceTokensOnly') }}:
+                                # When repositoryRoot is set, run token replacement in a script step with workingDirectory so v5 sees the right path
+                                - ${{ if and(ne(parameters.repositoryRoot, ''), ne(coalesce(deployment.replaceTokenPathsString, ''), '')) }}:
+                                  - task: PowerShell@2
+                                    displayName: Replace Variables (custom root)
+                                    inputs:
+                                      workingDirectory: ${{ parameters.repositoryRoot }}
+                                      targetType: filePath
+                                      filePath: ${{ parameters.repositoryRoot }}/scripts/pipeline/Replace-Tokens.ps1
+                                      arguments: '-Paths "${{ deployment.replaceTokenPathsString }}"'
+                                      pwsh: true
+                                - ${{ else }}:
+                                  - ${{ if ne(coalesce(deployment.replaceTokenTargetFiles, ''), '') }}:
+                                    - template: /templates/steps/replace-tokens.yaml
+                                      parameters:
+                                        rootDirectorylocation: ${{ parameters.repositoryRoot }}
+                                        targetFileslocation: ${{ deployment.replaceTokenTargetFiles }}
+                                        escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
+                                  - ${{ else }}:
+                                    - ${{ each path in deployment.replaceTokenPaths }}:
+                                      - template: /templates/steps/replace-tokens.yaml
+                                        parameters:
+                                          rootDirectorylocation: ${{ parameters.repositoryRoot }}
+                                          targetFileslocation: |
+                                            ${{ path }}/*.parameters.json => *.transformed.parameters.json
+                                            ${{ path }}/*.bicepparam => *.transformed.bicepparam
+                                          escapeType: ${{ parameters.tokenReplaceEscapeConfig }}
+                              - ${{ if and(ne(deployment.type, 'script'), ne(deployment.type, 'replaceTokensOnly')) }}:
                                 - ${{ if coalesce(deployment.preDeployScriptsList, False) }}:
                                   - template: /templates/steps/powershell.yaml
                                     parameters:
@@ -314,12 +362,16 @@ stages:
 
                                 - template: /templates/steps/validate-deploy-arm-template.yaml
                                   parameters:
-                                    deploy: true
+                                    deploy: ${{ coalesce(deployment.deploy, true) }}
                                     scope: ${{ deployment.scope }}
-                                    templateName: ${{ deployment.name }}
+                                    templateName: ${{ coalesce(deployment.templateName, deployment.name) }}
                                     templateType: ${{ deployment.type }}
-                                    parameterFilePath: ${{ deployment.parameterFilePath }}
-                                    templatePath: $(Build.SourcesDirectory)/self/${{ deployment.path }}
+                                    ${{ if ne(deployment.parameterFilePath, '') }}:
+                                      parameterFilePath: ${{ parameters.repositoryRoot }}/${{ deployment.parameterFilePath }}
+                                      parameterFilePathRelative: ${{ deployment.parameterFilePath }}
+                                    templatePath: ${{ parameters.repositoryRoot }}/${{ deployment.path }}
+                                    templatePathRelative: ${{ deployment.path }}
+                                    tokenReplaceRootDirectory: ${{ parameters.repositoryRoot }}
                                     location: ${{ variables.location }}
                                     resourceGroup: '${{ deployment.resourceGroupName }}'
                                     connection: ${{ coalesce(variables[deployment.serviceConnectionVariableName], env.serviceConnection) }}
