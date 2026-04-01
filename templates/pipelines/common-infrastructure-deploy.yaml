@@ -69,7 +69,7 @@ stages:
             - name: primaryRegion
               value: ${{ env.azureRegions.primary }}
             - ${{ each file in parameters.variableFiles }}:
-              - template: ${{ replace(replace(replace(file, '{environment}', lower(env.name)), '{applicationID}', coalesce(parameters.applicationID, '{applicationID}')), '{instance}', coalesce(parameters.instance, '{instance}')) }}
+              - template: ${{ replace(replace(replace(replace(file, '{environment}', lower(env.name)), '{region}', lower(variables.primaryRegion)), '{applicationID}', coalesce(parameters.applicationID, '{applicationID}')), '{instance}', coalesce(parameters.instance, '{instance}')) }}
             - ${{ each customVariable in env.userCustomVariables }}:
               - ${{ if ne(customVariable.name, '') }}:
                 - name: ${{ customVariable.name }}
@@ -154,7 +154,7 @@ stages:
           - name: azurePrimaryAndSecondaryRegions
             value: ${{ format('{0};{1}', env.azureRegions.primary, join(';', env.azureRegions.secondary)) }}
           - ${{ each file in parameters.variableFiles }}:
-            - template: ${{ replace(replace(replace(file, '{environment}', env.name), '{applicationID}', coalesce(parameters.applicationID, '{applicationID}')), '{instance}', coalesce(parameters.instance, '{instance}')) }}
+            - template: ${{ replace(replace(replace(replace(file, '{environment}', env.name), '{region}', lower(variables.primaryRegion)), '{applicationID}', coalesce(parameters.applicationID, '{applicationID}')), '{instance}', coalesce(parameters.instance, '{instance}')) }}
         ${{ if eq(env.developmentEnvironment, True) }}:
           condition: and(ne(dependencies.validate.result, 'Canceled'), not(canceled()), not(failed()), or(eq(${{ parameters.deployFromFeature }}, true), eq(${{ containsValue(env.deploymentBranches,'*') }},true) ,eq(${{ containsValue(env.deploymentBranches,variables['Build.SourceBranch']) }},true)))
         ${{ elseif startsWith(variables['Build.SourceBranch'], 'refs/pull/') }}:
