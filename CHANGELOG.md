@@ -2,6 +2,12 @@
 
 All notable changes to this repository should be documented in this file.
 
+## [1.2.1] - 2026-09-28
+
+- 1.2.0 was originally tagged from branch and not picking up fix from parlell branch containing PR 159. No code change required. 1.2.1 will be correctly tagged from main. 
+
+Retagging to prevent impact to users over 1.2.0
+
 ## [1.2.0] - 2026-03-30
 
 ### Added
